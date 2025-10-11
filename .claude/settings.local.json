@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(DJANGO_SETTINGS_MODULE=league_gotta_bike.settings python -c \"\nimport django\ndjango.setup()\nfrom django.urls import get_resolver\n\nresolver = get_resolver()\npatterns = []\n\ndef extract_patterns(urlpatterns, prefix=''''):\n    for pattern in urlpatterns:\n        if hasattr(pattern, ''url_patterns''):\n            extract_patterns(pattern.url_patterns, prefix + str(pattern.pattern))\n        else:\n            if ''account'' in str(pattern.pattern) or ''account'' in str(getattr(pattern, ''name'', '''')):\n                if ''email'' in str(pattern.pattern) or ''email'' in str(getattr(pattern, ''name'', '''')):\n                    patterns.append({\n                        ''pattern'': prefix + str(pattern.pattern),\n                        ''name'': getattr(pattern, ''name'', ''no-name'')\n                    })\n\nextract_patterns(resolver.url_patterns)\n\nfor p in sorted(patterns, key=lambda x: x[''pattern'']):\n    print(f\"\"{p[''pattern'']:60} {p[''name'']}\"\")\n\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

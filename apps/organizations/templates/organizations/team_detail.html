@@ -1,0 +1,120 @@
+{% extends "organizations/base.html" %}
+
+{% block title %}{{ team.name }} - League Gotta Bike{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+    <!-- Breadcrumbs -->
+    <nav class="mb-4">
+        <ol class="flex items-center space-x-2 text-sm text-gray-500">
+            <li><a href="{% url 'organizations:league_list' %}" class="hover:text-gray-700">Leagues</a></li>
+            <li>/</li>
+            <li><a href="{{ league.get_absolute_url }}" class="hover:text-gray-700">{{ league.name }}</a></li>
+            <li>/</li>
+            <li class="text-gray-900">{{ team.name }}</li>
+        </ol>
+    </nav>
+
+    <!-- Team Header -->
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <div class="flex items-start justify-between">
+            <div class="flex items-center">
+                {% if team.logo %}
+                <img src="{{ team.logo.url }}" alt="{{ team.name }}" class="h-20 w-20 rounded-full object-cover mr-4">
+                {% endif %}
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">{{ team.name }}</h1>
+                    <p class="text-gray-500 mt-1">{{ team.get_type_display }} in {{ league.name }}</p>
+                </div>
+            </div>
+        </div>
+
+        {% if team.description %}
+        <p class="text-gray-600 mt-4">{{ team.description }}</p>
+        {% endif %}
+
+        <!-- Team Profile Details -->
+        {% if team_profile %}
+        <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-4">
+            {% if team_profile.race_category %}
+            <div>
+                <p class="text-sm font-medium text-gray-500">Race Category</p>
+                <p class="mt-1 text-sm text-gray-900">{{ team_profile.get_race_category_display }}</p>
+            </div>
+            {% endif %}
+            {% if team_profile.team_colors %}
+            <div>
+                <p class="text-sm font-medium text-gray-500">Team Colors</p>
+                <p class="mt-1 text-sm text-gray-900">{{ team_profile.team_colors }}</p>
+            </div>
+            {% endif %}
+            {% if team_profile.season_start %}
+            <div>
+                <p class="text-sm font-medium text-gray-500">Season</p>
+                <p class="mt-1 text-sm text-gray-900">{{ team_profile.season_start }} - {{ team_profile.season_end }}</p>
+            </div>
+            {% endif %}
+            {% if team.contact_email %}
+            <div>
+                <p class="text-sm font-medium text-gray-500">Contact</p>
+                <p class="mt-1 text-sm text-gray-900">{{ team.contact_email }}</p>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <!-- Members -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Team Members</h2>
+
+            {% if members %}
+            <div class="space-y-3">
+                {% for membership in members %}
+                <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                    <div>
+                        <p class="font-medium text-gray-900">{{ membership.user.username }}</p>
+                        <p class="text-sm text-gray-500">{{ membership.get_role_display }}</p>
+                    </div>
+                    <span class="px-2 py-1 text-xs font-medium rounded-full
+                        {% if membership.status == 'active' %}bg-green-100 text-green-800
+                        {% elif membership.status == 'prospect' %}bg-yellow-100 text-yellow-800
+                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {{ membership.get_status_display }}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-gray-500">No members yet.</p>
+            {% endif %}
+        </div>
+
+        <!-- Sub-Organizations (Squads, etc.) -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Squads & Groups</h2>
+
+            {% if sub_orgs %}
+            <div class="space-y-3">
+                {% for org in sub_orgs %}
+                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <h3 class="text-lg font-semibold text-gray-900">
+                        <a href="{{ org.get_absolute_url }}" class="hover:text-blue-600">
+                            {{ org.name }}
+                        </a>
+                    </h3>
+                    <p class="text-sm text-gray-500">{{ org.get_type_display }}</p>
+                    {% if org.description %}
+                    <p class="text-gray-600 text-sm mt-2 line-clamp-2">{{ org.description }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-gray-500">No squads or sub-groups yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

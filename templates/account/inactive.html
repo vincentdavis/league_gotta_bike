@@ -1,0 +1,44 @@
+{% extends "organizations/base.html" %}
+{% load allauth account %}
+
+{% block title %}Account Inactive - League Gotta Bike{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-base-200 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full">
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body text-center">
+                <div class="flex justify-center mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16 text-warning">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                    </svg>
+                </div>
+
+                <h2 class="card-title text-2xl font-bold justify-center mb-4">Account Inactive</h2>
+
+                <p class="text-base-content/70 mb-6">
+                    This account is currently inactive. Please verify your email address to activate your account.
+                </p>
+
+                <div role="alert" class="alert alert-warning mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span class="text-sm">Check your email for a verification link, or request a new one below.</span>
+                </div>
+
+                <div class="space-y-3">
+                    <a href="{% url 'account_email' %}" class="btn btn-primary w-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                        </svg>
+                        Manage Email Addresses
+                    </a>
+
+                    <a href="{% url 'account_logout' %}" class="btn btn-ghost btn-sm w-full">
+                        Sign Out
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

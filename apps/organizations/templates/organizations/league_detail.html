@@ -1,0 +1,77 @@
+{% extends "organizations/base.html" %}
+
+{% block title %}{{ league.name }} - League Gotta Bike{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+    <!-- League Header -->
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <div class="flex items-start justify-between">
+            <div class="flex items-center">
+                {% if league.logo %}
+                <img src="{{ league.logo.url }}" alt="{{ league.name }}" class="h-20 w-20 rounded-full object-cover mr-4">
+                {% endif %}
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">{{ league.name }}</h1>
+                    <p class="text-gray-500 mt-1">{{ league.get_type_display }}</p>
+                </div>
+            </div>
+        </div>
+
+        {% if league.description %}
+        <p class="text-gray-600 mt-4">{{ league.description }}</p>
+        {% endif %}
+
+        <!-- League Profile Details -->
+        {% if league_profile %}
+        <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {% if league_profile.region %}
+            <div>
+                <p class="text-sm font-medium text-gray-500">Region</p>
+                <p class="mt-1 text-sm text-gray-900">{{ league_profile.region }}</p>
+            </div>
+            {% endif %}
+            {% if league_profile.sanctioning_body %}
+            <div>
+                <p class="text-sm font-medium text-gray-500">Sanctioning Body</p>
+                <p class="mt-1 text-sm text-gray-900">{{ league_profile.sanctioning_body }}</p>
+            </div>
+            {% endif %}
+            {% if league.contact_email %}
+            <div>
+                <p class="text-sm font-medium text-gray-500">Contact</p>
+                <p class="mt-1 text-sm text-gray-900">{{ league.contact_email }}</p>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Teams List -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">Teams</h2>
+
+        {% if teams %}
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {% for team in teams %}
+            <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                <h3 class="text-lg font-semibold text-gray-900">
+                    <a href="{{ team.get_absolute_url }}" class="hover:text-blue-600">
+                        {{ team.name }}
+                    </a>
+                </h3>
+                {% if team.description %}
+                <p class="text-gray-600 text-sm mt-2 line-clamp-2">{{ team.description }}</p>
+                {% endif %}
+                <a href="{{ team.get_absolute_url }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium mt-2 inline-block">
+                    View Team →
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-500">No teams in this league yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

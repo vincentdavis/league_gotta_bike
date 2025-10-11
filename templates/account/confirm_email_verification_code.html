@@ -1,0 +1,113 @@
+{% extends "organizations/base.html" %}
+{% load allauth account %}
+
+{% block title %}Enter Verification Code - League Gotta Bike{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-base-200 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full">
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <div class="text-center mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16 mx-auto text-primary mb-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                    </svg>
+                    <h2 class="text-2xl font-bold">Enter Email Verification Code</h2>
+                    <p class="text-base-content/70 mt-2">
+                        We've sent a code to <strong class="text-primary">{{ email }}</strong>.
+                        The code expires shortly, so please enter it soon.
+                    </p>
+                </div>
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div role="alert" class="alert {% if message.tags == 'error' %}alert-error{% elif message.tags == 'success' %}alert-success{% else %}alert-info{% endif %} mb-4">
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post" class="space-y-4">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div role="alert" class="alert alert-error">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <div class="form-control">
+                        <label class="label" for="{{ form.code.id_for_label }}">
+                            <span class="label-text font-semibold">{{ form.code.label }}</span>
+                        </label>
+                        <input
+                            type="text"
+                            name="{{ form.code.name }}"
+                            id="{{ form.code.id_for_label }}"
+                            class="input input-bordered input-lg w-full text-center tracking-widest {% if form.code.errors %}input-error{% endif %}"
+                            placeholder="Enter code"
+                            autocomplete="one-time-code"
+                            inputmode="numeric"
+                            maxlength="6"
+                            required
+                        >
+                        {% if form.code.help_text %}
+                            <label class="label">
+                                <span class="label-text-alt">{{ form.code.help_text }}</span>
+                            </label>
+                        {% endif %}
+                        {% if form.code.errors %}
+                            <label class="label">
+                                <span class="label-text-alt text-error">{{ form.code.errors.0 }}</span>
+                            </label>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-control mt-6">
+                        <button type="submit" class="btn btn-primary w-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Confirm
+                        </button>
+                    </div>
+                </form>
+
+                <div class="divider text-sm">Didn't receive a code?</div>
+
+                <div class="space-y-3">
+                    {% if can_resend %}
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="resend">
+                            <button type="submit" class="btn btn-outline w-full">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                                </svg>
+                                Resend Verification Code
+                            </button>
+                        </form>
+                    {% else %}
+                        <div role="alert" class="alert alert-info">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                            </svg>
+                            <span class="text-sm">Please wait before requesting another code.</span>
+                        </div>
+                    {% endif %}
+
+                    {% if user.is_authenticated %}
+                        <form method="post" action="{% url 'account_logout' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{% url 'account_login' %}">
+                            <button type="submit" class="btn btn-ghost btn-sm w-full">
+                                Cancel and Sign Out
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

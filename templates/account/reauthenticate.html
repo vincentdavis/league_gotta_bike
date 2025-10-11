@@ -1,0 +1,73 @@
+{% extends "organizations/base.html" %}
+{% load allauth account %}
+
+{% block title %}Re-authenticate - League Gotta Bike{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-base-200 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full">
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <div class="text-center mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16 mx-auto text-warning mb-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                    </svg>
+                    <h2 class="text-2xl font-bold">Confirm Your Identity</h2>
+                    <p class="text-base-content/70 mt-2">Please re-enter your password to continue.</p>
+                </div>
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div role="alert" class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} mb-4">
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post" class="space-y-4">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div role="alert" class="alert alert-error">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <div class="form-control">
+                        <label class="label" for="{{ form.password.id_for_label }}">
+                            <span class="label-text">{{ form.password.label }}</span>
+                        </label>
+                        <input
+                            type="password"
+                            name="{{ form.password.name }}"
+                            id="{{ form.password.id_for_label }}"
+                            class="input input-bordered w-full {% if form.password.errors %}input-error{% endif %}"
+                            placeholder="Enter your password"
+                            required
+                        >
+                        {% if form.password.errors %}
+                            <label class="label">
+                                <span class="label-text-alt text-error">{{ form.password.errors.0 }}</span>
+                            </label>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-control mt-6">
+                        <button type="submit" class="btn btn-primary w-full">
+                            Confirm
+                        </button>
+                    </div>
+                </form>
+
+                <div class="divider"></div>
+
+                <div class="text-center">
+                    <a href="{% url 'organizations:league_list' %}" class="link link-primary text-sm">
+                        Cancel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

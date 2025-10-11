@@ -1,0 +1,136 @@
+{% extends "organizations/base.html" %}
+{% load allauth account %}
+
+{% block title %}Recovery Codes - League Gotta Bike{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-base-200 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-2xl mx-auto">
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold mb-2">Your Recovery Codes</h1>
+            <p class="text-base-content/70">Save these codes in a secure location. Each code can only be used once.</p>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div role="alert" class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-error{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %} mb-4">
+                    <span>{{ message }}</span>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <div role="alert" class="alert alert-warning mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 shrink-0">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                    </svg>
+                    <div class="text-sm">
+                        <p class="font-semibold">Keep these codes safe!</p>
+                        <ul class="list-disc list-inside mt-1">
+                            <li>Store them in a password manager or secure location</li>
+                            <li>Each code works only once</li>
+                            <li>Don't share these codes with anyone</li>
+                            <li>You won't be able to see these codes again</li>
+                        </ul>
+                    </div>
+                </div>
+
+                {% if unused_codes %}
+                    <div class="bg-base-200 rounded-lg p-6 mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="recovery-codes">
+                            {% for code in unused_codes %}
+                                <div class="font-mono text-lg bg-base-100 p-3 rounded border border-base-300 text-center">
+                                    {{ code }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-3">
+                        <button onclick="copyToClipboard()" class="btn btn-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
+                            </svg>
+                            Copy All Codes
+                        </button>
+                        <button onclick="downloadCodes()" class="btn btn-secondary">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                            </svg>
+                            Download as Text
+                        </button>
+                        <button onclick="window.print()" class="btn btn-outline">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z" />
+                            </svg>
+                            Print Codes
+                        </button>
+                    </div>
+                {% else %}
+                    <div role="alert" class="alert alert-info mb-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                        </svg>
+                        <span>You have no unused recovery codes. Generate new codes to continue.</span>
+                    </div>
+
+                    <a href="{% url 'mfa_generate_recovery_codes' %}" class="btn btn-warning">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                        </svg>
+                        Generate New Recovery Codes
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="mt-6 text-center">
+            <a href="{% url 'mfa_index' %}" class="btn btn-ghost btn-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                </svg>
+                Back to MFA Settings
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToClipboard() {
+    const codes = document.querySelectorAll('#recovery-codes > div');
+    const text = Array.from(codes).map(el => el.textContent.trim()).join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+        alert('Recovery codes copied to clipboard!');
+    }).catch(err => {
+        console.error('Failed to copy: ', err);
+    });
+}
+
+function downloadCodes() {
+    const codes = document.querySelectorAll('#recovery-codes > div');
+    const text = 'League Gotta Bike - Recovery Codes\n' +
+                 'Generated: ' + new Date().toLocaleString() + '\n\n' +
+                 Array.from(codes).map(el => el.textContent.trim()).join('\n') +
+                 '\n\nKeep these codes in a secure location. Each code can only be used once.';
+
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'recovery-codes-' + Date.now() + '.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+</script>
+
+<style>
+@media print {
+    .btn, .alert, nav, footer, .divider {
+        display: none !important;
+    }
+}
+</style>
+{% endblock %}

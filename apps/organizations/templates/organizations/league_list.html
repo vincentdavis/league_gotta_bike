@@ -1,0 +1,57 @@
+{% extends "organizations/base.html" %}
+
+{% block title %}Leagues - League Gotta Bike{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">Cycling Leagues</h2>
+
+    {% if leagues %}
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {% for league in leagues %}
+        <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow duration-300">
+            <div class="p-6">
+                {% if league.logo %}
+                <img src="{{ league.logo.url }}" alt="{{ league.name }}" class="h-16 w-16 mb-4 rounded-full object-cover">
+                {% endif %}
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                    <a href="{{ league.get_absolute_url }}" class="hover:text-blue-600">
+                        {{ league.name }}
+                    </a>
+                </h3>
+                {% if league.description %}
+                <p class="text-gray-600 text-sm line-clamp-3">{{ league.description }}</p>
+                {% endif %}
+
+                {% if league.league_profile %}
+                <div class="mt-4 space-y-1">
+                    {% if league.league_profile.region %}
+                    <p class="text-sm text-gray-500">
+                        <span class="font-medium">Region:</span> {{ league.league_profile.region }}
+                    </p>
+                    {% endif %}
+                    {% if league.league_profile.sanctioning_body %}
+                    <p class="text-sm text-gray-500">
+                        <span class="font-medium">Sanctioned by:</span> {{ league.league_profile.sanctioning_body }}
+                    </p>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <div class="mt-4">
+                    <a href="{{ league.get_absolute_url }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                        View Details →
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-white shadow rounded-lg p-12 text-center">
+        <p class="text-gray-500 text-lg">No leagues found.</p>
+        <p class="text-gray-400 text-sm mt-2">Check back later or contact an administrator to create a league.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

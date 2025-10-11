@@ -1,0 +1,120 @@
+{% extends "organizations/base.html" %}
+{% load allauth account %}
+
+{% block title %}Set Up Authenticator App - League Gotta Bike{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-base-200 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-2xl mx-auto">
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title text-3xl font-bold text-center mb-6">Set Up Authenticator App</h2>
+
+                <div class="alert alert-info mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <div class="text-sm">
+                        <p>Use an authenticator app like Google Authenticator, Authy, or 1Password to scan this QR code.</p>
+                    </div>
+                </div>
+
+                {% if qr_code_url %}
+                    <div class="flex flex-col items-center mb-6">
+                        <div class="bg-white p-4 rounded-lg shadow-inner mb-4">
+                            <img src="{{ qr_code_url }}" alt="QR Code" class="w-48 h-48">
+                        </div>
+                        <p class="text-sm text-base-content/70 text-center">Scan this QR code with your authenticator app</p>
+                    </div>
+
+                    <div class="divider">OR</div>
+
+                    <div class="form-control mb-6">
+                        <label class="label">
+                            <span class="label-text font-semibold">Manual Entry Key</span>
+                        </label>
+                        <div class="join w-full">
+                            <input
+                                type="text"
+                                value="{{ secret }}"
+                                class="input input-bordered join-item flex-1 font-mono text-sm"
+                                readonly
+                                id="manual-key"
+                            >
+                            <button
+                                class="btn btn-secondary join-item"
+                                onclick="copyToClipboard()"
+                                type="button"
+                            >
+                                Copy
+                            </button>
+                        </div>
+                        <label class="label">
+                            <span class="label-text-alt">Enter this key manually if you can't scan the QR code</span>
+                        </label>
+                    </div>
+                {% endif %}
+
+                <form method="post" class="space-y-4">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div role="alert" class="alert alert-error">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <div class="form-control">
+                        <label class="label" for="{{ form.code.id_for_label }}">
+                            <span class="label-text font-semibold">Verification Code</span>
+                        </label>
+                        <input
+                            type="text"
+                            name="{{ form.code.name }}"
+                            id="{{ form.code.id_for_label }}"
+                            class="input input-bordered input-lg w-full text-center tracking-widest {% if form.code.errors %}input-error{% endif %}"
+                            placeholder="000000"
+                            autocomplete="one-time-code"
+                            inputmode="numeric"
+                            pattern="[0-9]*"
+                            maxlength="6"
+                            required
+                        >
+                        <label class="label">
+                            <span class="label-text-alt">Enter the 6-digit code from your authenticator app to confirm setup</span>
+                        </label>
+                        {% if form.code.errors %}
+                            <label class="label">
+                                <span class="label-text-alt text-error">{{ form.code.errors.0 }}</span>
+                            </label>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-control mt-6">
+                        <button type="submit" class="btn btn-primary w-full">
+                            Activate Authenticator
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToClipboard() {
+    const input = document.getElementById('manual-key');
+    input.select();
+    input.setSelectionRange(0, 99999); // For mobile devices
+    navigator.clipboard.writeText(input.value);
+
+    // Optional: Show a toast notification
+    const btn = event.target;
+    const originalText = btn.textContent;
+    btn.textContent = 'Copied!';
+    btn.classList.add('btn-success');
+    setTimeout(() => {
+        btn.textContent = originalText;
+        btn.classList.remove('btn-success');
+    }, 2000);
+}
+</script>
+{% endblock %}
