@@ -177,12 +177,117 @@ league_gotta_bike/           # Main project
 - **Performance Tracking**: Race results, statistics, progress reports
 - **Financial Tools**: Expense tracking, dues management, budget reports
 
-### User Roles
-- Team Owner/Admin (full management) `OrgOwner` and `OrgAdmin`
-- Team Captain (limited management)
-- Team Members (participation & tracking)
-- League Officials (multi-team oversight)
-- Parents/Spectators (view-only for youth teams)
+### Permissions vs Roles Architecture
+
+**CRITICAL CONCEPT**: The system separates **permission levels** (authorization) from **organizational roles** (identity/function).
+
+#### Permission Levels (What You Can DO)
+
+Permission levels determine **authorization** - what actions a user can perform in an organization:
+
+| Permission Level | Description | Capabilities |
+|-----------------|-------------|--------------|
+| **Owner** | Full control | All permissions; can delete org; assign any permission level |
+| **Administrator** | Most permissions | Edit org, manage members, events, finances; cannot delete org |
+| **Manager** | Limited management | Manage members, create events; cannot edit org settings |
+| **Member** | Basic access | View content, participate in events; no management |
+
+**Permission Matrix**:
+| Action | Owner | Admin | Manager | Member |
+|--------|:-----:|:-----:|:-------:|:------:|
+| View organization | ✅ | ✅ | ✅ | ✅ |
+| Edit organization | ✅ | ✅ | ❌ | ❌ |
+| Delete organization | ✅ | ❌ | ❌ | ❌ |
+| Manage members | ✅ | ✅ | ✅ | ❌ |
+| Assign permissions | ✅ | ✅ | ❌ | ❌ |
+| Create/edit events | ✅ | ✅ | ✅ | ❌ |
+| View finances | ✅ | ✅ | ✅ | ❌ |
+| Manage finances | ✅ | ✅ | ❌ | ❌ |
+| Participate in events | ✅ | ✅ | ✅ | ✅ |
+
+**Implementation**:
+```python
+# Check permission level
+membership = Membership.objects.get(user=user, organization=org)
+if membership.permission_level in [Membership.OWNER, Membership.ADMIN]:
+    # User can edit organization
+```
+
+#### Organizational Roles (What You ARE)
+
+Organizational roles are **descriptive identities** - they describe what type of participant you are. Roles do NOT grant permissions.
+
+**Available Roles**:
+- **Athlete/Cyclist**: Active participant in cycling activities
+- **Coach**: Provides training and guidance
+- **Parent**: Parent of a youth athlete
+- **Guardian**: Legal guardian of an athlete
+- **Team Captain**: Leadership role among athletes
+- **Medical Staff**: Provides medical support
+- **Mechanic**: Provides bike maintenance
+- **Volunteer**: General volunteer
+- **Official**: Race/event official
+- **Spectator**: Observer/supporter
+
+**Key Features**:
+- ✅ **Multiple roles per user**: A person can be "Coach" AND "Parent"
+- ✅ **Descriptive only**: Roles don't grant permissions
+- ✅ **Display in UI**: Shows user's function(s) in the organization
+- ✅ **Filterable**: Search for all coaches, all parents, etc.
+
+**Example**:
+```python
+# User has Manager permission level + Coach and Parent roles
+membership = Membership.objects.create(
+    user=user,
+    organization=team,
+    permission_level=Membership.MANAGER,  # Can manage members
+    status=Membership.ACTIVE
+)
+
+# Add multiple roles
+MemberRole.objects.create(membership=membership, role_type=MemberRole.COACH, is_primary=True)
+MemberRole.objects.create(membership=membership, role_type=MemberRole.PARENT)
+
+# Display
+print(f"{user.name} - {membership.get_permission_level_display()}")
+# Output: "John Doe - Manager"
+print(f"Roles: {', '.join([r.get_role_type_display() for r in membership.roles.all()])}")
+# Output: "Roles: Coach, Parent"
+```
+
+#### Common Scenarios
+
+**Scenario 1: Team Coach with Management**
+- Permission Level: `Manager` (can invite members, create events)
+- Roles: `Coach` (identity)
+
+**Scenario 2: Parent Volunteer**
+- Permission Level: `Member` (basic participation)
+- Roles: `Parent`, `Volunteer`
+
+**Scenario 3: Team Owner/Director**
+- Permission Level: `Owner` (full control)
+- Roles: `Coach`, `Team Captain`
+
+**Scenario 4: Youth Athlete**
+- Permission Level: `Member`
+- Roles: `Athlete`
+
+**Scenario 5: Support Staff**
+- Permission Level: `Member` or `Manager`
+- Roles: `Medical Staff`, `Mechanic`, `Volunteer`
+
+#### Best Practices
+
+1. **Assign permission level first** based on what they need to DO
+2. **Add roles** to describe what they ARE
+3. **Permission level = authorization check** in code
+4. **Roles = display and filtering** in UI
+5. **Most users** should be `Member` permission level
+6. **Limit `Owner`** to 1-2 people per organization
+7. **Use `Manager`** for coaches who need to organize events
+8. **Multiple roles are encouraged** when appropriate
 
 ### Development Phases
 1. **Foundation** (Weeks 1-3): Core team/member management
@@ -236,11 +341,22 @@ SquadProfile(parent_team, focus_area, etc.)
 - membership requirements
 - competition rules
 
-#### members.Membership
-- Links User to Organization with role (admin, captain, member)
-- Status (active, inactive, prospect)
+#### membership.Membership & membership.MemberRole
+
+**IMPORTANT**: The system separates **permission levels** (what you can DO) from **organizational roles** (what you ARE).
+
+**Membership Model**:
+- Links User to Organization
+- `permission_level`: Determines authorization (owner, admin, manager, member)
+- `status`: Membership status (active, inactive, prospect)
 - Join date, membership fees
 - Works across all organization types
+
+**MemberRole Model**:
+- Many-to-many relationship: One user can have multiple roles
+- `role_type`: Organizational identity (athlete, coach, parent, guardian, medical_staff, etc.)
+- Descriptive only - does NOT grant permissions
+- Examples: A user can be both "Coach" and "Parent" simultaneously
 
 #### events.Event
 - title, description, event_type

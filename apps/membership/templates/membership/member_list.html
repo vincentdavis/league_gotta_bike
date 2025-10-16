@@ -1,0 +1,204 @@
+{% extends "organizations/base.html" %}
+
+{% block title %}Members - {{ organization.name }} - League Gotta Bike{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">{{ organization.name }} Members</h1>
+            <p class="text-gray-600 mt-1">Manage your organization's members</p>
+        </div>
+        {% if user_membership.role in 'OrgOwner,OrgAdmin,OrgManager' %}
+        <div class="flex gap-2">
+            <a href="{% url 'membership:invite' slug=organization.slug %}" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                </svg>
+                Invite Member
+            </a>
+            {% if prospect_count > 0 %}
+            <a href="{% url 'membership:request_list' slug=organization.slug %}" class="btn btn-warning">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                Pending Requests ({{ prospect_count }})
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Stats -->
+    <div class="stats stats-horizontal shadow mb-6 w-full">
+        <div class="stat">
+            <div class="stat-title">Total Members</div>
+            <div class="stat-value">{{ total_count }}</div>
+            <div class="stat-desc">All members</div>
+        </div>
+        <div class="stat">
+            <div class="stat-title">Active</div>
+            <div class="stat-value text-success">{{ active_count }}</div>
+            <div class="stat-desc">Currently active</div>
+        </div>
+        <div class="stat">
+            <div class="stat-title">Pending</div>
+            <div class="stat-value text-warning">{{ prospect_count }}</div>
+            <div class="stat-desc">Awaiting approval</div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card bg-base-100 shadow-xl mb-6">
+        <div class="card-body">
+            <form method="get" class="flex gap-4 items-end">
+                <div class="form-control flex-1">
+                    <label class="label">
+                        <span class="label-text">Filter by Status</span>
+                    </label>
+                    <select name="status" class="select select-bordered">
+                        <option value="">All Statuses</option>
+                        <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                        <option value="prospect" {% if request.GET.status == 'prospect' %}selected{% endif %}>Prospect</option>
+                    </select>
+                </div>
+                <div class="form-control flex-1">
+                    <label class="label">
+                        <span class="label-text">Filter by Role</span>
+                    </label>
+                    <select name="role" class="select select-bordered">
+                        <option value="">All Roles</option>
+                        <option value="OrgOwner" {% if request.GET.role == 'OrgOwner' %}selected{% endif %}>Owner</option>
+                        <option value="OrgAdmin" {% if request.GET.role == 'OrgAdmin' %}selected{% endif %}>Administrator</option>
+                        <option value="OrgManager" {% if request.GET.role == 'OrgManager' %}selected{% endif %}>Manager</option>
+                        <option value="OrgCoach" {% if request.GET.role == 'OrgCoach' %}selected{% endif %}>Coach</option>
+                        <option value="OrgMember" {% if request.GET.role == 'OrgMember' %}selected{% endif %}>Member</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Apply Filters</button>
+                {% if request.GET.status or request.GET.role %}
+                <a href="{% url 'membership:member_list' slug=organization.slug %}" class="btn btn-ghost">Clear</a>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <!-- Members Table -->
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            {% if memberships %}
+            <div class="overflow-x-auto">
+                <table class="table table-zebra w-full">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Joined</th>
+                            {% if user_membership.role in 'OrgOwner,OrgAdmin,OrgManager' %}
+                            <th>Actions</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for membership in memberships %}
+                        <tr>
+                            <td>
+                                <div class="flex items-center gap-3">
+                                    <div class="avatar placeholder">
+                                        <div class="bg-primary text-primary-content rounded-full w-12">
+                                            <span class="text-sm">{{ membership.user.first_name.0|upper }}{{ membership.user.last_name.0|upper }}</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="font-bold">{{ membership.user.get_full_name }}</div>
+                                        <div class="text-sm opacity-50">@{{ membership.user.username }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge
+                                    {% if membership.role == 'OrgOwner' %}badge-primary
+                                    {% elif membership.role == 'OrgAdmin' %}badge-success
+                                    {% elif membership.role == 'OrgManager' %}badge-info
+                                    {% elif membership.role == 'OrgCoach' %}badge-warning
+                                    {% else %}badge-ghost{% endif %}">
+                                    {{ membership.get_role_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge
+                                    {% if membership.status == 'active' %}badge-success
+                                    {% elif membership.status == 'prospect' %}badge-warning
+                                    {% else %}badge-ghost{% endif %}">
+                                    {{ membership.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ membership.join_date|date:"M d, Y" }}</td>
+                            {% if user_membership.role in 'OrgOwner,OrgAdmin,OrgManager' %}
+                            <td>
+                                <div class="dropdown dropdown-end">
+                                    <label tabindex="0" class="btn btn-ghost btn-sm">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                                        </svg>
+                                    </label>
+                                    <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                                        <li><a href="{% url 'membership:member_detail' membership_id=membership.id %}">View Details</a></li>
+                                        {% if user_membership.role in 'OrgOwner,OrgAdmin' and membership.user != user %}
+                                        <li><a href="{% url 'membership:role_update' membership_id=membership.id %}">Change Role</a></li>
+                                        <li><a href="{% url 'membership:member_remove' membership_id=membership.id %}" class="text-error">Remove Member</a></li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <div class="flex justify-center mt-6">
+                <div class="btn-group">
+                    {% if page_obj.has_previous %}
+                    <a href="?page=1{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}" class="btn btn-sm">«</a>
+                    <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}" class="btn btn-sm">‹</a>
+                    {% endif %}
+                    <a class="btn btn-sm btn-active">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</a>
+                    {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}" class="btn btn-sm">›</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}" class="btn btn-sm">»</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            {% else %}
+            <!-- Empty State -->
+            <div class="text-center py-12">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <h3 class="text-2xl font-bold text-gray-900 mb-2">No members found</h3>
+                <p class="text-gray-600 mb-6">No members match your current filters</p>
+                {% if user_membership.role in 'OrgOwner,OrgAdmin,OrgManager' %}
+                <a href="{% url 'membership:invite' slug=organization.slug %}" class="btn btn-primary">
+                    Invite First Member
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="mt-6 text-center">
+        <a href="{{ organization.get_absolute_url }}" class="btn btn-ghost">
+            ← Back to {{ organization.name }}
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,10 +1,26 @@
-from django.shortcuts import render, get_object_or_404
-from django.views.generic import DetailView, ListView
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import transaction
+from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse, reverse_lazy
+from django.views.generic import DetailView, ListView, CreateView, UpdateView, DeleteView, TemplateView
+from django.views import View
 
 from apps.membership.models import Membership
 
-from .models import Organization
+from .models import Organization, LeagueProfile, TeamProfile, SquadProfile
+from .forms import (
+    LeagueCreateForm, TeamCreateForm, SquadCreateForm, ClubCreateForm,
+    OrganizationEditForm, LeagueProfileForm, TeamProfileForm, SquadProfileForm
+)
+from .permissions import (
+    OrgOwnerRequiredMixin, OrgAdminRequiredMixin,
+    is_org_admin, get_user_membership
+)
 
+
+# Detail Views (existing)
 
 class LeagueDetailView(DetailView):
     """Display details of a league"""
@@ -25,6 +41,10 @@ class LeagueDetailView(DetailView):
         ).order_by('name')
         # Get league profile if exists
         context['league_profile'] = getattr(self.object, 'league_profile', None)
+        # Check if user can edit
+        if self.request.user.is_authenticated:
+            context['can_edit'] = is_org_admin(self.request.user, self.object)
+            context['user_membership'] = get_user_membership(self.request.user, self.object)
         return context
 
 
@@ -56,6 +76,10 @@ class TeamDetailView(DetailView):
         context['team_profile'] = getattr(self.object, 'team_profile', None)
         # Get team members
         context['members'] = self.object.get_members()
+        # Check if user can edit
+        if self.request.user.is_authenticated:
+            context['can_edit'] = is_org_admin(self.request.user, self.object)
+            context['user_membership'] = get_user_membership(self.request.user, self.object)
         return context
 
 
@@ -91,6 +115,10 @@ class OrganizationDetailView(DetailView):
             context['org_profile'] = getattr(self.object, 'squad_profile', None)
         # Get organization members
         context['members'] = self.object.get_members()
+        # Check if user can edit
+        if self.request.user.is_authenticated:
+            context['can_edit'] = is_org_admin(self.request.user, self.object)
+            context['user_membership'] = get_user_membership(self.request.user, self.object)
         return context
 
 
@@ -102,3 +130,259 @@ class LeagueListView(ListView):
 
     def get_queryset(self):
         return Organization.objects.leagues().active().order_by('name')
+
+
+# Create Views
+
+class OrganizationTypeSelectView(LoginRequiredMixin, TemplateView):
+    """View for selecting organization type to create."""
+    template_name = 'organizations/organization_type_select.html'
+
+
+class LeagueCreateView(LoginRequiredMixin, CreateView):
+    """View for creating a new league."""
+    model = Organization
+    form_class = LeagueCreateForm
+    template_name = 'organizations/organization_create.html'
+
+    def form_valid(self, form):
+        """Create league and assign creator as owner."""
+        with transaction.atomic():
+            self.object = form.save()
+            # Create membership for creator as OrgOwner
+            Membership.objects.create(
+                user=self.request.user,
+                organization=self.object,
+                role=Membership.ORG_OWNER,
+                status=Membership.ACTIVE
+            )
+            messages.success(self.request, f'League "{self.object.name}" created successfully!')
+        return redirect(self.object.get_absolute_url())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['org_type'] = 'League'
+        context['org_type_value'] = Organization.LEAGUE
+        return context
+
+
+class TeamCreateView(LoginRequiredMixin, CreateView):
+    """View for creating a new team."""
+    model = Organization
+    form_class = TeamCreateForm
+    template_name = 'organizations/organization_create.html'
+
+    def form_valid(self, form):
+        """Create team and assign creator as owner."""
+        with transaction.atomic():
+            self.object = form.save()
+            # Create membership for creator as OrgOwner
+            Membership.objects.create(
+                user=self.request.user,
+                organization=self.object,
+                role=Membership.ORG_OWNER,
+                status=Membership.ACTIVE
+            )
+            messages.success(self.request, f'Team "{self.object.name}" created successfully!')
+        return redirect(self.object.get_absolute_url())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['org_type'] = 'Team'
+        context['org_type_value'] = Organization.TEAM
+        return context
+
+
+class SquadCreateView(LoginRequiredMixin, CreateView):
+    """View for creating a new squad."""
+    model = Organization
+    form_class = SquadCreateForm
+    template_name = 'organizations/organization_create.html'
+
+    def form_valid(self, form):
+        """Create squad and assign creator as owner."""
+        with transaction.atomic():
+            self.object = form.save()
+            # Create membership for creator as OrgOwner
+            Membership.objects.create(
+                user=self.request.user,
+                organization=self.object,
+                role=Membership.ORG_OWNER,
+                status=Membership.ACTIVE
+            )
+            messages.success(self.request, f'Squad "{self.object.name}" created successfully!')
+        return redirect(self.object.get_absolute_url())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['org_type'] = 'Squad'
+        context['org_type_value'] = Organization.SQUAD
+        return context
+
+
+class ClubCreateView(LoginRequiredMixin, CreateView):
+    """View for creating a new club."""
+    model = Organization
+    form_class = ClubCreateForm
+    template_name = 'organizations/organization_create.html'
+
+    def form_valid(self, form):
+        """Create club and assign creator as owner."""
+        with transaction.atomic():
+            self.object = form.save()
+            # Create membership for creator as OrgOwner
+            Membership.objects.create(
+                user=self.request.user,
+                organization=self.object,
+                role=Membership.ORG_OWNER,
+                status=Membership.ACTIVE
+            )
+            messages.success(self.request, f'Club "{self.object.name}" created successfully!')
+        return redirect(self.object.get_absolute_url())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['org_type'] = 'Club'
+        context['org_type_value'] = Organization.CLUB
+        return context
+
+
+# Edit Views
+
+class OrganizationEditView(OrgAdminRequiredMixin, UpdateView):
+    """View for editing organization basic details."""
+    model = Organization
+    form_class = OrganizationEditForm
+    template_name = 'organizations/organization_edit.html'
+    slug_url_kwarg = 'slug'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add profile form based on organization type
+        if self.request.POST:
+            if self.object.type == Organization.LEAGUE:
+                context['profile_form'] = LeagueProfileForm(
+                    self.request.POST,
+                    instance=getattr(self.object, 'league_profile', None)
+                )
+            elif self.object.type == Organization.TEAM:
+                context['profile_form'] = TeamProfileForm(
+                    self.request.POST,
+                    instance=getattr(self.object, 'team_profile', None)
+                )
+            elif self.object.type == Organization.SQUAD:
+                context['profile_form'] = SquadProfileForm(
+                    self.request.POST,
+                    instance=getattr(self.object, 'squad_profile', None)
+                )
+        else:
+            if self.object.type == Organization.LEAGUE:
+                context['profile_form'] = LeagueProfileForm(
+                    instance=getattr(self.object, 'league_profile', None)
+                )
+            elif self.object.type == Organization.TEAM:
+                context['profile_form'] = TeamProfileForm(
+                    instance=getattr(self.object, 'team_profile', None)
+                )
+            elif self.object.type == Organization.SQUAD:
+                context['profile_form'] = SquadProfileForm(
+                    instance=getattr(self.object, 'squad_profile', None)
+                )
+
+        return context
+
+    def form_valid(self, form):
+        """Save both organization and profile."""
+        context = self.get_context_data()
+        profile_form = context.get('profile_form')
+
+        with transaction.atomic():
+            self.object = form.save()
+
+            # Save profile if it exists
+            if profile_form and profile_form.is_valid():
+                profile = profile_form.save(commit=False)
+                if not hasattr(profile, 'organization') or not profile.organization:
+                    profile.organization = self.object
+                profile.save()
+
+            messages.success(self.request, f'Organization "{self.object.name}" updated successfully!')
+
+        return redirect(self.object.get_absolute_url())
+
+
+class OrganizationSettingsView(OrgAdminRequiredMixin, DetailView):
+    """View for organization settings page."""
+    model = Organization
+    template_name = 'organizations/organization_settings.html'
+    slug_url_kwarg = 'slug'
+    context_object_name = 'organization'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Get members
+        context['members'] = self.object.memberships.select_related('user').all()
+        # Get profile
+        if self.object.type == Organization.LEAGUE:
+            context['profile'] = getattr(self.object, 'league_profile', None)
+        elif self.object.type == Organization.TEAM:
+            context['profile'] = getattr(self.object, 'team_profile', None)
+        elif self.object.type == Organization.SQUAD:
+            context['profile'] = getattr(self.object, 'squad_profile', None)
+        return context
+
+
+# Delete View
+
+class OrganizationDeleteView(OrgOwnerRequiredMixin, DeleteView):
+    """View for deleting an organization."""
+    model = Organization
+    template_name = 'organizations/organization_delete_confirm.html'
+    slug_url_kwarg = 'slug'
+
+    def get_success_url(self):
+        """Redirect based on organization type."""
+        if self.object.type == Organization.LEAGUE:
+            messages.success(self.request, f'League "{self.object.name}" has been deleted.')
+            return reverse('organizations:league_list')
+        elif self.object.parent:
+            messages.success(self.request, f'{self.object.get_type_display()} "{self.object.name}" has been deleted.')
+            return self.object.parent.get_absolute_url()
+        else:
+            return reverse('organizations:league_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Count members and child organizations
+        context['member_count'] = self.object.memberships.count()
+        context['child_count'] = self.object.children.count()
+        return context
+
+
+# User Dashboard
+
+class UserOrganizationsView(LoginRequiredMixin, TemplateView):
+    """View showing user's organizations and memberships."""
+    template_name = 'organizations/user_organizations.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Get all user's memberships
+        memberships = Membership.objects.filter(
+            user=self.request.user
+        ).select_related('organization').order_by('-join_date')
+
+        # Separate by role
+        context['owned_orgs'] = [m for m in memberships if m.role == Membership.ORG_OWNER]
+        context['admin_orgs'] = [m for m in memberships if m.role == Membership.ORG_ADMIN]
+        context['member_orgs'] = [m for m in memberships if m.role not in [Membership.ORG_OWNER, Membership.ORG_ADMIN]]
+
+        # Get pending requests (if user is admin of any org)
+        admin_org_ids = [m.organization.id for m in memberships if m.role in [Membership.ORG_OWNER, Membership.ORG_ADMIN]]
+        context['pending_requests_count'] = Membership.objects.filter(
+            organization_id__in=admin_org_ids,
+            status=Membership.PROSPECT
+        ).count()
+
+        return context

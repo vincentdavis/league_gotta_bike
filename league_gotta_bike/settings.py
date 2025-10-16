@@ -43,7 +43,7 @@ DEFAULT_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 ]
-LOCAL_APPS = ["accounts", "apps.organizations", "apps.membership", "apps.events"]
+LOCAL_APPS = ["accounts", "apps.organizations", "apps.membership", "apps.events", "apps.messaging"]
 
 # Conditionally add debug tools only in DEBUG mode
 ADDON_APPS = [
@@ -52,6 +52,8 @@ ADDON_APPS = [
     "push_notifications",
     "django_tasks",
     "django_tasks.backends.database",
+    # Django Channels
+    "channels",
     # Django-allauth
     "allauth",
     "allauth.account",
@@ -62,13 +64,15 @@ ADDON_APPS = [
 if DEBUG:
     ADDON_APPS += ["debug_toolbar", "django_browser_reload"]
 
-INSTALLED_APPS = DEFAULT_APPS + LOCAL_APPS + ADDON_APPS
+# Daphne must be listed before django.contrib.staticfiles
+INSTALLED_APPS = ["daphne"] + DEFAULT_APPS + LOCAL_APPS + ADDON_APPS
 
 # Custom User Model
 AUTH_USER_MODEL = 'accounts.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Serve static files with WhiteNoise
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -112,7 +116,18 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'league_gotta_bike.wsgi.application'
+ASGI_APPLICATION = 'league_gotta_bike.asgi.application'
 
+# Django Channels Configuration
+# https://channels.readthedocs.io/en/stable/topics/channel_layers.html
+
+CHANNEL_LAYERS = {
+    'default': {
+        # Use in-memory channel layer for development
+        # For production, use Redis: 'channels_redis.core.RedisChannelLayer'
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    }
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
@@ -161,6 +176,17 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# WhiteNoise Configuration
+# http://whitenoise.evans.io/
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 # Media files (User uploaded content)
 # https://docs.djangoproject.com/en/5.2/topics/files/

@@ -1,0 +1,63 @@
+{% extends "organizations/base.html" %}
+
+{% block title %}Delete {{ object.name }} - League Gotta Bike{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 py-8">
+    <div class="card bg-base-100 shadow-xl border-2 border-error">
+        <div class="card-body">
+            <h2 class="card-title text-error text-2xl mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                Delete {{ object.get_type_display }}
+            </h2>
+
+            <p class="text-lg mb-4">
+                Are you sure you want to delete <strong>{{ object.name }}</strong>?
+            </p>
+
+            <div class="alert alert-warning mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <div>
+                    <h3 class="font-bold">This action cannot be undone!</h3>
+                    <div class="text-sm">Deleting this {{ object.get_type_display|lower }} will permanently remove:</div>
+                </div>
+            </div>
+
+            <div class="stats stats-vertical shadow mb-6">
+                <div class="stat">
+                    <div class="stat-title">Members</div>
+                    <div class="stat-value text-primary">{{ member_count }}</div>
+                    <div class="stat-desc">Will lose access to this organization</div>
+                </div>
+
+                {% if child_count > 0 %}
+                <div class="stat">
+                    <div class="stat-title">Child Organizations</div>
+                    <div class="stat-value text-error">{{ child_count }}</div>
+                    <div class="stat-desc">Will also be deleted</div>
+                </div>
+                {% endif %}
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="flex justify-end gap-2">
+                    <a href="{{ object.get_absolute_url }}" class="btn btn-ghost">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-error">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Yes, Delete {{ object.get_type_display }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

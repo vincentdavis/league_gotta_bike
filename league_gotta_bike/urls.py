@@ -40,6 +40,16 @@ if settings.DEBUG:
     # Serve media files in development
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
+# Membership URLs (before organizations due to more specific patterns)
+urlpatterns += [
+    path('membership/', include('apps.membership.urls')),
+]
+
+# Messaging URLs
+urlpatterns += [
+    path('chat/', include('apps.messaging.urls')),
+]
+
 # Organizations URLs (must be last due to catch-all slug patterns)
 urlpatterns += [
     path('', include('apps.organizations.urls')),
