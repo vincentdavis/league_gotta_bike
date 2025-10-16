@@ -1,7 +1,9 @@
-from django.contrib.auth.models import AbstractUser
-from django.db import models
-from django.core.exceptions import ValidationError
 from datetime import date
+
+from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
+from django.db import models
+from phonenumber_field.modelfields import PhoneNumberField
 
 
 def validate_age(value):
@@ -26,15 +28,18 @@ class User(AbstractUser):
     - email: Requires verification to activate account
     - first_name: Required
     - last_name: Required
-    - phone_number: Required contact field
+    - phone_number: Contact field with international format support (optional)
     """
 
     # Override first_name and last_name to make them required
     first_name = models.CharField(max_length=150, blank=False)
     last_name = models.CharField(max_length=150, blank=False)
 
-    # Additional required field
-    phone_number = models.CharField(max_length=20, blank=True, help_text="Contact phone number")
+    # Phone number field with international format support
+    phone_number = PhoneNumberField(
+        blank=True,
+        help_text="Contact phone number (international format supported, e.g., +1 555-555-5555)"
+    )
 
     # Optional date of birth field with age validation
     dob = models.DateField(

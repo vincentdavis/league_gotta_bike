@@ -36,12 +36,6 @@
         <!-- Team Profile Details -->
         {% if team_profile %}
         <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-4">
-            {% if team_profile.race_category %}
-            <div>
-                <p class="text-sm font-medium text-gray-500">Race Category</p>
-                <p class="mt-1 text-sm text-gray-900">{{ team_profile.get_race_category_display }}</p>
-            </div>
-            {% endif %}
             {% if team_profile.team_colors %}
             <div>
                 <p class="text-sm font-medium text-gray-500">Team Colors</p>

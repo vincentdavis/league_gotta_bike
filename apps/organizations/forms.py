@@ -114,14 +114,6 @@ class TeamCreateForm(OrganizationBaseForm):
     )
 
     # Team-specific fields
-    race_category = forms.ChoiceField(
-        choices=TeamProfile.RACE_CATEGORIES,
-        widget=forms.Select(attrs={
-            'class': 'select select-bordered w-full'
-        }),
-        label='Race Category',
-        initial=TeamProfile.RECREATIONAL
-    )
     team_colors = forms.CharField(
         required=False,
         max_length=100,
@@ -170,7 +162,6 @@ class TeamCreateForm(OrganizationBaseForm):
             # Create team profile
             TeamProfile.objects.create(
                 organization=organization,
-                race_category=self.cleaned_data.get('race_category', TeamProfile.RECREATIONAL),
                 team_colors=self.cleaned_data.get('team_colors', ''),
                 season_start=self.cleaned_data.get('season_start'),
                 season_end=self.cleaned_data.get('season_end'),
@@ -318,11 +309,8 @@ class TeamProfileForm(forms.ModelForm):
 
     class Meta:
         model = TeamProfile
-        fields = ['race_category', 'team_colors', 'season_start', 'season_end', 'meeting_location']
+        fields = ['team_colors', 'season_start', 'season_end', 'meeting_location']
         widgets = {
-            'race_category': forms.Select(attrs={
-                'class': 'select select-bordered w-full'
-            }),
             'team_colors': forms.TextInput(attrs={
                 'class': 'input input-bordered w-full'
             }),

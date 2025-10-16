@@ -78,6 +78,7 @@ ADDON_APPS = [
     "allauth.account",
     "allauth.mfa",
     "anymail",
+    "phonenumber_field",
 ]
 if DEBUG:
     ADDON_APPS += ["debug_toolbar", "django_browser_reload"]
@@ -282,6 +283,11 @@ MFA_RECOVERY_CODE_COUNT = 10  # Number of recovery codes to generate
 # Redirect URLs
 LOGIN_REDIRECT_URL = "/"  # Redirect after successful login
 ACCOUNT_LOGOUT_REDIRECT_URL = "/"  # Redirect after logout
+
+# Django Phone Number Field Configuration
+# https://github.com/stefanfoulis/django-phonenumber-field
+PHONENUMBER_DEFAULT_REGION = "US"  # Default region for phone numbers
+PHONENUMBER_DEFAULT_FORMAT = "NATIONAL"  # Display format for phone numbers
 
 # Logging Configuration
 # https://docs.djangoproject.com/en/5.2/topics/logging/

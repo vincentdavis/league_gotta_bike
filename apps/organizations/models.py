@@ -26,6 +26,10 @@ class OrganizationQuerySet(models.QuerySet):
         """Return only club organizations"""
         return self.filter(type=Organization.CLUB)
 
+    def practice_groups(self):
+        """Return only practice group organizations"""
+        return self.filter(type=Organization.PRACTICE_GROUP)
+
     def active(self):
         """Return only active organizations"""
         return self.filter(is_active=True)
@@ -49,12 +53,16 @@ class OrganizationManager(models.Manager):
     def clubs(self):
         return self.get_queryset().clubs()
 
+    def practice_groups(self):
+        return self.get_queryset().practice_groups()
+
     def active(self):
         return self.get_queryset().active()
 
 
 class Organization(models.Model):
-    """Base model for all organization types (leagues, teams, squads, clubs).
+    """Base model for all organization types (leagues, teams, squads, clubs, practice groups).
+
     Uses hybrid pattern with type-specific profile models.
     """
 
@@ -63,12 +71,14 @@ class Organization(models.Model):
     TEAM = "team"
     SQUAD = "squad"
     CLUB = "club"
+    PRACTICE_GROUP = "practice_group"
 
     ORGANIZATION_TYPES = [
         (LEAGUE, "League"),
         (TEAM, "Team"),
         (SQUAD, "Squad"),
         (CLUB, "Club"),
+        (PRACTICE_GROUP, "Practice Group"),
     ]
 
     # Core fields
@@ -136,8 +146,8 @@ class Organization(models.Model):
             if self.parent.type != self.LEAGUE:
                 raise ValidationError({"parent": "Teams must have a League as their parent."})
 
-        # Rule 3: Squads and other types must have a Team as parent
-        if self.type in [self.SQUAD, self.CLUB]:
+        # Rule 3: Squads, clubs, and practice groups must have a Team as parent
+        if self.type in [self.SQUAD, self.CLUB, self.PRACTICE_GROUP]:
             if self.parent is None:
                 raise ValidationError({"parent": f"{self.get_type_display()}s must belong to a team."})
             if self.parent.type != self.TEAM:
@@ -239,36 +249,12 @@ class LeagueProfile(models.Model):
 class TeamProfile(models.Model):
     """Extended profile for Team organizations"""
 
-    # Race categories
-    CAT_1 = "cat1"
-    CAT_2 = "cat2"
-    CAT_3 = "cat3"
-    CAT_4 = "cat4"
-    CAT_5 = "cat5"
-    JUNIOR = "junior"
-    MASTERS = "masters"
-    RECREATIONAL = "recreational"
-
-    RACE_CATEGORIES = [
-        (CAT_1, "Category 1"),
-        (CAT_2, "Category 2"),
-        (CAT_3, "Category 3"),
-        (CAT_4, "Category 4"),
-        (CAT_5, "Category 5"),
-        (JUNIOR, "Junior"),
-        (MASTERS, "Masters"),
-        (RECREATIONAL, "Recreational"),
-    ]
-
     organization = models.OneToOneField(
         Organization,
         on_delete=models.CASCADE,
         primary_key=True,
         limit_choices_to={"type": Organization.TEAM},
         related_name="team_profile",
-    )
-    race_category = models.CharField(
-        max_length=20, choices=RACE_CATEGORIES, default=RECREATIONAL, help_text="Primary race category"
     )
     team_colors = models.CharField(max_length=100, blank=True, help_text="Team colors (e.g., 'Blue and White')")
     season_start = models.DateField(null=True, blank=True, help_text="Season start date")
@@ -338,5 +324,3 @@ class SquadProfile(models.Model):
 
     def __str__(self):
         return f"Squad Profile: {self.organization.name}"
-
-
