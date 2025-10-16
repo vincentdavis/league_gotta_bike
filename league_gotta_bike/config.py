@@ -29,6 +29,7 @@ class Settings(BaseSettings):
 
     # Security
     INTERNAL_IPS: str = "127.0.0.1"
+    CSRF_TRUSTED_ORIGINS: str = ""
 
     # Email Configuration
     DEFAULT_FROM_EMAIL: str = "noreply@signup.gotta.bike"
@@ -59,6 +60,14 @@ class Settings(BaseSettings):
         if not v:
             return ["127.0.0.1"]
         return [ip.strip() for ip in v.split(",") if ip.strip()]
+
+    @field_validator("CSRF_TRUSTED_ORIGINS", mode="after")
+    @classmethod
+    def parse_csrf_trusted_origins(cls, v: str) -> list[str]:
+        """Parse comma-separated CSRF_TRUSTED_ORIGINS into list"""
+        if not v:
+            return []
+        return [origin.strip() for origin in v.split(",") if origin.strip()]
 
 
 # Global settings instance

@@ -49,6 +49,8 @@ DEBUG = env_settings.DEBUG
 
 ALLOWED_HOSTS = env_settings.ALLOWED_HOSTS
 
+CSRF_TRUSTED_ORIGINS = env_settings.CSRF_TRUSTED_ORIGINS
+
 INTERNAL_IPS = env_settings.INTERNAL_IPS
 
 # Application definition
