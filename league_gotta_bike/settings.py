@@ -11,10 +11,31 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 
+import logfire
+
 from .config import settings as env_settings
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Logfire Configuration
+# https://logfire.pydantic.dev/docs/integrations/django/
+if env_settings.LOGFIRE_TOKEN:
+    logfire.configure(
+        token=env_settings.LOGFIRE_TOKEN,
+        service_name="league-gotta-bike",
+        console=logfire.ConsoleOptions(verbose=env_settings.DEBUG),
+    )
+    # Instrument Django to track requests, responses, database queries, and middleware
+    logfire.instrument_django()
+else:
+    # For local development without a token, use console-only logging
+    logfire.configure(
+        send_to_logfire=False,
+        console=logfire.ConsoleOptions(verbose=env_settings.DEBUG),
+    )
+    if env_settings.DEBUG:
+        logfire.instrument_django()
 
 
 # Quick-start development settings - unsuitable for production

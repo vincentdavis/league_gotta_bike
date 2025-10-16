@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/5.2/howto/deployment/asgi/
 
 import os
 
+import logfire
 from channels.auth import AuthMiddlewareStack
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.security.websocket import AllowedHostsOriginValidator
@@ -23,7 +24,8 @@ django_asgi_app = get_asgi_application()
 # Import routing after Django is set up
 from apps.messaging.routing import websocket_urlpatterns
 
-application = ProtocolTypeRouter({
+# Create the protocol type router
+app = ProtocolTypeRouter({
     # Django's ASGI application to handle traditional HTTP requests
     "http": django_asgi_app,
 
@@ -34,3 +36,6 @@ application = ProtocolTypeRouter({
         )
     ),
 })
+
+# Instrument ASGI application with logfire for WebSocket and async tracking
+application = logfire.instrument_asgi(app)
