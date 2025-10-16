@@ -114,6 +114,14 @@ class TeamCreateForm(OrganizationBaseForm):
     )
 
     # Team-specific fields
+    team_type = forms.ChoiceField(
+        required=False,
+        choices=TeamProfile.TEAM_TYPES,
+        widget=forms.Select(attrs={
+            'class': 'select select-bordered w-full'
+        }),
+        label='Team Type'
+    )
     team_colors = forms.CharField(
         required=False,
         max_length=100,
@@ -162,6 +170,7 @@ class TeamCreateForm(OrganizationBaseForm):
             # Create team profile
             TeamProfile.objects.create(
                 organization=organization,
+                team_type=self.cleaned_data.get('team_type', ''),
                 team_colors=self.cleaned_data.get('team_colors', ''),
                 season_start=self.cleaned_data.get('season_start'),
                 season_end=self.cleaned_data.get('season_end'),
@@ -184,23 +193,6 @@ class SquadCreateForm(OrganizationBaseForm):
         help_text='Select the team this squad belongs to'
     )
 
-    # Squad-specific fields
-    focus_area = forms.ChoiceField(
-        choices=SquadProfile.FOCUS_AREAS,
-        widget=forms.Select(attrs={
-            'class': 'select select-bordered w-full'
-        }),
-        label='Focus Area'
-    )
-    skill_level = forms.ChoiceField(
-        choices=SquadProfile.SKILL_LEVELS,
-        widget=forms.Select(attrs={
-            'class': 'select select-bordered w-full'
-        }),
-        label='Skill Level',
-        initial=SquadProfile.INTERMEDIATE
-    )
-
     class Meta(OrganizationBaseForm.Meta):
         fields = ['parent'] + OrganizationBaseForm.Meta.fields
 
@@ -213,9 +205,7 @@ class SquadCreateForm(OrganizationBaseForm):
             organization.save()
             # Create squad profile
             SquadProfile.objects.create(
-                organization=organization,
-                focus_area=self.cleaned_data.get('focus_area'),
-                skill_level=self.cleaned_data.get('skill_level', SquadProfile.INTERMEDIATE)
+                organization=organization
             )
 
         return organization
@@ -309,8 +299,11 @@ class TeamProfileForm(forms.ModelForm):
 
     class Meta:
         model = TeamProfile
-        fields = ['team_colors', 'season_start', 'season_end', 'meeting_location']
+        fields = ['team_type', 'team_colors', 'season_start', 'season_end', 'meeting_location']
         widgets = {
+            'team_type': forms.Select(attrs={
+                'class': 'select select-bordered w-full'
+            }),
             'team_colors': forms.TextInput(attrs={
                 'class': 'input input-bordered w-full'
             }),
@@ -333,12 +326,5 @@ class SquadProfileForm(forms.ModelForm):
 
     class Meta:
         model = SquadProfile
-        fields = ['focus_area', 'skill_level']
-        widgets = {
-            'focus_area': forms.Select(attrs={
-                'class': 'select select-bordered w-full'
-            }),
-            'skill_level': forms.Select(attrs={
-                'class': 'select select-bordered w-full'
-            }),
-        }
+        fields = []
+        widgets = {}

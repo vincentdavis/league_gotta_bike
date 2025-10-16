@@ -38,18 +38,6 @@
         <!-- Organization Profile Details -->
         {% if org_profile %}
         <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-            {% if org_profile.focus_area %}
-            <div>
-                <p class="text-sm font-medium text-gray-500">Focus Area</p>
-                <p class="mt-1 text-sm text-gray-900">{{ org_profile.get_focus_area_display }}</p>
-            </div>
-            {% endif %}
-            {% if org_profile.skill_level %}
-            <div>
-                <p class="text-sm font-medium text-gray-500">Skill Level</p>
-                <p class="mt-1 text-sm text-gray-900">{{ org_profile.get_skill_level_display }}</p>
-            </div>
-            {% endif %}
             {% if organization.contact_email %}
             <div>
                 <p class="text-sm font-medium text-gray-500">Contact</p>

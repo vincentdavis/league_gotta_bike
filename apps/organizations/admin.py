@@ -18,7 +18,7 @@ class TeamProfileInline(admin.StackedInline):
     model = TeamProfile
     can_delete = False
     verbose_name_plural = 'Team Details'
-    fields = ['team_colors', 'season_start', 'season_end', 'meeting_location']
+    fields = ['team_type', 'team_colors', 'season_start', 'season_end', 'meeting_location']
 
 
 class SquadProfileInline(admin.StackedInline):
@@ -26,7 +26,7 @@ class SquadProfileInline(admin.StackedInline):
     model = SquadProfile
     can_delete = False
     verbose_name_plural = 'Squad Details'
-    fields = ['focus_area', 'skill_level']
+    fields = []
 
 
 class MembershipInline(admin.TabularInline):
@@ -99,13 +99,13 @@ class LeagueProfileAdmin(admin.ModelAdmin):
 @admin.register(TeamProfile)
 class TeamProfileAdmin(admin.ModelAdmin):
     """Admin interface for TeamProfile"""
-    list_display = ['organization', 'team_colors']
+    list_display = ['organization', 'team_type', 'team_colors']
+    list_filter = ['team_type']
     search_fields = ['organization__name']
 
 
 @admin.register(SquadProfile)
 class SquadProfileAdmin(admin.ModelAdmin):
     """Admin interface for SquadProfile"""
-    list_display = ['organization', 'focus_area', 'skill_level']
-    list_filter = ['focus_area', 'skill_level']
+    list_display = ['organization']
     search_fields = ['organization__name']

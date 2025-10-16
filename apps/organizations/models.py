@@ -249,12 +249,26 @@ class LeagueProfile(models.Model):
 class TeamProfile(models.Model):
     """Extended profile for Team organizations"""
 
+    # Team types
+    HIGH_SCHOOL = "high_school"
+    RACING = "racing"
+    DEVO = "devo"
+
+    TEAM_TYPES = [
+        (HIGH_SCHOOL, "High School"),
+        (RACING, "Racing"),
+        (DEVO, "Devo"),
+    ]
+
     organization = models.OneToOneField(
         Organization,
         on_delete=models.CASCADE,
         primary_key=True,
         limit_choices_to={"type": Organization.TEAM},
         related_name="team_profile",
+    )
+    team_type = models.CharField(
+        max_length=20, choices=TEAM_TYPES, blank=True, help_text="Type of team"
     )
     team_colors = models.CharField(max_length=100, blank=True, help_text="Team colors (e.g., 'Blue and White')")
     season_start = models.DateField(null=True, blank=True, help_text="Season start date")
@@ -272,50 +286,12 @@ class TeamProfile(models.Model):
 class SquadProfile(models.Model):
     """Extended profile for Squad sub-organizations"""
 
-    # Focus areas
-    SPRINT = "sprint"
-    ENDURANCE = "endurance"
-    CLIMBING = "climbing"
-    TIME_TRIAL = "time_trial"
-    TRACK = "track"
-    MOUNTAIN = "mountain"
-    YOUTH = "youth"
-    WOMENS = "womens"
-
-    FOCUS_AREAS = [
-        (SPRINT, "Sprint"),
-        (ENDURANCE, "Endurance"),
-        (CLIMBING, "Climbing"),
-        (TIME_TRIAL, "Time Trial"),
-        (TRACK, "Track"),
-        (MOUNTAIN, "Mountain Biking"),
-        (YOUTH, "Youth Development"),
-        (WOMENS, "Women's Squad"),
-    ]
-
-    # Skill levels
-    BEGINNER = "beginner"
-    INTERMEDIATE = "intermediate"
-    ADVANCED = "advanced"
-    ELITE = "elite"
-
-    SKILL_LEVELS = [
-        (BEGINNER, "Beginner"),
-        (INTERMEDIATE, "Intermediate"),
-        (ADVANCED, "Advanced"),
-        (ELITE, "Elite"),
-    ]
-
     organization = models.OneToOneField(
         Organization,
         on_delete=models.CASCADE,
         primary_key=True,
         limit_choices_to={"type": Organization.SQUAD},
         related_name="squad_profile",
-    )
-    focus_area = models.CharField(max_length=20, choices=FOCUS_AREAS, help_text="Primary focus area for this squad")
-    skill_level = models.CharField(
-        max_length=20, choices=SKILL_LEVELS, default=INTERMEDIATE, help_text="Target skill level"
     )
 
     class Meta:
