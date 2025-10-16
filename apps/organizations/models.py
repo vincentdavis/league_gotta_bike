@@ -270,10 +270,6 @@ class TeamProfile(models.Model):
     team_type = models.CharField(
         max_length=20, choices=TEAM_TYPES, blank=True, help_text="Type of team"
     )
-    team_colors = models.CharField(max_length=100, blank=True, help_text="Team colors (e.g., 'Blue and White')")
-    season_start = models.DateField(null=True, blank=True, help_text="Season start date")
-    season_end = models.DateField(null=True, blank=True, help_text="Season end date")
-    meeting_location = models.CharField(max_length=200, blank=True, help_text="Regular meeting or training location")
 
     class Meta:
         verbose_name = "Team Profile"

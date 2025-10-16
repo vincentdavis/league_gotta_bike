@@ -35,23 +35,11 @@
 
         <!-- Team Profile Details -->
         {% if team_profile %}
-        <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-4">
+        <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {% if team_profile.team_type %}
             <div>
                 <p class="text-sm font-medium text-gray-500">Team Type</p>
                 <p class="mt-1 text-sm text-gray-900">{{ team_profile.get_team_type_display }}</p>
-            </div>
-            {% endif %}
-            {% if team_profile.team_colors %}
-            <div>
-                <p class="text-sm font-medium text-gray-500">Team Colors</p>
-                <p class="mt-1 text-sm text-gray-900">{{ team_profile.team_colors }}</p>
-            </div>
-            {% endif %}
-            {% if team_profile.season_start %}
-            <div>
-                <p class="text-sm font-medium text-gray-500">Season</p>
-                <p class="mt-1 text-sm text-gray-900">{{ team_profile.season_start }} - {{ team_profile.season_end }}</p>
             </div>
             {% endif %}
             {% if team.contact_email %}

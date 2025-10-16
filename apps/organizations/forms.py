@@ -122,40 +122,6 @@ class TeamCreateForm(OrganizationBaseForm):
         }),
         label='Team Type'
     )
-    team_colors = forms.CharField(
-        required=False,
-        max_length=100,
-        widget=forms.TextInput(attrs={
-            'class': 'input input-bordered w-full',
-            'placeholder': 'e.g., Blue and White'
-        }),
-        label='Team Colors'
-    )
-    season_start = forms.DateField(
-        required=False,
-        widget=forms.DateInput(attrs={
-            'class': 'input input-bordered w-full',
-            'type': 'date'
-        }),
-        label='Season Start Date'
-    )
-    season_end = forms.DateField(
-        required=False,
-        widget=forms.DateInput(attrs={
-            'class': 'input input-bordered w-full',
-            'type': 'date'
-        }),
-        label='Season End Date'
-    )
-    meeting_location = forms.CharField(
-        required=False,
-        max_length=200,
-        widget=forms.TextInput(attrs={
-            'class': 'input input-bordered w-full',
-            'placeholder': 'Regular meeting or training location'
-        }),
-        label='Meeting Location'
-    )
 
     class Meta(OrganizationBaseForm.Meta):
         fields = ['parent'] + OrganizationBaseForm.Meta.fields
@@ -170,11 +136,7 @@ class TeamCreateForm(OrganizationBaseForm):
             # Create team profile
             TeamProfile.objects.create(
                 organization=organization,
-                team_type=self.cleaned_data.get('team_type', ''),
-                team_colors=self.cleaned_data.get('team_colors', ''),
-                season_start=self.cleaned_data.get('season_start'),
-                season_end=self.cleaned_data.get('season_end'),
-                meeting_location=self.cleaned_data.get('meeting_location', '')
+                team_type=self.cleaned_data.get('team_type', '')
             )
 
         return organization
@@ -299,25 +261,11 @@ class TeamProfileForm(forms.ModelForm):
 
     class Meta:
         model = TeamProfile
-        fields = ['team_type', 'team_colors', 'season_start', 'season_end', 'meeting_location']
+        fields = ['team_type']
         widgets = {
             'team_type': forms.Select(attrs={
                 'class': 'select select-bordered w-full'
-            }),
-            'team_colors': forms.TextInput(attrs={
-                'class': 'input input-bordered w-full'
-            }),
-            'season_start': forms.DateInput(attrs={
-                'class': 'input input-bordered w-full',
-                'type': 'date'
-            }),
-            'season_end': forms.DateInput(attrs={
-                'class': 'input input-bordered w-full',
-                'type': 'date'
-            }),
-            'meeting_location': forms.TextInput(attrs={
-                'class': 'input input-bordered w-full'
-            }),
+            })
         }
 
 
