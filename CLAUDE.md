@@ -39,6 +39,53 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Django Tasks** configured with DatabaseBackend for background task processing
 - **Tailwind CSS v4** with **DaisyUI** component library for styling
 - **PostCSS** build pipeline for CSS processing
+- **Logfire** for logging, observability, and application monitoring
+
+### Logging and Observability
+
+The project uses **Logfire** (by Pydantic) for comprehensive logging and observability.
+
+#### Features
+- **Automatic Django Integration**: Tracks requests, responses, database queries, and middleware
+- **ASGI Support**: Monitors WebSocket connections and async operations
+- **Database Tracking**: Logs SQLite (dev) and PostgreSQL (production) queries with performance metrics
+- **Structured Logging**: JSON-formatted logs with context and tracing
+- **Error Tracking**: Automatic exception capture with stack traces
+
+#### When Writing Code
+- **Use Logfire for Important Operations**: Log significant events, errors, and business logic
+- **Add Context**: Include relevant data like user IDs, organization IDs, event IDs
+- **Track Performance**: Use logfire to measure slow operations
+- **Async Support**: Logfire automatically tracks async/await operations
+
+#### Example Usage
+```python
+import logfire
+
+# Basic logging
+logfire.info("User created organization", user_id=user.id, org_id=org.id)
+
+# Error logging with context
+try:
+    process_payment(transaction)
+except PaymentError as e:
+    logfire.error("Payment failed", error=str(e), transaction_id=transaction.id)
+
+# Performance tracking
+with logfire.span("expensive_operation"):
+    result = perform_complex_calculation()
+```
+
+#### Environment Variables
+- `LOGFIRE_TOKEN`: API token for Logfire (optional for local development)
+- Configure in Railway for production monitoring
+
+#### Best Practices
+- Log user actions that modify data (create, update, delete)
+- Log authentication events (login, logout, MFA)
+- Log background task execution
+- Include relevant IDs for traceability
+- Avoid logging sensitive data (passwords, tokens, personal info)
 
 ### Environment Variables
 Configuration is managed via `.env` file (see `.env.example` for template):

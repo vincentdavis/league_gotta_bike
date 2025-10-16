@@ -741,7 +741,7 @@ dependencies = [
     { name = "django-push-notifications", extra = ["wp"] },
     { name = "django-tailwind", extra = ["reload"] },
     { name = "django-tasks" },
-    { name = "logfire", extra = ["asgi", "django", "psycopg"] },
+    { name = "logfire", extra = ["asgi", "django", "psycopg", "sqlite3"] },
     { name = "pillow" },
     { name = "psycopg", extra = ["binary"] },
     { name = "pydantic-settings" },
@@ -770,7 +770,7 @@ requires-dist = [
     { name = "django-push-notifications", extras = ["wp"], specifier = ">=3.2.1" },
     { name = "django-tailwind", extras = ["reload"], specifier = ">=4.2.0" },
     { name = "django-tasks", specifier = ">=0.8.1" },
-    { name = "logfire", extras = ["asgi", "django", "psycopg"], specifier = ">=4.12.0" },
+    { name = "logfire", extras = ["asgi", "django", "psycopg", "sqlite3"], specifier = ">=4.12.0" },
     { name = "pillow", specifier = ">=11.3.0" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2.10" },
     { name = "pydantic-settings", specifier = ">=2.11.0" },
@@ -819,6 +819,9 @@ django = [
 psycopg = [
     { name = "opentelemetry-instrumentation-psycopg" },
     { name = "packaging" },
+]
+sqlite3 = [
+    { name = "opentelemetry-instrumentation-sqlite3" },
 ]
 
 [[package]]
@@ -1032,6 +1035,20 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/a3/e3/9c700526e3eb5753026819d152066fe085fd270de0dcced7a9397dcac2d6/opentelemetry_instrumentation_psycopg-0.58b0.tar.gz", hash = "sha256:b4301d74bd990bba1f0a43b00a4a02960987f23cf7933ec1df29246fda79d27a", size = 10680, upload-time = "2025-09-11T11:42:43.579Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/6e/3e/c03380e90d4187880473fc126b60b4642e03c6c3acbf07c72b15b778336c/opentelemetry_instrumentation_psycopg-0.58b0-py3-none-any.whl", hash = "sha256:c7eaaaec7941743ab70a17125ae7dbab974f9ed55594c1e467b8691ecd7e50f1", size = 11043, upload-time = "2025-09-11T11:41:41.082Z" },
+]
+
+[[package]]
+name = "opentelemetry-instrumentation-sqlite3"
+version = "0.58b0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "opentelemetry-api" },
+    { name = "opentelemetry-instrumentation" },
+    { name = "opentelemetry-instrumentation-dbapi" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ae/99/797b3ed47fbc7c384ef3cb9ede13d03282d60a0b8fdf092f41ebdb85d75d/opentelemetry_instrumentation_sqlite3-0.58b0.tar.gz", hash = "sha256:b192fc3cd2fbc0d7dfbf47a1324e5e85e73405e94c7929973d48e7233b1e1ff0", size = 7923, upload-time = "2025-09-11T11:42:52.758Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f7/0a/49d33173c016bf5464b13af3246744c9a77b3621381e66bba8d9d6435a89/opentelemetry_instrumentation_sqlite3-0.58b0-py3-none-any.whl", hash = "sha256:daa3d3e19b0279df27d8bd4416ee2f1f1f46e7481c91d169f3f507565ddaed2c", size = 9339, upload-time = "2025-09-11T11:41:55.003Z" },
 ]
 
 [[package]]
