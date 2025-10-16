@@ -11,9 +11,9 @@ dependencies = [
     "django-push-notifications[wp]>=3.2.1",
     "django-tailwind[reload]>=4.2.0",
     "django-tasks>=0.8.1",
-    "honcho>=2.0.0",
-    "logfire[asgi,django,psycopg]>=4.12.0",
+    "logfire[asgi,django,psycopg,sqlite3]>=4.12.0",
     "pillow>=11.3.0",
+    "psycopg[binary]>=3.2.10",
     "pydantic-settings>=2.11.0",
     "whitenoise>=6.11.0",
 ]
@@ -28,4 +28,5 @@ dev = [
     "cookiecutter>=2.6.0", # needed for tailwind app
     "ruff>=0.13.0",
     "ty>=0.0.1a20",
+        "honcho>=2.0.0",
 ]
