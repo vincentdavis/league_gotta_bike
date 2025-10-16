@@ -19,10 +19,50 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `cd theme/static_src && npm install` - Install Node.js dependencies for Tailwind
 
 ### Testing and Code Quality
-- `pytest` - Run tests using pytest
+
+#### Test Organization
+**IMPORTANT**: All tests must be kept in the `tests/` directory at the project root, organized by app:
+- `tests/accounts/` - Tests for accounts app
+- `tests/organizations/` - Tests for organizations app
+- `tests/membership/` - Tests for membership app
+- etc.
+
+**Structure**:
+```
+tests/
+├── __init__.py
+├── accounts/
+│   ├── __init__.py
+│   ├── test_email.py
+│   ├── test_auth.py
+│   └── README.md
+├── organizations/
+│   ├── __init__.py
+│   └── test_models.py
+└── ...
+```
+
+**Best Practices**:
+- Keep app-level `tests.py` as a stub pointing to `tests/`
+- Name test files with `test_` prefix (e.g., `test_email.py`, `test_models.py`)
+- Group related tests in the same file
+- Add a README.md in test directories for complex test suites
+
+#### Running Tests
+- `pytest` - Run all tests using pytest
+- `python manage.py test` - Run all tests using Django's test runner
+- `python manage.py test tests.accounts` - Run all tests for accounts app
 - `ruff check --fix` - Run linting with ruff and automatically fix issues
 - `ruff format` - Format code with ruff
-- `python manage.py test` - Run Django's built-in test suite
+
+#### Email Testing
+**Test email delivery for verification and password reset:**
+- `python manage.py test tests.accounts.test_email` - Run all email tests
+- `python manage.py test tests.accounts.test_email.EmailVerificationTestCase` - Test account verification emails
+- `python manage.py test tests.accounts.test_email.PasswordResetTestCase` - Test password reset emails
+- Requires `TEST_TO_EMAIL` environment variable set in `.env`
+- Sends actual emails via Resend to the configured test address
+- See `tests/accounts/README.md` for detailed testing instructions
 
 ## Project Architecture
 

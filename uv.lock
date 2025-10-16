@@ -745,6 +745,7 @@ dependencies = [
     { name = "pillow" },
     { name = "psycopg", extra = ["binary"] },
     { name = "pydantic-settings" },
+    { name = "resend" },
     { name = "whitenoise" },
 ]
 
@@ -774,6 +775,7 @@ requires-dist = [
     { name = "pillow", specifier = ">=11.3.0" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2.10" },
     { name = "pydantic-settings", specifier = ">=2.11.0" },
+    { name = "resend", specifier = ">=2.17.0" },
     { name = "whitenoise", specifier = ">=6.11.0" },
 ]
 
@@ -1512,6 +1514,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/c9/74/b3ff8e6c8446842c3f5c837e9c3dfcfe2018ea6ecef224c710c85ef728f4/requests-2.32.5.tar.gz", hash = "sha256:dbba0bac56e100853db0ea71b82b4dfd5fe2bf6d3754a8893c3af500cec7d7cf", size = 134517, upload-time = "2025-08-18T20:46:02.573Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/1e/db/4254e3eabe8020b458f1a747140d32277ec7a271daf1d235b70dc0b4e6e3/requests-2.32.5-py3-none-any.whl", hash = "sha256:2462f94637a34fd532264295e186976db0f5d453d1cdd31473c85a6a161affb6", size = 64738, upload-time = "2025-08-18T20:46:00.542Z" },
+]
+
+[[package]]
+name = "resend"
+version = "2.17.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "requests" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/1d/29/86a2fa190b934f4535cd36760debea2b005a9f481dfda7e76eb27e5b0f84/resend-2.17.0.tar.gz", hash = "sha256:90c8adbe92bfc14c9dfbe0bbe68cee14bd8813fdd568f36ae71df7a8946bbd4a", size = 16964, upload-time = "2025-10-14T23:38:59.698Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/63/65/417c754c0284f545e298e35b5f4fa70940905f5348534bf711792696c17b/resend-2.17.0-py2.py3-none-any.whl", hash = "sha256:9e27bdbc5c403d3735552cc0a1c8143877407b5d07fa4cd36fbea689c10d7793", size = 25611, upload-time = "2025-10-14T23:38:58.536Z" },
 ]
 
 [[package]]

@@ -41,6 +41,9 @@ class Settings(BaseSettings):
     # Logging
     LOGFIRE_TOKEN: str = ""
 
+    # Testing
+    TEST_TO_EMAIL: str = ""
+
     @field_validator("ALLOWED_HOSTS", mode="after")
     @classmethod
     def parse_allowed_hosts(cls, v: str) -> list[str]:
