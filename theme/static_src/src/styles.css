@@ -9,3 +9,14 @@
   * the scope of this path.
   */
 @source "../../../**/*.{html,py,js}";
+
+/* DaisyUI Theme Configuration */
+@theme {
+  --color-primary: #0ea5e9;
+  --color-primary-content: #ffffff;
+}
+
+/* Custom styles for better navbar contrast */
+.navbar-link {
+  @apply text-gray-700 hover:text-primary hover:bg-gray-50;
+}

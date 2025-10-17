@@ -3,6 +3,8 @@ from datetime import date
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
 from phonenumber_field.modelfields import PhoneNumberField
 
 
@@ -39,6 +41,12 @@ class User(AbstractUser):
     phone_number = PhoneNumberField(
         blank=True,
         help_text="Contact phone number (international format supported, e.g., +1 555-555-5555)"
+    )
+
+    # Phone verification status
+    phone_verified = models.BooleanField(
+        default=False,
+        help_text="Whether the phone number has been verified via SMS"
     )
 
     # Optional date of birth field with age validation
@@ -96,3 +104,20 @@ class User(AbstractUser):
         """
         age = self.racing_age()
         return age < 16 if age > 0 else False
+
+
+@receiver(pre_save, sender=User)
+def unverify_on_phone_change(sender, instance, **kwargs):
+    """Mark phone as unverified if the phone number changes.
+
+    This signal handler detects when a user changes their phone number
+    and automatically sets phone_verified to False to require re-verification.
+    """
+    if instance.pk:  # Only for existing users (not new users)
+        try:
+            old_user = User.objects.get(pk=instance.pk)
+            # If phone number changed, mark as unverified
+            if old_user.phone_number != instance.phone_number:
+                instance.phone_verified = False
+        except User.DoesNotExist:
+            pass  # New user, nothing to compare

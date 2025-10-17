@@ -45,6 +45,11 @@ class Settings(BaseSettings):
     # Testing
     TEST_TO_EMAIL: str = ""
 
+    # Twilio SMS Verification
+    TWILIO_ACCOUNT_SID: str = ""
+    TWILIO_AUTH_TOKEN: str = ""
+    TWILIO_VERIFY_SERVICE_SID: str = ""
+
     @field_validator("ALLOWED_HOSTS", mode="after")
     @classmethod
     def parse_allowed_hosts(cls, v: str) -> list[str]:

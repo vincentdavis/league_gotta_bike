@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(uv run:*)",
-      "Bash(python manage.py check:*)"
+      "Bash(python manage.py check:*)",
+      "Bash(python manage.py makemigrations:*)",
+      "Bash(python manage.py migrate:*)"
     ],
     "deny": [],
     "ask": []

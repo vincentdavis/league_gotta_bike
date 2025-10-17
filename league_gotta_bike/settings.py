@@ -243,6 +243,12 @@ else:
 
 DEFAULT_FROM_EMAIL = env_settings.DEFAULT_FROM_EMAIL
 
+# Twilio SMS Verification Configuration
+# https://www.twilio.com/docs/verify/api
+TWILIO_ACCOUNT_SID = env_settings.TWILIO_ACCOUNT_SID
+TWILIO_AUTH_TOKEN = env_settings.TWILIO_AUTH_TOKEN
+TWILIO_VERIFY_SERVICE_SID = env_settings.TWILIO_VERIFY_SERVICE_SID
+
 # Django-allauth Configuration
 # https://docs.allauth.org/
 
