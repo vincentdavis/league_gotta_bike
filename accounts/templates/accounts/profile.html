@@ -96,6 +96,32 @@
                                         <span class="label-text-alt">{{ form.phone_number.help_text }}</span>
                                     </label>
                                 {% endif %}
+
+                                <!-- Phone Verification Status -->
+                                {% if user.phone_number %}
+                                    <div class="mt-2">
+                                        {% if user.phone_verified %}
+                                            <span class="badge badge-success gap-2">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                Verified
+                                            </span>
+                                        {% else %}
+                                            <div class="flex items-center gap-2">
+                                                <span class="badge badge-warning gap-2">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                                    </svg>
+                                                    Not Verified
+                                                </span>
+                                                <button type="button" class="btn btn-sm btn-primary" onclick="verifyPhoneModal.showModal()">
+                                                    Verify Phone
+                                                </button>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
                             </div>
 
                             <!-- Date of Birth -->
@@ -204,4 +230,147 @@
         </div>
     </div>
 </div>
+
+<!-- Phone Verification Modal -->
+<dialog id="verifyPhoneModal" class="modal">
+    <div class="modal-box">
+        <h3 class="font-bold text-lg mb-4">Verify Phone Number</h3>
+
+        <!-- Step 1: Send Code -->
+        <div id="sendCodeStep">
+            <p class="py-4">We'll send a verification code to <strong>{{ user.phone_number }}</strong></p>
+            <div class="modal-action">
+                <button type="button" class="btn" onclick="verifyPhoneModal.close()">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="sendVerificationCode()">Send Code</button>
+            </div>
+        </div>
+
+        <!-- Step 2: Enter Code -->
+        <div id="enterCodeStep" style="display: none;">
+            <p class="py-2 text-sm text-gray-600">Enter the 6-digit code sent to {{ user.phone_number }}</p>
+            <form id="verifyCodeForm" method="post" action="{% url 'accounts:verify_phone_confirm' %}">
+                {% csrf_token %}
+                <div class="form-control">
+                    <input type="text" name="code" id="verificationCode" maxlength="6" pattern="[0-9]{6}"
+                           class="input input-bordered text-center text-2xl tracking-widest font-mono"
+                           placeholder="000000" required autofocus>
+                    <label class="label">
+                        <span class="label-text-alt" id="errorMessage"></span>
+                    </label>
+                </div>
+                <div class="modal-action">
+                    <button type="button" class="btn btn-ghost" onclick="resendCode()">Resend Code</button>
+                    <button type="submit" class="btn btn-primary">Verify</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingStep" style="display: none;" class="py-8 text-center">
+            <span class="loading loading-spinner loading-lg"></span>
+            <p class="mt-2">Processing...</p>
+        </div>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+        <button>close</button>
+    </form>
+</dialog>
+
+<script>
+function sendVerificationCode() {
+    const modal = document.getElementById('verifyPhoneModal');
+    const sendStep = document.getElementById('sendCodeStep');
+    const enterStep = document.getElementById('enterCodeStep');
+    const loadingStep = document.getElementById('loadingStep');
+    const errorMsg = document.getElementById('errorMessage');
+
+    // Show loading
+    sendStep.style.display = 'none';
+    loadingStep.style.display = 'block';
+
+    fetch('{% url "accounts:verify_phone_send" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        loadingStep.style.display = 'none';
+        if (data.success) {
+            enterStep.style.display = 'block';
+            document.getElementById('verificationCode').focus();
+        } else {
+            sendStep.style.display = 'block';
+            errorMsg.textContent = data.message || 'Failed to send code';
+            errorMsg.classList.add('text-error');
+        }
+    })
+    .catch(error => {
+        loadingStep.style.display = 'none';
+        sendStep.style.display = 'block';
+        errorMsg.textContent = 'Network error. Please try again.';
+        errorMsg.classList.add('text-error');
+    });
+}
+
+function resendCode() {
+    const enterStep = document.getElementById('enterCodeStep');
+    const sendStep = document.getElementById('sendCodeStep');
+    enterStep.style.display = 'none';
+    sendStep.style.display = 'block';
+}
+
+// Handle form submission
+document.getElementById('verifyCodeForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const loadingStep = document.getElementById('loadingStep');
+    const enterStep = document.getElementById('enterCodeStep');
+    const errorMsg = document.getElementById('errorMessage');
+
+    enterStep.style.display = 'none';
+    loadingStep.style.display = 'block';
+
+    const formData = new FormData(this);
+
+    fetch(this.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Success - reload page to show verified status
+            window.location.reload();
+        } else {
+            // Show error
+            loadingStep.style.display = 'none';
+            enterStep.style.display = 'block';
+            errorMsg.textContent = data.message || 'Invalid code';
+            errorMsg.classList.add('text-error');
+            document.getElementById('verificationCode').value = '';
+            document.getElementById('verificationCode').focus();
+        }
+    })
+    .catch(error => {
+        loadingStep.style.display = 'none';
+        enterStep.style.display = 'block';
+        errorMsg.textContent = 'Network error. Please try again.';
+        errorMsg.classList.add('text-error');
+    });
+});
+
+// Reset modal when closed
+document.getElementById('verifyPhoneModal').addEventListener('close', function() {
+    document.getElementById('sendCodeStep').style.display = 'block';
+    document.getElementById('enterCodeStep').style.display = 'none';
+    document.getElementById('loadingStep').style.display = 'none';
+    document.getElementById('errorMessage').textContent = '';
+    document.getElementById('verificationCode').value = '';
+});
+</script>
 {% endblock %}

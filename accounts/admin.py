@@ -8,14 +8,14 @@ class UserAdmin(BaseUserAdmin):
     """Custom User admin configuration"""
 
     # Fields to display in the user list
-    list_display = ['username', 'email', 'first_name', 'last_name', 'phone_number', 'dob', 'is_staff', 'is_active']
-    list_filter = ['is_staff', 'is_superuser', 'is_active', 'groups']
+    list_display = ['username', 'email', 'first_name', 'last_name', 'phone_number', 'phone_verified', 'dob', 'is_staff', 'is_active']
+    list_filter = ['is_staff', 'is_superuser', 'is_active', 'phone_verified', 'groups']
     search_fields = ['username', 'first_name', 'last_name', 'email', 'phone_number']
 
     # Fields to display on the user detail page
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
-        ('Personal info', {'fields': ('first_name', 'last_name', 'email', 'phone_number', 'dob')}),
+        ('Personal info', {'fields': ('first_name', 'last_name', 'email', 'phone_number', 'phone_verified', 'dob')}),
         ('Permissions', {
             'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
         }),
