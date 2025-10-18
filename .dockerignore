@@ -1,0 +1,59 @@
+# Environment files - Railway will provide these
+.env
+.env.*
+!.env.example
+
+# Git files
+.git
+.gitignore
+.gitattributes
+
+# Python cache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info
+dist
+build
+.pytest_cache
+.ruff_cache
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Database files (should use DATABASE_URL in production)
+*.sqlite3
+db.sqlite3
+
+# Media files (should use object storage in production)
+media/
+
+# Development files
+Procfile.tailwind
+*.md
+!README.md
+
+# Node modules (will be installed during build)
+node_modules/
+
+# Test files
+.coverage
+htmlcov/
+.tox/
