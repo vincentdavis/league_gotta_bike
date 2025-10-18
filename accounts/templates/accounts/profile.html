@@ -339,6 +339,7 @@ document.getElementById('verifyCodeForm').addEventListener('submit', function(e)
         body: formData,
         headers: {
             'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+            'X-Requested-With': 'XMLHttpRequest',
         },
     })
     .then(response => response.json())

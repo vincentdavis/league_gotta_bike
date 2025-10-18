@@ -88,6 +88,19 @@
                     {% endif %}
                 </form>
 
+                {% if MFA_PASSKEY_SIGNUP_ENABLED %}
+                <div class="mt-4 p-4 bg-info/10 rounded-lg">
+                    <div class="flex items-start gap-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-info flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div class="text-sm text-info-content">
+                            <strong>Passkey Support:</strong> After creating your account, you can add passkeys (fingerprint, Face ID, security key) for faster, more secure sign-in from your account settings.
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
                 <div class="divider">OR</div>
 
                 <div class="text-center">

@@ -44,11 +44,13 @@ class Settings(BaseSettings):
 
     # Testing
     TEST_TO_EMAIL: str = ""
+    TEST_TO_PHONE_NUMBER: str = ""  # Phone number for SMS testing (E.164 format, e.g., +15555555555)
 
-    # Twilio SMS Verification
-    TWILIO_ACCOUNT_SID: str = ""
-    TWILIO_AUTH_TOKEN: str = ""
-    TWILIO_VERIFY_SERVICE_SID: str = ""
+    # Sinch SMS Verification
+    SINCH_SMS_AUTH_TOKEN: str = ""
+    SINCH_PLAN_ID: str = ""
+    SINCH_URL: str = "https://sms.api.sinch.com/xms/v1/"
+    SINCH_FROM_NUMBER: str = ""  # Your Sinch phone number
 
     @field_validator("ALLOWED_HOSTS", mode="after")
     @classmethod

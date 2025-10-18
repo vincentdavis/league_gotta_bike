@@ -130,6 +130,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "league_gotta_bike.context_processors.mfa_settings",
             ],
         },
     },
@@ -243,11 +244,12 @@ else:
 
 DEFAULT_FROM_EMAIL = env_settings.DEFAULT_FROM_EMAIL
 
-# Twilio SMS Verification Configuration
-# https://www.twilio.com/docs/verify/api
-TWILIO_ACCOUNT_SID = env_settings.TWILIO_ACCOUNT_SID
-TWILIO_AUTH_TOKEN = env_settings.TWILIO_AUTH_TOKEN
-TWILIO_VERIFY_SERVICE_SID = env_settings.TWILIO_VERIFY_SERVICE_SID
+# Sinch SMS Verification Configuration
+# https://developers.sinch.com/docs/sms/api-reference/
+SINCH_SMS_AUTH_TOKEN = env_settings.SINCH_SMS_AUTH_TOKEN
+SINCH_PLAN_ID = env_settings.SINCH_PLAN_ID
+SINCH_URL = env_settings.SINCH_URL
+SINCH_FROM_NUMBER = env_settings.SINCH_FROM_NUMBER
 
 # Django-allauth Configuration
 # https://docs.allauth.org/
