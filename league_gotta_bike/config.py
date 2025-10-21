@@ -57,6 +57,15 @@ class Settings(BaseSettings):
     DJANGO_SUPERUSER_EMAIL: str = ""
     DJANGO_SUPERUSER_PASSWORD: str = ""
 
+    # Cloudflare R2 Object Storage (S3-compatible)
+    USE_S3: bool = False
+    AWS_ACCESS_KEY_ID: str = ""
+    AWS_SECRET_ACCESS_KEY: str = ""
+    AWS_STORAGE_BUCKET_NAME: str = ""
+    AWS_S3_ENDPOINT_URL: str = ""
+    AWS_S3_REGION_NAME: str = "auto"
+    AWS_S3_CUSTOM_DOMAIN: str = ""
+
     @field_validator("ALLOWED_HOSTS", mode="after")
     @classmethod
     def parse_allowed_hosts(cls, v: str) -> list[str]:

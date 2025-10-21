@@ -87,6 +87,10 @@ ADDON_APPS = [
 if DEBUG:
     ADDON_APPS += ["debug_toolbar", "django_browser_reload", "reset_migrations"]
 
+# Add django-storages if using R2
+if env_settings.USE_S3:
+    ADDON_APPS.append("storages")
+
 # Daphne must be listed before django.contrib.staticfiles
 INSTALLED_APPS = ["daphne"] + DEFAULT_APPS + LOCAL_APPS + ADDON_APPS
 
@@ -206,20 +210,56 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # WhiteNoise Configuration
 # http://whitenoise.evans.io/
-STORAGES = {
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-    },
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
-}
+# Media Storage Configuration
+# Use Cloudflare R2 for production, local filesystem for development
+# https://django-storages.readthedocs.io/
 
-# Media files (User uploaded content)
-# https://docs.djangoproject.com/en/5.2/topics/files/
+if env_settings.USE_S3:
+    # Cloudflare R2 Storage Configuration (S3-compatible)
+    AWS_ACCESS_KEY_ID = env_settings.AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY = env_settings.AWS_SECRET_ACCESS_KEY
+    AWS_STORAGE_BUCKET_NAME = env_settings.AWS_STORAGE_BUCKET_NAME
+    AWS_S3_ENDPOINT_URL = env_settings.AWS_S3_ENDPOINT_URL
+    AWS_S3_REGION_NAME = env_settings.AWS_S3_REGION_NAME
+    AWS_S3_CUSTOM_DOMAIN = env_settings.AWS_S3_CUSTOM_DOMAIN
 
-MEDIA_URL = "media/"
-MEDIA_ROOT = BASE_DIR / "media"
+    # File storage settings
+    AWS_DEFAULT_ACL = "public-read"  # Make uploaded files publicly accessible
+    AWS_S3_OBJECT_PARAMETERS = {
+        "CacheControl": "max-age=86400",  # Cache for 1 day
+    }
+    AWS_QUERYSTRING_AUTH = False  # Don't add auth query params to URLs
+    AWS_S3_FILE_OVERWRITE = False  # Don't overwrite files with same name
+
+    # Use R2 for media files
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
+
+    # Media URL - use custom domain if configured, otherwise use R2 endpoint
+    if AWS_S3_CUSTOM_DOMAIN:
+        MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
+    else:
+        MEDIA_URL = f"{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/"
+else:
+    # Local filesystem storage for development
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
+
+    # Media files (User uploaded content) - Local storage
+    MEDIA_URL = "media/"
+    MEDIA_ROOT = BASE_DIR / "media"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
