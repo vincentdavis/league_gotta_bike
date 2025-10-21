@@ -216,9 +216,11 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 if env_settings.USE_S3:
     # Cloudflare R2 Storage Configuration (S3-compatible)
-    import logging
-    logger = logging.getLogger(__name__)
-    logger.info(f"R2 Storage enabled: {env_settings.AWS_STORAGE_BUCKET_NAME}")
+    logfire.info(
+        "R2 Storage enabled",
+        bucket=env_settings.AWS_STORAGE_BUCKET_NAME,
+        endpoint=env_settings.AWS_S3_ENDPOINT_URL,
+    )
 
     AWS_ACCESS_KEY_ID = env_settings.AWS_ACCESS_KEY_ID
     AWS_SECRET_ACCESS_KEY = env_settings.AWS_SECRET_ACCESS_KEY
@@ -366,20 +368,23 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "verbose",
         },
+        "logfire": {
+            "class": "logfire.LogfireLoggingHandler",
+        },
     },
     "loggers": {
         "accounts": {
-            "handlers": ["console"],
+            "handlers": ["console", "logfire"],
             "level": "INFO",
             "propagate": False,
         },
         "allauth": {
-            "handlers": ["console"],
+            "handlers": ["console", "logfire"],
             "level": "INFO",
             "propagate": False,
         },
         "apps.organizations": {
-            "handlers": ["console"],
+            "handlers": ["console", "logfire"],
             "level": "INFO",
             "propagate": False,
         },

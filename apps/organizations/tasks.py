@@ -14,10 +14,8 @@ Example usage:
     send_welcome_email.using('high_priority').enqueue(user_id=1, organization_id=5)
 """
 
-import logging
+import logfire
 from django_tasks import task
-
-logger = logging.getLogger(__name__)
 
 
 @task()
@@ -37,30 +35,46 @@ def send_welcome_email(user_id: int, organization_id: int) -> dict:
 
     User = get_user_model()
 
-    try:
-        user = User.objects.get(id=user_id)
-        organization = Organization.objects.get(id=organization_id)
+    with logfire.span(
+        "send_welcome_email_task",
+        user_id=user_id,
+        organization_id=organization_id,
+    ):
+        try:
+            user = User.objects.get(id=user_id)
+            organization = Organization.objects.get(id=organization_id)
 
-        logger.info(f"Sending welcome email to {user.email} for {organization.name}")
+            logfire.info(
+                "Preparing welcome email",
+                user_email=user.email,
+                user_id=user_id,
+                organization_name=organization.name,
+                organization_id=organization_id,
+            )
 
-        # TODO: Implement actual email sending
-        # from django.core.mail import send_mail
-        # send_mail(
-        #     subject=f"Welcome to {organization.name}",
-        #     message=f"Welcome {user.username}! You've joined {organization.name}.",
-        #     from_email='noreply@leaguegottabike.com',
-        #     recipient_list=[user.email],
-        # )
+            # TODO: Implement actual email sending
+            # from django.core.mail import send_mail
+            # send_mail(
+            #     subject=f"Welcome to {organization.name}",
+            #     message=f"Welcome {user.username}! You've joined {organization.name}.",
+            #     from_email='noreply@leaguegottabike.com',
+            #     recipient_list=[user.email],
+            # )
 
-        return {
-            'status': 'success',
-            'user': user.username,
-            'organization': organization.name,
-        }
+            return {
+                'status': 'success',
+                'user': user.username,
+                'organization': organization.name,
+            }
 
-    except Exception as e:
-        logger.error(f"Failed to send welcome email: {str(e)}")
-        raise
+        except Exception as e:
+            logfire.error(
+                "Failed to send welcome email",
+                error=str(e),
+                user_id=user_id,
+                organization_id=organization_id,
+            )
+            raise
 
 
 @task(priority=10, queue_name='high_priority')
@@ -79,22 +93,37 @@ def send_urgent_notification(user_id: int, message: str) -> dict:
 
     User = get_user_model()
 
-    try:
-        user = User.objects.get(id=user_id)
+    with logfire.span(
+        "send_urgent_notification_task",
+        user_id=user_id,
+        priority="high",
+    ):
+        try:
+            user = User.objects.get(id=user_id)
 
-        logger.info(f"Sending urgent notification to {user.email}: {message}")
+            logfire.info(
+                "Sending urgent notification",
+                user_email=user.email,
+                user_id=user_id,
+                message=message,
+            )
 
-        # TODO: Implement notification sending (email, push, SMS, etc.)
+            # TODO: Implement notification sending (email, push, SMS, etc.)
 
-        return {
-            'status': 'success',
-            'user': user.username,
-            'message': message,
-        }
+            return {
+                'status': 'success',
+                'user': user.username,
+                'message': message,
+            }
 
-    except Exception as e:
-        logger.error(f"Failed to send urgent notification: {str(e)}")
-        raise
+        except Exception as e:
+            logfire.error(
+                "Failed to send urgent notification",
+                error=str(e),
+                user_id=user_id,
+                message=message,
+            )
+            raise
 
 
 @task(queue_name='low_priority')
@@ -107,14 +136,15 @@ def cleanup_old_data() -> dict:
     Returns:
         dict with cleanup statistics
     """
-    logger.info("Starting data cleanup task")
+    with logfire.span("cleanup_old_data_task", priority="low"):
+        logfire.info("Starting data cleanup task")
 
-    # TODO: Implement cleanup logic
-    # - Remove expired invitations
-    # - Archive old events
-    # - Clean up orphaned records
+        # TODO: Implement cleanup logic
+        # - Remove expired invitations
+        # - Archive old events
+        # - Clean up orphaned records
 
-    return {
-        'status': 'success',
-        'records_cleaned': 0,
-    }
+        return {
+            'status': 'success',
+            'records_cleaned': 0,
+        }

@@ -1,6 +1,6 @@
-import logging
 import random
 
+import logfire
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -10,8 +10,6 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import DetailView, ListView, CreateView, UpdateView, DeleteView, TemplateView
 from django.views import View
-
-logger = logging.getLogger(__name__)
 
 from apps.membership.models import Membership
 
@@ -433,12 +431,21 @@ class OrganizationEditView(OrgAdminRequiredMixin, UpdateView):
 
     def form_invalid(self, form):
         """Handle invalid form."""
-        logger.error(f"Organization edit form validation failed: {form.errors}")
+        logfire.error(
+            "Organization edit form validation failed",
+            form_errors=form.errors.as_json(),
+            organization_id=self.object.id,
+            organization_name=self.object.name,
+        )
 
         context = self.get_context_data()
         profile_form = context.get('profile_form')
         if profile_form and not profile_form.is_valid():
-            logger.error(f"Profile form validation failed: {profile_form.errors}")
+            logfire.error(
+                "Profile form validation failed",
+                profile_errors=profile_form.errors.as_json(),
+                organization_type=self.object.type,
+            )
 
         return super().form_invalid(form)
 

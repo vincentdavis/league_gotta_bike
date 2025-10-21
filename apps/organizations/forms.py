@@ -1,13 +1,9 @@
 """Forms for organization management."""
 
-import logging
-
 from django import forms
 from django.core.exceptions import ValidationError
 
 from .models import Organization, LeagueProfile, TeamProfile, SquadProfile
-
-logger = logging.getLogger(__name__)
 
 
 class OrganizationBaseForm(forms.ModelForm):
