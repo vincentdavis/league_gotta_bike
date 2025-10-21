@@ -371,16 +371,19 @@ class OrganizationEditView(OrgAdminRequiredMixin, UpdateView):
             if self.object.type == Organization.LEAGUE:
                 context['profile_form'] = LeagueProfileForm(
                     self.request.POST,
+                    self.request.FILES,
                     instance=getattr(self.object, 'league_profile', None)
                 )
             elif self.object.type == Organization.TEAM:
                 context['profile_form'] = TeamProfileForm(
                     self.request.POST,
+                    self.request.FILES,
                     instance=getattr(self.object, 'team_profile', None)
                 )
             elif self.object.type == Organization.SQUAD:
                 context['profile_form'] = SquadProfileForm(
                     self.request.POST,
+                    self.request.FILES,
                     instance=getattr(self.object, 'squad_profile', None)
                 )
         else:
