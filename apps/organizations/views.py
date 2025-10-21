@@ -364,6 +364,23 @@ class OrganizationEditView(OrgAdminRequiredMixin, UpdateView):
     template_name = 'organizations/organization_edit.html'
     slug_url_kwarg = 'slug'
 
+    def get_form_kwargs(self):
+        """Get form kwargs with debug logging."""
+        kwargs = super().get_form_kwargs()
+        print(f"🔍 get_form_kwargs called")
+        print(f"🔍 FILES in kwargs: {kwargs.get('files')}")
+        print(f"🔍 Instance: {kwargs.get('instance')}")
+        return kwargs
+
+    def get_form(self, form_class=None):
+        """Get form with debug logging."""
+        form = super().get_form(form_class)
+        print(f"📋 get_form called")
+        print(f"📋 Form class: {form.__class__.__name__}")
+        print(f"📋 Form has logo field: {'logo' in form.fields}")
+        print(f"📋 Form.files: {form.files}")
+        return form
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Add profile form based on organization type
