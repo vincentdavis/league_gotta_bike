@@ -47,6 +47,52 @@
         {% endif %}
     </div>
 
+    <!-- My Organizations Section (for authenticated users) -->
+    {% if user.is_authenticated and user_leagues_teams %}
+    <div class="mb-10">
+        <h3 class="text-2xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            My Organizations
+        </h3>
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {% for membership in user_leagues_teams %}
+            <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow duration-300 border-l-4 {% if membership.permission_level == 'owner' %}border-primary{% elif membership.permission_level == 'admin' %}border-success{% elif membership.permission_level == 'manager' %}border-info{% else %}border-gray-300{% endif %}">
+                <div class="p-6">
+                    <div class="flex items-start justify-between mb-3">
+                        <img src="{% if membership.organization.logo %}{{ membership.organization.logo.url }}{% else %}{% static 'images/Default_League.png' %}{% endif %}" alt="{{ membership.organization.name }}" class="h-16 w-16 rounded-full object-cover">
+                        <span class="badge {% if membership.permission_level == 'owner' %}badge-primary{% elif membership.permission_level == 'admin' %}badge-success{% elif membership.permission_level == 'manager' %}badge-info{% else %}badge-ghost{% endif %}">
+                            {{ membership.get_permission_level_display }}
+                        </span>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                        <a href="{{ membership.organization.get_absolute_url }}" class="hover:text-blue-600">
+                            {{ membership.organization.name }}
+                        </a>
+                    </h3>
+                    <p class="text-sm text-gray-500 mb-2">{{ membership.organization.get_type_display }}</p>
+                    {% if membership.organization.description %}
+                    <p class="text-gray-600 text-sm line-clamp-2">{{ membership.organization.description }}</p>
+                    {% endif %}
+
+                    <div class="mt-4 flex items-center gap-2">
+                        <a href="{{ membership.organization.get_absolute_url }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                            View Details →
+                        </a>
+                        {% if membership.permission_level == 'owner' or membership.permission_level == 'admin' %}
+                        <a href="{% url 'organizations:org_edit' slug=membership.organization.slug %}" class="text-primary hover:text-primary-focus text-sm font-medium ml-auto">
+                            Manage
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Leagues Section -->
     {% if leagues %}
     <div class="mb-10">

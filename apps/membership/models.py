@@ -146,13 +146,20 @@ class Membership(models.Model):
         return role_type in self.roles
 
     def get_roles_display(self):
-        """Get comma-separated list of role names from the JSON field."""
+        """Get comma-separated list of role names from MemberRole records."""
+        member_roles = self.member_roles.all()
+        if not member_roles:
+            return "No roles assigned"
+        return ", ".join([role.get_role_type_display() for role in member_roles])
+
+    def get_roles_display_json(self):
+        """Get comma-separated list of role names from the JSON field (legacy)."""
         if not self.roles:
             return "No roles assigned"
         role_dict = dict(self.ROLE_TYPE_CHOICES)
         return ", ".join([role_dict.get(role, role) for role in self.roles])
 
-    # Helper methods for working with MemberRole model (legacy)
+    # Helper methods for working with MemberRole model
 
     def get_roles(self):
         """Get all organizational roles for this membership."""
@@ -181,10 +188,10 @@ class MemberRole(models.Model):
     """
 
     # Role Types (identity/function)
+    ADMIN = "administrator"
     ATHLETE = "athlete"
     COACH = "coach"
-    PARENT = "parent"
-    GUARDIAN = "guardian"
+    PARENT_GUARDIAN = "parent/guardian"
     TEAM_CAPTAIN = "team_captain"
     MEDICAL_STAFF = "medical_staff"
     MECHANIC = "mechanic"
@@ -192,11 +199,11 @@ class MemberRole(models.Model):
     OFFICIAL = "official"
     SPECTATOR = "spectator"
 
-    ROLE_TYPE_CHOICES = [
+    ROLE_TYPE_CHOICES = [  # noqa: RUF012
+        (ADMIN, "Administrator"),
         (ATHLETE, "Athlete/Cyclist"),
         (COACH, "Coach"),
-        (PARENT, "Parent"),
-        (GUARDIAN, "Guardian"),
+        (PARENT_GUARDIAN, "Parent/Guardian"),
         (TEAM_CAPTAIN, "Team Captain"),
         (MEDICAL_STAFF, "Medical Staff"),
         (MECHANIC, "Mechanic"),

@@ -23,5 +23,6 @@ urlpatterns = [
 
     # Role management
     path('member/<int:membership_id>/role/', views.MembershipRoleUpdateView.as_view(), name='role_update'),
+    path('<slug:slug>/member/<int:membership_id>/roles/', views.MemberRoleManagementView.as_view(), name='member_roles'),
     path('member/<int:membership_id>/remove/', views.MembershipRemoveView.as_view(), name='member_remove'),
 ]

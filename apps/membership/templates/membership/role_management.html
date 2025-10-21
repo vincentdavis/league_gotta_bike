@@ -1,0 +1,107 @@
+{% extends "organizations/base.html" %}
+
+{% block title %}Manage Roles - {{ membership.user.get_full_name }} - League Gotta Bike{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-8">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Manage Organizational Roles</h1>
+        <p class="text-gray-600">Assign roles for {{ membership.user.get_full_name }} in {{ organization.name }}</p>
+    </div>
+
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <!-- Member Info -->
+            <div class="bg-base-200 rounded-lg p-4 mb-6">
+                <div class="flex items-center gap-4">
+                    <div class="avatar placeholder">
+                        <div class="bg-primary text-primary-content rounded-full w-16">
+                            <span class="text-xl">{{ membership.user.first_name.0|upper }}{{ membership.user.last_name.0|upper }}</span>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <h2 class="text-xl font-bold text-gray-900">{{ membership.user.get_full_name }}</h2>
+                        <p class="text-sm text-gray-600">{{ membership.get_permission_level_display }} in {{ organization.name }}</p>
+                        <p class="text-sm text-gray-500">Joined: {{ membership.join_date|date:"M d, Y" }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Information Alert -->
+            <div class="alert alert-info mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <div>
+                    <p class="font-medium">About Organizational Roles</p>
+                    <p class="text-sm">Roles are descriptive and indicate what type of participant someone is (Athlete, Coach, Parent, etc.). Roles do NOT grant permissions - use permission levels for that.</p>
+                </div>
+            </div>
+
+            <!-- Role Management Form -->
+            <form method="post">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-error mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                        {% for error in form.non_field_errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Roles Field -->
+                <div class="form-control mb-6">
+                    <label class="label">
+                        <span class="label-text font-medium text-lg">{{ form.roles.label }}</span>
+                    </label>
+                    {% if form.roles.help_text %}
+                    <label class="label">
+                        <span class="label-text-alt text-gray-500 mb-3">{{ form.roles.help_text }}</span>
+                    </label>
+                    {% endif %}
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {% for choice in form.roles %}
+                        <div class="form-control">
+                            <label class="label cursor-pointer justify-start gap-3 p-3 border border-gray-200 rounded-lg hover:bg-base-200">
+                                {{ choice.tag }}
+                                <span class="label-text">{{ choice.choice_label }}</span>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    {% if form.roles.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ form.roles.errors.0 }}</span>
+                    </label>
+                    {% endif %}
+                </div>
+
+                <!-- Form Actions -->
+                <div class="divider"></div>
+                <div class="flex justify-end gap-2">
+                    <a href="{{ organization.get_absolute_url }}" class="btn btn-ghost">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        Save Roles
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

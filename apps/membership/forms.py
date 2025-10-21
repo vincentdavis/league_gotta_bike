@@ -203,3 +203,29 @@ class MembershipRequestDecisionForm(forms.Form):
         label='Admin Note',
         help_text='Internal note (not visible to the requester)'
     )
+
+
+class MemberRoleManagementForm(forms.Form):
+    """Form for managing member organizational roles (many-to-many)."""
+
+    from .models import MemberRole
+
+    roles = forms.MultipleChoiceField(
+        choices=MemberRole.ROLE_TYPE_CHOICES,
+        required=False,
+        widget=forms.CheckboxSelectMultiple(attrs={
+            'class': 'checkbox checkbox-primary'
+        }),
+        label='Organizational Roles',
+        help_text='Select all roles that apply to this member. Roles are descriptive and do not grant permissions.'
+    )
+
+    def __init__(self, membership=None, *args, **kwargs):
+        """Initialize form with current membership roles."""
+        super().__init__(*args, **kwargs)
+        self.membership = membership
+
+        # Pre-select existing roles
+        if membership:
+            existing_role_types = [role.role_type for role in membership.member_roles.all()]
+            self.fields['roles'].initial = existing_role_types

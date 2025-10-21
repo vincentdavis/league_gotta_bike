@@ -159,17 +159,29 @@
             {% if members %}
             <div class="space-y-3">
                 {% for membership in members %}
-                <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                    <div>
-                        <p class="font-medium text-gray-900">{{ membership.user.username }}</p>
-                        <p class="text-sm text-gray-500">{{ membership.get_role_display }}</p>
+                <div class="p-3 border border-gray-200 rounded-lg">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <p class="font-medium text-gray-900">{{ membership.user.get_full_name }}</p>
+                            <p class="text-sm text-gray-500">Joined: {{ membership.join_date|date:"M d, Y" }}</p>
+                            <p class="text-sm text-gray-500">
+                                {{ membership.get_permission_level_display }}{% if membership.member_roles.exists %} • {{ membership.get_roles_display }}{% else %} • <span class="text-gray-400 italic">No role assigned</span>{% endif %}
+                            </p>
+                            {% if can_edit %}
+                            <div class="mt-2">
+                                <a href="{% url 'membership:member_roles' slug=team.slug membership_id=membership.id %}" class="text-xs text-blue-600 hover:text-blue-800">
+                                    {% if membership.member_roles.exists %}Edit roles{% else %}Assign role{% endif %}
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <span class="px-2 py-1 text-xs font-medium rounded-full
+                            {% if membership.status == 'active' %}bg-green-100 text-green-800
+                            {% elif membership.status == 'prospect' %}bg-yellow-100 text-yellow-800
+                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ membership.get_status_display }}
+                        </span>
                     </div>
-                    <span class="px-2 py-1 text-xs font-medium rounded-full
-                        {% if membership.status == 'active' %}bg-green-100 text-green-800
-                        {% elif membership.status == 'prospect' %}bg-yellow-100 text-yellow-800
-                        {% else %}bg-gray-100 text-gray-800{% endif %}">
-                        {{ membership.get_status_display }}
-                    </span>
                 </div>
                 {% endfor %}
             </div>
@@ -180,7 +192,7 @@
 
         <!-- Sub-Organizations (Squads, etc.) -->
         <div class="bg-white shadow rounded-lg p-6">
-            <h2 class="text-2xl font-bold text-gray-900 mb-4">Squads & Groups</h2>
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Clubs, Squads, Practice Groups</h2>
 
             {% if sub_orgs %}
             <div class="space-y-3">
@@ -199,7 +211,7 @@
                 {% endfor %}
             </div>
             {% else %}
-            <p class="text-gray-500">No squads or sub-groups yet.</p>
+            <p class="text-gray-500">No Clubs, Squads, Practice Groups yet</p>
             {% endif %}
         </div>
     </div>

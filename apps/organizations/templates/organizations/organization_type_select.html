@@ -40,51 +40,11 @@
                     Team
                 </h2>
                 <p class="text-gray-600">
-                    A racing team within a league. Teams can have multiple squads and track member performance.
+                    A racing team that can optionally belong to a league. Teams can have multiple squads, clubs, and practice groups.
                 </p>
                 <div class="card-actions justify-end mt-4">
                     <a href="{% url 'organizations:team_create' %}" class="btn btn-success">
                         Create Team
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Squad Card -->
-        <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
-            <div class="card-body">
-                <h2 class="card-title text-2xl">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                    Squad
-                </h2>
-                <p class="text-gray-600">
-                    Specialized sub-group within a team focused on specific disciplines (sprint, endurance, climbing, etc.).
-                </p>
-                <div class="card-actions justify-end mt-4">
-                    <a href="{% url 'organizations:squad_create' %}" class="btn btn-warning">
-                        Create Squad
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Club Card -->
-        <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
-            <div class="card-body">
-                <h2 class="card-title text-2xl">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                    Club
-                </h2>
-                <p class="text-gray-600">
-                    General sub-organization within a team for social groups, training clubs, or other purposes.
-                </p>
-                <div class="card-actions justify-end mt-4">
-                    <a href="{% url 'organizations:club_create' %}" class="btn btn-info">
-                        Create Club
                     </a>
                 </div>
             </div>

@@ -1,3 +1,5 @@
+import random
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -15,6 +17,7 @@ from .forms import (
     LeagueCreateForm, TeamCreateForm, SquadCreateForm, ClubCreateForm,
     OrganizationEditForm, LeagueProfileForm, TeamProfileForm, SquadProfileForm
 )
+from .mixins import UserNameRequiredMixin
 from .permissions import (
     OrgOwnerRequiredMixin, OrgAdminRequiredMixin,
     is_org_admin, get_user_membership
@@ -196,11 +199,30 @@ class LeagueListView(ListView):
                 Q(league_profile__sanctioning_body__icontains=search_query)
             )
 
-        return queryset.order_by('type', 'name')
+        # Convert to list and randomize order
+        orgs_list = list(queryset)
+        random.shuffle(orgs_list)
+        return orgs_list
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['search_query'] = self.request.GET.get('q', '')
+
+        # Get user's leagues and teams (if authenticated)
+        if self.request.user.is_authenticated:
+            user_memberships = Membership.objects.filter(
+                user=self.request.user,
+                status=Membership.ACTIVE
+            ).filter(
+                Q(organization__type=Organization.LEAGUE) |
+                Q(organization__type=Organization.TEAM)
+            ).select_related('organization').prefetch_related(
+                'organization__league_profile',
+                'organization__team_profile'
+            ).order_by('-join_date')
+            context['user_leagues_teams'] = user_memberships
+        else:
+            context['user_leagues_teams'] = []
 
         # Separate leagues and teams for display
         organizations = context['organizations']
@@ -217,7 +239,7 @@ class OrganizationTypeSelectView(LoginRequiredMixin, TemplateView):
     template_name = 'organizations/organization_type_select.html'
 
 
-class LeagueCreateView(LoginRequiredMixin, CreateView):
+class LeagueCreateView(UserNameRequiredMixin, LoginRequiredMixin, CreateView):
     """View for creating a new league."""
     model = Organization
     form_class = LeagueCreateForm
@@ -246,7 +268,7 @@ class LeagueCreateView(LoginRequiredMixin, CreateView):
         return context
 
 
-class TeamCreateView(LoginRequiredMixin, CreateView):
+class TeamCreateView(UserNameRequiredMixin, LoginRequiredMixin, CreateView):
     """View for creating a new team."""
     model = Organization
     form_class = TeamCreateForm
@@ -275,7 +297,7 @@ class TeamCreateView(LoginRequiredMixin, CreateView):
         return context
 
 
-class SquadCreateView(LoginRequiredMixin, CreateView):
+class SquadCreateView(UserNameRequiredMixin, LoginRequiredMixin, CreateView):
     """View for creating a new squad."""
     model = Organization
     form_class = SquadCreateForm
@@ -304,7 +326,7 @@ class SquadCreateView(LoginRequiredMixin, CreateView):
         return context
 
 
-class ClubCreateView(LoginRequiredMixin, CreateView):
+class ClubCreateView(UserNameRequiredMixin, LoginRequiredMixin, CreateView):
     """View for creating a new club."""
     model = Organization
     form_class = ClubCreateForm

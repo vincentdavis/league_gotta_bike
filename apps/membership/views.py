@@ -9,16 +9,17 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.views.generic.detail import SingleObjectMixin
 
 from apps.organizations.models import Organization
+from apps.organizations.mixins import UserNameRequiredMixin
 from apps.organizations.permissions import (
     OrgMemberManagerRequiredMixin, OrgMemberRequiredMixin,
     is_org_member, get_user_membership
 )
 
-from .models import Membership
+from .models import Membership, MemberRole
 from .forms import (
     MembershipInviteForm, MembershipPermissionUpdateForm,
     MembershipStatusUpdateForm, MembershipRequestForm,
-    MembershipRequestDecisionForm
+    MembershipRequestDecisionForm, MemberRoleManagementForm
 )
 
 
@@ -93,7 +94,7 @@ class MemberDetailView(OrgMemberRequiredMixin, DetailView):
 
 # Join Request Views
 
-class MembershipRequestView(LoginRequiredMixin, FormView):
+class MembershipRequestView(UserNameRequiredMixin, LoginRequiredMixin, FormView):
     """View for requesting to join an organization."""
     template_name = 'membership/request_join.html'
     form_class = MembershipRequestForm
@@ -344,6 +345,82 @@ class MembershipRoleUpdateView(OrgMemberManagerRequiredMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         context['organization'] = self.get_object().organization
         return context
+
+
+class MemberRoleManagementView(OrgMemberManagerRequiredMixin, FormView):
+    """View for managing member organizational roles."""
+    template_name = 'membership/role_management.html'
+    form_class = MemberRoleManagementForm
+
+    def get_membership(self):
+        """Get the membership object."""
+        return get_object_or_404(
+            Membership,
+            pk=self.kwargs['membership_id'],
+            organization__slug=self.kwargs['slug']
+        )
+
+    def get_organization(self):
+        """Get organization from membership."""
+        return self.get_membership().organization
+
+    def get_form_kwargs(self):
+        """Pass membership to form."""
+        kwargs = super().get_form_kwargs()
+        kwargs['membership'] = self.get_membership()
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        membership = self.get_membership()
+        context['membership'] = membership
+        context['organization'] = membership.organization
+        return context
+
+    def form_valid(self, form):
+        """Update member roles."""
+        membership = self.get_membership()
+        selected_roles = form.cleaned_data['roles']
+
+        # Debug logging
+        print(f"DEBUG: Selected roles from form: {selected_roles}")
+        print(f"DEBUG: Membership ID: {membership.id}")
+
+        with transaction.atomic():
+            # Get current roles
+            current_roles = set(role.role_type for role in membership.member_roles.all())
+            new_roles = set(selected_roles)
+
+            print(f"DEBUG: Current roles: {current_roles}")
+            print(f"DEBUG: New roles: {new_roles}")
+
+            # Roles to add
+            roles_to_add = new_roles - current_roles
+            print(f"DEBUG: Roles to add: {roles_to_add}")
+            for role_type in roles_to_add:
+                role = MemberRole.objects.create(
+                    membership=membership,
+                    role_type=role_type,
+                    is_primary=(membership.member_roles.count() == 0)  # First role is primary
+                )
+                print(f"DEBUG: Created MemberRole: {role.id} - {role.get_role_type_display()}")
+
+            # Roles to remove
+            roles_to_remove = current_roles - new_roles
+            print(f"DEBUG: Roles to remove: {roles_to_remove}")
+            if roles_to_remove:
+                deleted_count = membership.member_roles.filter(role_type__in=roles_to_remove).delete()[0]
+                print(f"DEBUG: Deleted {deleted_count} roles")
+
+        # Verify roles were saved
+        final_roles = membership.member_roles.all()
+        print(f"DEBUG: Final roles after save: {[r.get_role_type_display() for r in final_roles]}")
+
+        messages.success(
+            self.request,
+            f'Roles updated for {membership.user.get_full_name()}. Assigned roles: {membership.get_roles_display()}'
+        )
+        return redirect(membership.organization.get_absolute_url())
 
 
 class MembershipRemoveView(OrgMemberManagerRequiredMixin, DeleteView):
