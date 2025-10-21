@@ -1,9 +1,13 @@
 """Forms for organization management."""
 
+import logging
+
 from django import forms
 from django.core.exceptions import ValidationError
 
 from .models import Organization, LeagueProfile, TeamProfile, SquadProfile
+
+logger = logging.getLogger(__name__)
 
 
 class OrganizationBaseForm(forms.ModelForm):
@@ -227,23 +231,23 @@ class OrganizationEditForm(forms.ModelForm):
     """Form for editing basic organization details."""
 
     def __init__(self, *args, **kwargs):
-        print(f"🔧 OrganizationEditForm.__init__ called")
-        print(f"🔧 Number of args: {len(args)}")
+        logger.info("🔧 OrganizationEditForm.__init__ called")
+        logger.info(f"🔧 Number of args: {len(args)}")
         if len(args) > 0:
-            print(f"🔧 arg[0] (data): {type(args[0])}")
+            logger.info(f"🔧 arg[0] (data): {type(args[0])}")
         if len(args) > 1:
-            print(f"🔧 arg[1] (files): {args[1]}")
-        print(f"🔧 kwargs keys: {kwargs.keys()}")
+            logger.info(f"🔧 arg[1] (files): {args[1]}")
+        logger.info(f"🔧 kwargs keys: {kwargs.keys()}")
         super().__init__(*args, **kwargs)
 
     def save(self, commit=True):
-        print(f"💾 OrganizationEditForm.save() called")
-        print(f"💾 Logo in cleaned_data: {self.cleaned_data.get('logo')}")
-        print(f"💾 Logo type: {type(self.cleaned_data.get('logo'))}")
+        logger.info("💾 OrganizationEditForm.save() called")
+        logger.info(f"💾 Logo in cleaned_data: {self.cleaned_data.get('logo')}")
+        logger.info(f"💾 Logo type: {type(self.cleaned_data.get('logo'))}")
         instance = super().save(commit=commit)
-        print(f"💾 Instance logo after save: {instance.logo}")
+        logger.info(f"💾 Instance logo after save: {instance.logo}")
         if instance.logo:
-            print(f"💾 Logo name: {instance.logo.name}")
+            logger.info(f"💾 Logo name: {instance.logo.name}")
         return instance
 
     class Meta:

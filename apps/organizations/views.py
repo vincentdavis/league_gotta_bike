@@ -1,3 +1,4 @@
+import logging
 import random
 
 from django.contrib import messages
@@ -9,6 +10,8 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import DetailView, ListView, CreateView, UpdateView, DeleteView, TemplateView
 from django.views import View
+
+logger = logging.getLogger(__name__)
 
 from apps.membership.models import Membership
 
@@ -367,18 +370,18 @@ class OrganizationEditView(OrgAdminRequiredMixin, UpdateView):
     def get_form_kwargs(self):
         """Get form kwargs with debug logging."""
         kwargs = super().get_form_kwargs()
-        print(f"🔍 get_form_kwargs called")
-        print(f"🔍 FILES in kwargs: {kwargs.get('files')}")
-        print(f"🔍 Instance: {kwargs.get('instance')}")
+        logger.info("🔍 get_form_kwargs called")
+        logger.info(f"🔍 FILES in kwargs: {kwargs.get('files')}")
+        logger.info(f"🔍 Instance: {kwargs.get('instance')}")
         return kwargs
 
     def get_form(self, form_class=None):
         """Get form with debug logging."""
         form = super().get_form(form_class)
-        print(f"📋 get_form called")
-        print(f"📋 Form class: {form.__class__.__name__}")
-        print(f"📋 Form has logo field: {'logo' in form.fields}")
-        print(f"📋 Form.files: {form.files}")
+        logger.info("📋 get_form called")
+        logger.info(f"📋 Form class: {form.__class__.__name__}")
+        logger.info(f"📋 Form has logo field: {'logo' in form.fields}")
+        logger.info(f"📋 Form.files: {form.files}")
         return form
 
     def get_context_data(self, **kwargs):
@@ -421,33 +424,33 @@ class OrganizationEditView(OrgAdminRequiredMixin, UpdateView):
 
     def post(self, request, *args, **kwargs):
         """Handle POST request with debug logging."""
-        print(f"📝 OrganizationEditView POST called")
-        print(f"📝 Files in request: {request.FILES}")
-        print(f"📝 POST data keys: {request.POST.keys()}")
+        logger.info("📝 OrganizationEditView POST called")
+        logger.info(f"📝 Files in request: {request.FILES}")
+        logger.info(f"📝 POST data keys: {request.POST.keys()}")
         return super().post(request, *args, **kwargs)
 
     def form_valid(self, form):
         """Save both organization and profile."""
-        print(f"✅ form_valid() called - Form is VALID")
+        logger.info("✅ form_valid() called - Form is VALID")
 
         context = self.get_context_data()
         profile_form = context.get('profile_form')
 
         # Debug: Check if logo is in the request
-        print(f"DEBUG: Files in request: {self.request.FILES}")
-        print(f"DEBUG: Logo in form.cleaned_data: {form.cleaned_data.get('logo')}")
-        print(f"DEBUG: Logo field has changed: {'logo' in form.changed_data}")
+        logger.info(f"DEBUG: Files in request: {self.request.FILES}")
+        logger.info(f"DEBUG: Logo in form.cleaned_data: {form.cleaned_data.get('logo')}")
+        logger.info(f"DEBUG: Logo field has changed: {'logo' in form.changed_data}")
 
         with transaction.atomic():
             self.object = form.save()
 
             # Debug: Check logo after save
-            print(f"DEBUG: Organization logo after save: {self.object.logo}")
+            logger.info(f"DEBUG: Organization logo after save: {self.object.logo}")
             if self.object.logo:
-                print(f"DEBUG: Logo URL: {self.object.logo.url}")
-                print(f"DEBUG: Logo path: {self.object.logo.name}")
+                logger.info(f"DEBUG: Logo URL: {self.object.logo.url}")
+                logger.info(f"DEBUG: Logo path: {self.object.logo.name}")
             else:
-                print(f"DEBUG: No logo saved!")
+                logger.warning("DEBUG: No logo saved!")
 
             # Save profile if it exists
             if profile_form and profile_form.is_valid():
@@ -465,14 +468,14 @@ class OrganizationEditView(OrgAdminRequiredMixin, UpdateView):
 
     def form_invalid(self, form):
         """Handle invalid form with debug logging."""
-        print(f"❌ form_invalid() called - Form has ERRORS")
-        print(f"❌ Form errors: {form.errors}")
-        print(f"❌ Files in request: {self.request.FILES}")
+        logger.error("❌ form_invalid() called - Form has ERRORS")
+        logger.error(f"❌ Form errors: {form.errors}")
+        logger.error(f"❌ Files in request: {self.request.FILES}")
 
         context = self.get_context_data()
         profile_form = context.get('profile_form')
         if profile_form and not profile_form.is_valid():
-            print(f"❌ Profile form errors: {profile_form.errors}")
+            logger.error(f"❌ Profile form errors: {profile_form.errors}")
 
         return super().form_invalid(form)
 
