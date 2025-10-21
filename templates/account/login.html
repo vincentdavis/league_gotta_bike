@@ -1,0 +1,121 @@
+{% extends "organizations/base.html" %}
+{% load allauth account %}
+
+{% block title %}Sign In - League Gotta Bike{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-base-200 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full">
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title text-3xl font-bold text-center mb-6">Sign In</h2>
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div role="alert" class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} mb-4">
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post" action="{% url 'account_login' %}" class="space-y-4">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div role="alert" class="alert alert-error">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <div class="form-control">
+                        <label class="label" for="{{ form.login.id_for_label }}">
+                            <span class="label-text">{{ form.login.label }}</span>
+                        </label>
+                        <input
+                            type="text"
+                            name="{{ form.login.name }}"
+                            id="{{ form.login.id_for_label }}"
+                            class="input input-bordered w-full {% if form.login.errors %}input-error{% endif %}"
+                            placeholder="Enter your username"
+                            value="{{ form.login.value|default:'' }}"
+                            required
+                        >
+                        {% if form.login.errors %}
+                            <label class="label">
+                                <span class="label-text-alt text-error">{{ form.login.errors.0 }}</span>
+                            </label>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label" for="{{ form.password.id_for_label }}">
+                            <span class="label-text">{{ form.password.label }}</span>
+                        </label>
+                        <input
+                            type="password"
+                            name="{{ form.password.name }}"
+                            id="{{ form.password.id_for_label }}"
+                            class="input input-bordered w-full {% if form.password.errors %}input-error{% endif %}"
+                            placeholder="Enter your password"
+                            required
+                        >
+                        {% if form.password.errors %}
+                            <label class="label">
+                                <span class="label-text-alt text-error">{{ form.password.errors.0 }}</span>
+                            </label>
+                        {% endif %}
+                        <label class="label">
+                            <a href="{% url 'account_reset_password' %}" class="label-text-alt link link-hover">Forgot password?</a>
+                        </label>
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label cursor-pointer justify-start gap-3">
+                            <input
+                                type="checkbox"
+                                name="{{ form.remember.name }}"
+                                id="{{ form.remember.id_for_label }}"
+                                class="checkbox checkbox-primary"
+                                {% if form.remember.value %}checked{% endif %}
+                            >
+                            <span class="label-text">{{ form.remember.label }}</span>
+                        </label>
+                    </div>
+
+                    <div class="form-control mt-6">
+                        <button type="submit" class="btn btn-primary w-full">
+                            Sign In
+                        </button>
+                    </div>
+
+                    {% if redirect_field_value %}
+                        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
+                    {% endif %}
+                </form>
+
+                {% if MFA_PASSKEY_LOGIN_ENABLED %}
+                <div class="divider">OR</div>
+
+                <div class="form-control">
+                    <a href="{% url 'mfa_login_webauthn' %}" class="btn btn-outline w-full gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                        </svg>
+                        Sign in with Passkey
+                    </a>
+                </div>
+                {% endif %}
+
+                <div class="divider">{% if MFA_PASSKEY_LOGIN_ENABLED %}OR{% endif %}</div>
+
+                <div class="text-center">
+                    <p class="text-sm">
+                        Don't have an account?
+                        <a href="{% url 'account_signup' %}" class="link link-primary font-semibold">Sign Up</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

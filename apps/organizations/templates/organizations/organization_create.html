@@ -1,0 +1,278 @@
+{% extends "organizations/base.html" %}
+
+{% block title %}Create {{ org_type }} - League Gotta Bike{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-8">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Create New {{ org_type }}</h1>
+        <p class="text-gray-600">Fill out the form below to create your {{ org_type|lower }}</p>
+    </div>
+
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-error mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                        {% for error in form.non_field_errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Basic Information Section -->
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Basic Information</h2>
+                    <div class="space-y-4">
+                        <!-- Parent Selection (for Team, Squad, Club) -->
+                        {% if form.parent %}
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-medium">{{ form.parent.label }}</span>
+                            </label>
+                            {{ form.parent }}
+                            {% if form.parent.help_text %}
+                            <label class="label">
+                                <span class="label-text-alt text-gray-500">{{ form.parent.help_text }}</span>
+                            </label>
+                            {% endif %}
+                            {% if form.parent.errors %}
+                            <label class="label">
+                                <span class="label-text-alt text-error">{{ form.parent.errors.0 }}</span>
+                            </label>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Organization Name -->
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-medium">{{ form.name.label }} *</span>
+                            </label>
+                            {{ form.name }}
+                            {% if form.name.help_text %}
+                            <label class="label">
+                                <span class="label-text-alt text-gray-500">{{ form.name.help_text }}</span>
+                            </label>
+                            {% endif %}
+                            {% if form.name.errors %}
+                            <label class="label">
+                                <span class="label-text-alt text-error">{{ form.name.errors.0 }}</span>
+                            </label>
+                            {% endif %}
+                        </div>
+
+                        <!-- Description -->
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-medium">{{ form.description.label }}</span>
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.help_text %}
+                            <label class="label">
+                                <span class="label-text-alt text-gray-500">{{ form.description.help_text }}</span>
+                            </label>
+                            {% endif %}
+                            {% if form.description.errors %}
+                            <label class="label">
+                                <span class="label-text-alt text-error">{{ form.description.errors.0 }}</span>
+                            </label>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="divider"></div>
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Contact Information</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Contact Email -->
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-medium">{{ form.contact_email.label }}</span>
+                            </label>
+                            {{ form.contact_email }}
+                            {% if form.contact_email.errors %}
+                            <label class="label">
+                                <span class="label-text-alt text-error">{{ form.contact_email.errors.0 }}</span>
+                            </label>
+                            {% endif %}
+                        </div>
+
+                        <!-- Contact Phone -->
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-medium">{{ form.contact_phone.label }}</span>
+                            </label>
+                            {{ form.contact_phone }}
+                            {% if form.contact_phone.errors %}
+                            <label class="label">
+                                <span class="label-text-alt text-error">{{ form.contact_phone.errors.0 }}</span>
+                            </label>
+                            {% endif %}
+                        </div>
+
+                        <!-- Website URL -->
+                        <div class="form-control md:col-span-2">
+                            <label class="label">
+                                <span class="label-text font-medium">{{ form.website_url.label }}</span>
+                            </label>
+                            {{ form.website_url }}
+                            {% if form.website_url.help_text %}
+                            <label class="label">
+                                <span class="label-text-alt text-gray-500">{{ form.website_url.help_text }}</span>
+                            </label>
+                            {% endif %}
+                            {% if form.website_url.errors %}
+                            <label class="label">
+                                <span class="label-text-alt text-error">{{ form.website_url.errors.0 }}</span>
+                            </label>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logo -->
+                <div class="mb-6">
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-medium">{{ form.logo.label }}</span>
+                        </label>
+                        {{ form.logo }}
+                        {% if form.logo.help_text %}
+                        <label class="label">
+                            <span class="label-text-alt text-gray-500">{{ form.logo.help_text }}</span>
+                        </label>
+                        {% endif %}
+                        {% if form.logo.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.logo.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Chat Room Settings -->
+                <div class="divider"></div>
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Chat Room Settings</h2>
+                    <div class="space-y-3">
+                        <!-- Enable Member Chat -->
+                        <div class="form-control">
+                            <label class="label cursor-pointer justify-start gap-3">
+                                {{ form.enable_member_chat }}
+                                <div>
+                                    <span class="label-text font-medium">{{ form.enable_member_chat.label }}</span>
+                                    {% if form.enable_member_chat.help_text %}
+                                    <p class="text-sm text-gray-500">{{ form.enable_member_chat.help_text }}</p>
+                                    {% endif %}
+                                </div>
+                            </label>
+                            {% if form.enable_member_chat.errors %}
+                            <label class="label">
+                                <span class="label-text-alt text-error">{{ form.enable_member_chat.errors.0 }}</span>
+                            </label>
+                            {% endif %}
+                        </div>
+
+                        <!-- Enable News Channel -->
+                        <div class="form-control">
+                            <label class="label cursor-pointer justify-start gap-3">
+                                {{ form.enable_news_channel }}
+                                <div>
+                                    <span class="label-text font-medium">{{ form.enable_news_channel.label }}</span>
+                                    {% if form.enable_news_channel.help_text %}
+                                    <p class="text-sm text-gray-500">{{ form.enable_news_channel.help_text }}</p>
+                                    {% endif %}
+                                </div>
+                            </label>
+                            {% if form.enable_news_channel.errors %}
+                            <label class="label">
+                                <span class="label-text-alt text-error">{{ form.enable_news_channel.errors.0 }}</span>
+                            </label>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Membership Settings -->
+                <div class="divider"></div>
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Membership Settings</h2>
+                    <div class="space-y-3">
+                        <!-- Membership Open -->
+                        <div class="form-control">
+                            <label class="label cursor-pointer justify-start gap-3">
+                                {{ form.membership_open }}
+                                <div>
+                                    <span class="label-text font-medium">{{ form.membership_open.label }}</span>
+                                    {% if form.membership_open.help_text %}
+                                    <p class="text-sm text-gray-500">{{ form.membership_open.help_text }}</p>
+                                    {% endif %}
+                                </div>
+                            </label>
+                            {% if form.membership_open.errors %}
+                            <label class="label">
+                                <span class="label-text-alt text-error">{{ form.membership_open.errors.0 }}</span>
+                            </label>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Type-Specific Fields -->
+                {% if org_type_value != 'club' %}
+                <div class="divider"></div>
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ org_type }} Details</h2>
+                    <div class="space-y-4">
+                        {% for field in form %}
+                            {% if field.name not in 'name,description,contact_email,contact_phone,website_url,logo,enable_member_chat,enable_news_channel,membership_open,parent' %}
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text font-medium">{{ field.label }}{% if field.field.required %} *{% endif %}</span>
+                                </label>
+                                {{ field }}
+                                {% if field.help_text %}
+                                <label class="label">
+                                    <span class="label-text-alt text-gray-500">{{ field.help_text }}</span>
+                                </label>
+                                {% endif %}
+                                {% if field.errors %}
+                                <label class="label">
+                                    <span class="label-text-alt text-error">{{ field.errors.0 }}</span>
+                                </label>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Form Actions -->
+                <div class="divider"></div>
+                <div class="flex justify-end gap-2">
+                    <a href="{% url 'organizations:league_list' %}" class="btn btn-ghost">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        Create {{ org_type }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

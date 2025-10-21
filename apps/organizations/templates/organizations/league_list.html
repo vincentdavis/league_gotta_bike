@@ -1,0 +1,170 @@
+{% extends "organizations/base.html" %}
+{% load static %}
+
+{% block title %}Leagues & Teams - League Gotta Bike{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+    <!-- Header with Search -->
+    <div class="mb-8">
+        <h2 class="text-3xl font-bold text-gray-900 mb-4">Cycling Leagues & Teams</h2>
+
+        <!-- Search Form -->
+        <form method="get" action="{% url 'organizations:league_list' %}" class="max-w-2xl">
+            <div class="flex gap-2">
+                <div class="form-control flex-1">
+                    <input
+                        type="text"
+                        name="q"
+                        value="{{ search_query }}"
+                        placeholder="Search leagues and teams by name, region, or sanctioning body..."
+                        class="input input-bordered w-full"
+                    />
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    Search
+                </button>
+                {% if search_query %}
+                    <a href="{% url 'organizations:league_list' %}" class="btn btn-ghost">
+                        Clear
+                    </a>
+                {% endif %}
+            </div>
+        </form>
+
+        {% if search_query %}
+            <div class="mt-4">
+                <p class="text-sm text-gray-600">
+                    Search results for <strong>"{{ search_query }}"</strong>
+                    {% if organizations %}
+                        - Found {{ organizations|length }} result{{ organizations|length|pluralize }}
+                    {% endif %}
+                </p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Leagues Section -->
+    {% if leagues %}
+    <div class="mb-10">
+        <h3 class="text-2xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+            Leagues
+        </h3>
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {% for league in leagues %}
+        <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow duration-300">
+            <div class="p-6">
+                <img src="{% if league.logo %}{{ league.logo.url }}{% else %}{% static 'images/Default_League.png' %}{% endif %}" alt="{{ league.name }}" class="h-16 w-16 mb-4 rounded-full object-cover">
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                    <a href="{{ league.get_absolute_url }}" class="hover:text-blue-600">
+                        {{ league.name }}
+                    </a>
+                </h3>
+                {% if league.description %}
+                <p class="text-gray-600 text-sm line-clamp-3">{{ league.description }}</p>
+                {% endif %}
+
+                {% if league.league_profile %}
+                <div class="mt-4 space-y-1">
+                    {% if league.league_profile.region %}
+                    <p class="text-sm text-gray-500">
+                        <span class="font-medium">Region:</span> {{ league.league_profile.region }}
+                    </p>
+                    {% endif %}
+                    {% if league.league_profile.sanctioning_body %}
+                    <p class="text-sm text-gray-500">
+                        <span class="font-medium">Sanctioned by:</span> {{ league.league_profile.sanctioning_body }}
+                    </p>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <div class="mt-4">
+                    <a href="{{ league.get_absolute_url }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                        View Details →
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Teams Section -->
+    {% if teams %}
+    <div class="mb-10">
+        <h3 class="text-2xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            Teams
+        </h3>
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {% for team in teams %}
+            <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow duration-300">
+                <div class="p-6">
+                    <img src="{% if team.logo %}{{ team.logo.url }}{% else %}{% static 'images/Default_League.png' %}{% endif %}" alt="{{ team.name }}" class="h-16 w-16 mb-4 rounded-full object-cover">
+                    <div class="flex items-center gap-2 mb-2">
+                        <h3 class="text-xl font-semibold text-gray-900">
+                            <a href="{{ team.get_absolute_url }}" class="hover:text-blue-600">
+                                {{ team.name }}
+                            </a>
+                        </h3>
+                        <span class="badge badge-sm badge-primary">Team</span>
+                    </div>
+                    {% if team.description %}
+                    <p class="text-gray-600 text-sm line-clamp-3">{{ team.description }}</p>
+                    {% endif %}
+
+                    {% if team.team_profile and team.team_profile.team_type %}
+                    <div class="mt-4">
+                        <p class="text-sm text-gray-500">
+                            <span class="font-medium">Type:</span> {{ team.team_profile.get_team_type_display }}
+                        </p>
+                    </div>
+                    {% endif %}
+
+                    <div class="mt-4">
+                        <a href="{{ team.get_absolute_url }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                            View Details →
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Empty State -->
+    {% if not leagues and not teams %}
+    <div class="bg-white shadow rounded-lg p-12 text-center">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        {% if search_query %}
+            <p class="text-gray-500 text-lg mt-4">No results found for "{{ search_query }}"</p>
+            <p class="text-gray-400 text-sm mt-2">Try adjusting your search terms</p>
+            <a href="{% url 'organizations:league_list' %}" class="btn btn-primary btn-sm mt-4">
+                Clear Search
+            </a>
+        {% else %}
+            <p class="text-gray-500 text-lg mt-4">No leagues or teams found.</p>
+            <p class="text-gray-400 text-sm mt-2">Check back later or create a new organization.</p>
+            {% if user.is_authenticated %}
+                <a href="{% url 'organizations:org_type_select' %}" class="btn btn-primary btn-sm mt-4">
+                    Create Organization
+                </a>
+            {% endif %}
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

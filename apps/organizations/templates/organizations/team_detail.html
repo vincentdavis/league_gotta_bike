@@ -1,0 +1,207 @@
+{% extends "organizations/base.html" %}
+{% load static %}
+
+{% block title %}{{ team.name }} - League Gotta Bike{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+    <!-- Breadcrumbs -->
+    <nav class="mb-4">
+        <ol class="flex items-center space-x-2 text-sm text-gray-500">
+            <li><a href="{% url 'organizations:league_list' %}" class="hover:text-gray-700">Leagues</a></li>
+            <li>/</li>
+            <li><a href="{{ league.get_absolute_url }}" class="hover:text-gray-700">{{ league.name }}</a></li>
+            <li>/</li>
+            <li class="text-gray-900">{{ team.name }}</li>
+        </ol>
+    </nav>
+
+    <!-- Team Header -->
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <div class="flex items-start justify-between">
+            <div class="flex items-center">
+                <img src="{% if team.logo %}{{ team.logo.url }}{% else %}{% static 'images/Default_Club.png' %}{% endif %}" alt="{{ team.name }}" class="h-20 w-20 rounded-full object-cover mr-4">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">{{ team.name }}</h1>
+                    <p class="text-gray-500 mt-1">{{ team.get_type_display }} in {{ league.name }}</p>
+                </div>
+            </div>
+        </div>
+
+        {% if team.description %}
+        <p class="text-gray-600 mt-4">{{ team.description }}</p>
+        {% endif %}
+
+        <!-- Team Profile Details -->
+        {% if team_profile %}
+        <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {% if team_profile.team_type %}
+            <div>
+                <p class="text-sm font-medium text-gray-500">Team Type</p>
+                <p class="mt-1 text-sm text-gray-900">{{ team_profile.get_team_type_display }}</p>
+            </div>
+            {% endif %}
+            {% if team.contact_email %}
+            <div>
+                <p class="text-sm font-medium text-gray-500">Contact</p>
+                <p class="mt-1 text-sm text-gray-900">{{ team.contact_email }}</p>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Membership Actions Card -->
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Membership</h2>
+
+        {% if user.is_authenticated %}
+            {% if user_membership %}
+                <!-- User is already a member -->
+                <div class="space-y-3">
+                    {% if user_membership.status == 'active' %}
+                        <div class="flex items-center gap-2 text-green-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span class="font-medium">Member since {{ user_membership.join_date|date:"M d, Y" }}</span>
+                        </div>
+                        <p class="text-sm text-gray-600">Role: <span class="font-medium">{{ user_membership.get_permission_level_display }}</span></p>
+                    {% elif user_membership.status == 'prospect' %}
+                        <div class="flex items-center gap-2 text-yellow-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span class="font-medium">Pending Approval</span>
+                        </div>
+                        <p class="text-sm text-gray-600">Request submitted: {{ user_membership.join_date|date:"M d, Y" }}</p>
+                    {% elif user_membership.status == 'expired' %}
+                        <div class="flex items-center gap-2 text-gray-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span class="font-medium">Membership Expired</span>
+                        </div>
+                        <p class="text-sm text-gray-600">Your membership has expired</p>
+                        {% if membership_open %}
+                            <a href="{% url 'membership:request_join' org_id=team.pk %}" class="btn btn-primary btn-sm mt-2">
+                                Renew Membership
+                            </a>
+                        {% endif %}
+                    {% else %}
+                        <div class="flex items-center gap-2 text-gray-600">
+                            <span class="font-medium">Status: {{ user_membership.get_status_display }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+            {% else %}
+                <!-- User is not a member -->
+                {% if membership_open %}
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-2 text-green-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span class="font-medium">Open for new members</span>
+                        </div>
+                        <p class="text-sm text-gray-600">Join this team to participate in events and connect with members.</p>
+                        <a href="{% url 'membership:request_join' org_id=team.pk %}" class="btn btn-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                            </svg>
+                            Join Team
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="flex items-center gap-2 text-gray-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        <span class="font-medium">Membership Closed</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-2">This team is not currently accepting new members.</p>
+                {% endif %}
+            {% endif %}
+        {% else %}
+            <!-- User is not authenticated -->
+            {% if membership_open %}
+                <div class="space-y-3">
+                    <div class="flex items-center gap-2 text-green-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span class="font-medium">Open for new members</span>
+                    </div>
+                    <p class="text-sm text-gray-600">Sign in to join this team.</p>
+                    <a href="{% url 'account_login' %}?next={{ request.path }}" class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                        </svg>
+                        Sign In to Join
+                    </a>
+                </div>
+            {% else %}
+                <div class="flex items-center gap-2 text-gray-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    <span class="font-medium">Membership Closed</span>
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <!-- Members -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Team Members</h2>
+
+            {% if members %}
+            <div class="space-y-3">
+                {% for membership in members %}
+                <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                    <div>
+                        <p class="font-medium text-gray-900">{{ membership.user.username }}</p>
+                        <p class="text-sm text-gray-500">{{ membership.get_role_display }}</p>
+                    </div>
+                    <span class="px-2 py-1 text-xs font-medium rounded-full
+                        {% if membership.status == 'active' %}bg-green-100 text-green-800
+                        {% elif membership.status == 'prospect' %}bg-yellow-100 text-yellow-800
+                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {{ membership.get_status_display }}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-gray-500">No members yet.</p>
+            {% endif %}
+        </div>
+
+        <!-- Sub-Organizations (Squads, etc.) -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Squads & Groups</h2>
+
+            {% if sub_orgs %}
+            <div class="space-y-3">
+                {% for org in sub_orgs %}
+                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <h3 class="text-lg font-semibold text-gray-900">
+                        <a href="{{ org.get_absolute_url }}" class="hover:text-blue-600">
+                            {{ org.name }}
+                        </a>
+                    </h3>
+                    <p class="text-sm text-gray-500">{{ org.get_type_display }}</p>
+                    {% if org.description %}
+                    <p class="text-gray-600 text-sm mt-2 line-clamp-2">{{ org.description }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-gray-500">No squads or sub-groups yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

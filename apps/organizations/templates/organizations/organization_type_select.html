@@ -1,0 +1,100 @@
+{% extends "organizations/base.html" %}
+
+{% block title %}Create Organization - League Gotta Bike{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold text-gray-900 mb-2">Create New Organization</h1>
+        <p class="text-gray-600">Choose the type of organization you want to create</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- League Card -->
+        <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
+            <div class="card-body">
+                <h2 class="card-title text-2xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+                    </svg>
+                    League
+                </h2>
+                <p class="text-gray-600">
+                    Top-level organization that can contain multiple teams. Perfect for managing cycling leagues or racing series.
+                </p>
+                <div class="card-actions justify-end mt-4">
+                    <a href="{% url 'organizations:league_create' %}" class="btn btn-primary">
+                        Create League
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Team Card -->
+        <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
+            <div class="card-body">
+                <h2 class="card-title text-2xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    Team
+                </h2>
+                <p class="text-gray-600">
+                    A racing team within a league. Teams can have multiple squads and track member performance.
+                </p>
+                <div class="card-actions justify-end mt-4">
+                    <a href="{% url 'organizations:team_create' %}" class="btn btn-success">
+                        Create Team
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Squad Card -->
+        <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
+            <div class="card-body">
+                <h2 class="card-title text-2xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Squad
+                </h2>
+                <p class="text-gray-600">
+                    Specialized sub-group within a team focused on specific disciplines (sprint, endurance, climbing, etc.).
+                </p>
+                <div class="card-actions justify-end mt-4">
+                    <a href="{% url 'organizations:squad_create' %}" class="btn btn-warning">
+                        Create Squad
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Club Card -->
+        <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
+            <div class="card-body">
+                <h2 class="card-title text-2xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    Club
+                </h2>
+                <p class="text-gray-600">
+                    General sub-organization within a team for social groups, training clubs, or other purposes.
+                </p>
+                <div class="card-actions justify-end mt-4">
+                    <a href="{% url 'organizations:club_create' %}" class="btn btn-info">
+                        Create Club
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-8 text-center">
+        <a href="{% url 'organizations:league_list' %}" class="btn btn-ghost">
+            Cancel
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,3 @@
+django: uv run daphne -b 127.0.0.1 -p 8002 league_gotta_bike.asgi:application
+tailwind: uv run manage.py tailwind start
+db_worker: uv run manage.py db_worker

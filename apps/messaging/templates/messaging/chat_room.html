@@ -1,0 +1,161 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>{{ page_title }} - League Gotta Bike</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    {% tailwind_css %}
+</head>
+
+<body class="bg-gray-50 text-black font-sans">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Header -->
+        <div class="mb-6">
+            <h1 class="text-4xl font-bold mb-2">{{ page_title }}</h1>
+            <p class="text-gray-600">Real-time chat powered by Django Channels</p>
+        </div>
+
+        <!-- Chat Container -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body p-0">
+                <!-- Messages Area -->
+                <div id="chat-messages" class="h-96 overflow-y-auto p-6 space-y-4 bg-base-200">
+                    <!-- Messages will appear here -->
+                </div>
+
+                <!-- Input Area -->
+                <div class="p-4 bg-base-100 border-t border-base-300">
+                    <div class="flex gap-2">
+                        <input
+                            type="text"
+                            id="chat-message-input"
+                            class="input input-bordered flex-1"
+                            placeholder="Type your message..."
+                            autocomplete="off"
+                        >
+                        <button id="chat-message-submit" class="btn btn-primary">
+                            Send
+                        </button>
+                    </div>
+                    <div id="connection-status" class="mt-2 text-sm">
+                        <span class="loading loading-spinner loading-xs"></span>
+                        <span class="text-gray-500">Connecting...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="mt-6 alert alert-info">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <div>
+                <h3 class="font-bold">How to use</h3>
+                <div class="text-sm">Type a message and press Enter or click Send. Messages are broadcast to all connected users in real-time.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Determine WebSocket protocol (ws:// or wss://)
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${wsProtocol}//${window.location.host}/ws/chat/`;
+
+        console.log('Connecting to WebSocket:', wsUrl);
+
+        const chatSocket = new WebSocket(wsUrl);
+
+        const messageInput = document.getElementById('chat-message-input');
+        const messagesDiv = document.getElementById('chat-messages');
+        const submitButton = document.getElementById('chat-message-submit');
+        const statusDiv = document.getElementById('connection-status');
+
+        // Connection opened
+        chatSocket.onopen = function(e) {
+            console.log('WebSocket connection established');
+            statusDiv.innerHTML = '<span class="text-success">● Connected</span>';
+        };
+
+        // Listen for messages
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            console.log('Message received:', data);
+
+            if (data.type === 'message_history') {
+                // Display message history on initial connection
+                data.messages.forEach(msg => displayMessage(msg));
+            } else if (data.type === 'message') {
+                // Display new message
+                displayMessage(data.message);
+            } else if (data.type === 'error') {
+                console.error('Error:', data.message);
+                statusDiv.innerHTML = `<span class="text-error">Error: ${data.message}</span>`;
+            }
+        };
+
+        // Connection closed
+        chatSocket.onclose = function(e) {
+            console.log('WebSocket connection closed');
+            statusDiv.innerHTML = '<span class="text-error">● Disconnected</span>';
+        };
+
+        // Connection error
+        chatSocket.onerror = function(e) {
+            console.error('WebSocket error:', e);
+            statusDiv.innerHTML = '<span class="text-error">● Connection error</span>';
+        };
+
+        // Display a message in the chat
+        function displayMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat chat-start';
+
+            const timestamp = new Date(message.timestamp).toLocaleTimeString();
+
+            messageDiv.innerHTML = `
+                <div class="chat-header">
+                    ${message.username}
+                    <time class="text-xs opacity-50 ml-1">${timestamp}</time>
+                </div>
+                <div class="chat-bubble">${escapeHtml(message.text)}</div>
+            `;
+
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Send message
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (message && chatSocket.readyState === WebSocket.OPEN) {
+                chatSocket.send(JSON.stringify({
+                    'message': message
+                }));
+                messageInput.value = '';
+            }
+        }
+
+        // Event listeners
+        submitButton.addEventListener('click', sendMessage);
+
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Focus input on load
+        messageInput.focus();
+    </script>
+</body>
+</html>

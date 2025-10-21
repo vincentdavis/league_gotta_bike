@@ -1,0 +1,88 @@
+{% extends "organizations/base.html" %}
+{% load allauth account %}
+
+{% block title %}Two-Factor Authentication - League Gotta Bike{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-base-200 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full">
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <div class="text-center mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16 mx-auto text-primary mb-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                    </svg>
+                    <h2 class="text-2xl font-bold">Two-Factor Authentication</h2>
+                    <p class="text-base-content/70 mt-2">Enter your authentication code to continue</p>
+                </div>
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div role="alert" class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} mb-4">
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post" class="space-y-4">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div role="alert" class="alert alert-error">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    {% for field in form %}
+                        {% if field.name not in 'csrf_token,csrfmiddlewaretoken' %}
+                            <div class="form-control">
+                                <label class="label" for="{{ field.id_for_label }}">
+                                    <span class="label-text">{{ field.label }}</span>
+                                </label>
+                                <input
+                                    type="{{ field.field.widget.input_type|default:'text' }}"
+                                    name="{{ field.name }}"
+                                    id="{{ field.id_for_label }}"
+                                    class="input input-bordered input-lg w-full text-center tracking-widest {% if field.errors %}input-error{% endif %}"
+                                    placeholder="000000"
+                                    value="{{ field.value|default:'' }}"
+                                    {% if field.field.required %}required{% endif %}
+                                    autocomplete="one-time-code"
+                                    inputmode="numeric"
+                                    pattern="[0-9]*"
+                                    maxlength="6"
+                                >
+                                {% if field.help_text %}
+                                    <label class="label">
+                                        <span class="label-text-alt">{{ field.help_text|safe }}</span>
+                                    </label>
+                                {% endif %}
+                                {% if field.errors %}
+                                    <label class="label">
+                                        <span class="label-text-alt text-error">{{ field.errors.0 }}</span>
+                                    </label>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+
+                    <div class="form-control mt-6">
+                        <button type="submit" class="btn btn-primary w-full">
+                            Verify
+                        </button>
+                    </div>
+                </form>
+
+                <div class="divider text-sm">Having trouble?</div>
+
+                <div class="text-center space-y-2">
+                    <p class="text-sm text-base-content/70">
+                        Lost access to your authenticator?
+                        <a href="#" class="link link-primary">Use recovery code</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

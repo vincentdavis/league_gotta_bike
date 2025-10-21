@@ -1,0 +1,419 @@
+{% extends "organizations/base.html" %}
+
+{% block title %}My Profile - League Gotta Bike{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Page Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">My Profile</h1>
+            <p class="text-gray-500 mt-2">Manage your personal information and view your organizations</p>
+        </div>
+
+        <!-- Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div role="alert" class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-error{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %} mb-4">
+                    <span>{{ message }}</span>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Profile Information Card -->
+            <div class="lg:col-span-2">
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h2 class="card-title text-2xl mb-6">Personal Information</h2>
+
+                        <form method="post" enctype="multipart/form-data" class="space-y-4">
+                            {% csrf_token %}
+
+                            {% if form.non_field_errors %}
+                                <div role="alert" class="alert alert-error">
+                                    {{ form.non_field_errors }}
+                                </div>
+                            {% endif %}
+
+                            <!-- Avatar/Profile Photo -->
+                            <div class="form-control">
+                                <label class="label" for="{{ form.avatar.id_for_label }}">
+                                    <span class="label-text font-semibold">{{ form.avatar.label }}</span>
+                                </label>
+                                {% if user.avatar %}
+                                    <div class="mb-3 flex items-center gap-4">
+                                        <div class="avatar">
+                                            <div class="w-24 h-24 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
+                                                <img src="{{ user.avatar.url }}" alt="{{ user.get_full_name }}" />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm text-gray-500">Current profile photo</p>
+                                            <p class="text-xs text-gray-400">Upload a new photo to replace</p>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="mb-3">
+                                        <div class="avatar placeholder">
+                                            <div class="bg-neutral text-neutral-content rounded-full w-24 h-24">
+                                                <span class="text-3xl">{{ user.first_name.0 }}{{ user.last_name.0 }}</span>
+                                            </div>
+                                        </div>
+                                        <p class="text-sm text-gray-500 mt-2">No profile photo uploaded</p>
+                                    </div>
+                                {% endif %}
+                                {{ form.avatar }}
+                                {% if form.avatar.errors %}
+                                    <label class="label">
+                                        <span class="label-text-alt text-error">{{ form.avatar.errors.0 }}</span>
+                                    </label>
+                                {% endif %}
+                                {% if form.avatar.help_text %}
+                                    <label class="label">
+                                        <span class="label-text-alt">{{ form.avatar.help_text }}</span>
+                                    </label>
+                                {% endif %}
+                            </div>
+
+                            <div class="divider"></div>
+
+                            <!-- First Name -->
+                            <div class="form-control">
+                                <label class="label" for="{{ form.first_name.id_for_label }}">
+                                    <span class="label-text font-semibold">{{ form.first_name.label }}</span>
+                                </label>
+                                {{ form.first_name }}
+                                {% if form.first_name.errors %}
+                                    <label class="label">
+                                        <span class="label-text-alt text-error">{{ form.first_name.errors.0 }}</span>
+                                    </label>
+                                {% endif %}
+                            </div>
+
+                            <!-- Last Name -->
+                            <div class="form-control">
+                                <label class="label" for="{{ form.last_name.id_for_label }}">
+                                    <span class="label-text font-semibold">{{ form.last_name.label }}</span>
+                                </label>
+                                {{ form.last_name }}
+                                {% if form.last_name.errors %}
+                                    <label class="label">
+                                        <span class="label-text-alt text-error">{{ form.last_name.errors.0 }}</span>
+                                    </label>
+                                {% endif %}
+                            </div>
+
+                            <!-- Email -->
+                            <div class="form-control">
+                                <label class="label" for="{{ form.email.id_for_label }}">
+                                    <span class="label-text font-semibold">{{ form.email.label }}</span>
+                                </label>
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                    <label class="label">
+                                        <span class="label-text-alt text-error">{{ form.email.errors.0 }}</span>
+                                    </label>
+                                {% endif %}
+                                {% if form.email.help_text %}
+                                    <label class="label">
+                                        <span class="label-text-alt">{{ form.email.help_text }}</span>
+                                    </label>
+                                {% endif %}
+                            </div>
+
+                            <!-- Phone Number -->
+                            <div class="form-control">
+                                <label class="label" for="{{ form.phone_number.id_for_label }}">
+                                    <span class="label-text font-semibold">{{ form.phone_number.label }}</span>
+                                </label>
+                                {{ form.phone_number }}
+                                {% if form.phone_number.errors %}
+                                    <label class="label">
+                                        <span class="label-text-alt text-error">{{ form.phone_number.errors.0 }}</span>
+                                    </label>
+                                {% endif %}
+                                {% if form.phone_number.help_text %}
+                                    <label class="label">
+                                        <span class="label-text-alt">{{ form.phone_number.help_text }}</span>
+                                    </label>
+                                {% endif %}
+
+                                <!-- Phone Verification Status -->
+                                {% if user.phone_number %}
+                                    <div class="mt-2">
+                                        {% if user.phone_verified %}
+                                            <span class="badge badge-success gap-2">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                Verified
+                                            </span>
+                                        {% else %}
+                                            <div class="flex items-center gap-2">
+                                                <span class="badge badge-warning gap-2">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                                    </svg>
+                                                    Not Verified
+                                                </span>
+                                                <button type="button" class="btn btn-sm btn-primary" onclick="verifyPhoneModal.showModal()">
+                                                    Verify Phone
+                                                </button>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Date of Birth -->
+                            <div class="form-control">
+                                <label class="label" for="{{ form.dob.id_for_label }}">
+                                    <span class="label-text font-semibold">{{ form.dob.label }}</span>
+                                </label>
+                                {{ form.dob }}
+                                {% if form.dob.errors %}
+                                    <label class="label">
+                                        <span class="label-text-alt text-error">{{ form.dob.errors.0 }}</span>
+                                    </label>
+                                {% endif %}
+                                {% if form.dob.help_text %}
+                                    <label class="label">
+                                        <span class="label-text-alt">{{ form.dob.help_text }}</span>
+                                    </label>
+                                {% endif %}
+                                {% if user.dob %}
+                                    <label class="label">
+                                        <span class="label-text-alt">Racing Age: {{ user.racing_age }} years</span>
+                                    </label>
+                                {% endif %}
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="form-control mt-6">
+                                <button type="submit" class="btn btn-primary">
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+
+                        <!-- Additional Account Links -->
+                        <div class="divider mt-8"></div>
+                        <div class="space-y-2">
+                            <a href="{% url 'account_change_password' %}" class="btn btn-outline btn-sm">
+                                Change Password
+                            </a>
+                            <a href="{% url 'mfa_index' %}" class="btn btn-outline btn-sm ml-2">
+                                Two-Factor Authentication
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Organizations Membership Card -->
+            <div class="lg:col-span-1">
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h2 class="card-title text-xl mb-4">My Organizations</h2>
+
+                        {% if memberships %}
+                            <div class="space-y-3">
+                                {% for membership in memberships %}
+                                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                                        <div class="flex items-start justify-between">
+                                            <div class="flex-1">
+                                                <h3 class="font-semibold text-gray-900">
+                                                    <a href="{{ membership.organization.get_absolute_url }}" class="hover:text-blue-600">
+                                                        {{ membership.organization.name }}
+                                                    </a>
+                                                </h3>
+                                                <p class="text-sm text-gray-500">{{ membership.organization.get_type_display }}</p>
+                                                {% if membership.organization.parent %}
+                                                    <p class="text-xs text-gray-400 mt-1">in {{ membership.organization.parent.name }}</p>
+                                                {% endif %}
+                                            </div>
+                                            <div>
+                                                <span class="badge badge-sm {% if membership.status == 'active' %}badge-success{% elif membership.status == 'prospect' %}badge-warning{% else %}badge-ghost{% endif %}">
+                                                    {{ membership.get_status_display }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="mt-2">
+                                            <p class="text-xs text-gray-500">
+                                                <span class="font-medium">Role:</span> {{ membership.get_role_display }}
+                                            </p>
+                                            <p class="text-xs text-gray-500">
+                                                <span class="font-medium">Permission:</span> {{ membership.get_permission_level_display }}
+                                            </p>
+                                            {% if membership.join_date %}
+                                                <p class="text-xs text-gray-400 mt-1">
+                                                    Joined {{ membership.join_date|date:"M d, Y" }}
+                                                </p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-8">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                                <p class="mt-2 text-sm text-gray-500">You haven't joined any organizations yet.</p>
+                                <a href="{% url 'organizations:league_list' %}" class="btn btn-primary btn-sm mt-4">
+                                    Browse Organizations
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Phone Verification Modal -->
+<dialog id="verifyPhoneModal" class="modal">
+    <div class="modal-box">
+        <h3 class="font-bold text-lg mb-4">Verify Phone Number</h3>
+
+        <!-- Step 1: Send Code -->
+        <div id="sendCodeStep">
+            <p class="py-4">We'll send a verification code to <strong>{{ user.phone_number }}</strong></p>
+            <div class="modal-action">
+                <button type="button" class="btn" onclick="verifyPhoneModal.close()">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="sendVerificationCode()">Send Code</button>
+            </div>
+        </div>
+
+        <!-- Step 2: Enter Code -->
+        <div id="enterCodeStep" style="display: none;">
+            <p class="py-2 text-sm text-gray-600">Enter the 6-digit code sent to {{ user.phone_number }}</p>
+            <form id="verifyCodeForm" method="post" action="{% url 'accounts:verify_phone_confirm' %}">
+                {% csrf_token %}
+                <div class="form-control">
+                    <input type="text" name="code" id="verificationCode" maxlength="6" pattern="[0-9]{6}"
+                           class="input input-bordered text-center text-2xl tracking-widest font-mono"
+                           placeholder="000000" required autofocus>
+                    <label class="label">
+                        <span class="label-text-alt" id="errorMessage"></span>
+                    </label>
+                </div>
+                <div class="modal-action">
+                    <button type="button" class="btn btn-ghost" onclick="resendCode()">Resend Code</button>
+                    <button type="submit" class="btn btn-primary">Verify</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingStep" style="display: none;" class="py-8 text-center">
+            <span class="loading loading-spinner loading-lg"></span>
+            <p class="mt-2">Processing...</p>
+        </div>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+        <button>close</button>
+    </form>
+</dialog>
+
+<script>
+function sendVerificationCode() {
+    const modal = document.getElementById('verifyPhoneModal');
+    const sendStep = document.getElementById('sendCodeStep');
+    const enterStep = document.getElementById('enterCodeStep');
+    const loadingStep = document.getElementById('loadingStep');
+    const errorMsg = document.getElementById('errorMessage');
+
+    // Show loading
+    sendStep.style.display = 'none';
+    loadingStep.style.display = 'block';
+
+    fetch('{% url "accounts:verify_phone_send" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        loadingStep.style.display = 'none';
+        if (data.success) {
+            enterStep.style.display = 'block';
+            document.getElementById('verificationCode').focus();
+        } else {
+            sendStep.style.display = 'block';
+            errorMsg.textContent = data.message || 'Failed to send code';
+            errorMsg.classList.add('text-error');
+        }
+    })
+    .catch(error => {
+        loadingStep.style.display = 'none';
+        sendStep.style.display = 'block';
+        errorMsg.textContent = 'Network error. Please try again.';
+        errorMsg.classList.add('text-error');
+    });
+}
+
+function resendCode() {
+    const enterStep = document.getElementById('enterCodeStep');
+    const sendStep = document.getElementById('sendCodeStep');
+    enterStep.style.display = 'none';
+    sendStep.style.display = 'block';
+}
+
+// Handle form submission
+document.getElementById('verifyCodeForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const loadingStep = document.getElementById('loadingStep');
+    const enterStep = document.getElementById('enterCodeStep');
+    const errorMsg = document.getElementById('errorMessage');
+
+    enterStep.style.display = 'none';
+    loadingStep.style.display = 'block';
+
+    const formData = new FormData(this);
+
+    fetch(this.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Success - reload page to show verified status
+            window.location.reload();
+        } else {
+            // Show error
+            loadingStep.style.display = 'none';
+            enterStep.style.display = 'block';
+            errorMsg.textContent = data.message || 'Invalid code';
+            errorMsg.classList.add('text-error');
+            document.getElementById('verificationCode').value = '';
+            document.getElementById('verificationCode').focus();
+        }
+    })
+    .catch(error => {
+        loadingStep.style.display = 'none';
+        enterStep.style.display = 'block';
+        errorMsg.textContent = 'Network error. Please try again.';
+        errorMsg.classList.add('text-error');
+    });
+});
+
+// Reset modal when closed
+document.getElementById('verifyPhoneModal').addEventListener('close', function() {
+    document.getElementById('sendCodeStep').style.display = 'block';
+    document.getElementById('enterCodeStep').style.display = 'none';
+    document.getElementById('loadingStep').style.display = 'none';
+    document.getElementById('errorMessage').textContent = '';
+    document.getElementById('verificationCode').value = '';
+});
+</script>
+{% endblock %}
