@@ -9,7 +9,7 @@
     <div class="bg-white shadow rounded-lg p-6 mb-6">
         <div class="flex items-start justify-between">
             <div class="flex items-center">
-                <img src="{% if league.logo %}{{ league.logo.url }}{% else %}{% static 'images/Default_League.png' %}{% endif %}" alt="{{ league.name }}" class="h-20 w-20 rounded-full object-cover mr-4">
+                <img src="{% if league.logo %}{{ league.logo.url }}{% else %}{% static 'images/Default_League.png' %}{% endif %}" alt="{{ league.name }}" class="h-20 w-20 rounded-full object-contain mr-4">
                 <div>
                     <h1 class="text-3xl font-bold text-gray-900">{{ league.name }}</h1>
                     <p class="text-gray-500 mt-1">{{ league.get_type_display }}</p>

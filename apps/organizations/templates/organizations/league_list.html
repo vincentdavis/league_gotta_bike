@@ -61,7 +61,7 @@
             <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow duration-300 border-l-4 {% if membership.permission_level == 'owner' %}border-primary{% elif membership.permission_level == 'admin' %}border-success{% elif membership.permission_level == 'manager' %}border-info{% else %}border-gray-300{% endif %}">
                 <div class="p-6">
                     <div class="flex items-start justify-between mb-3">
-                        <img src="{% if membership.organization.logo %}{{ membership.organization.logo.url }}{% else %}{% static 'images/Default_League.png' %}{% endif %}" alt="{{ membership.organization.name }}" class="h-16 w-16 rounded-full object-cover">
+                        <img src="{% if membership.organization.logo %}{{ membership.organization.logo.url }}{% else %}{% static 'images/Default_League.png' %}{% endif %}" alt="{{ membership.organization.name }}" class="h-16 w-16 rounded-full object-contain">
                         <span class="badge {% if membership.permission_level == 'owner' %}badge-primary{% elif membership.permission_level == 'admin' %}badge-success{% elif membership.permission_level == 'manager' %}badge-info{% else %}badge-ghost{% endif %}">
                             {{ membership.get_permission_level_display }}
                         </span>
@@ -106,7 +106,7 @@
             {% for league in leagues %}
         <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow duration-300">
             <div class="p-6">
-                <img src="{% if league.logo %}{{ league.logo.url }}{% else %}{% static 'images/Default_League.png' %}{% endif %}" alt="{{ league.name }}" class="h-16 w-16 mb-4 rounded-full object-cover">
+                <img src="{% if league.logo %}{{ league.logo.url }}{% else %}{% static 'images/Default_League.png' %}{% endif %}" alt="{{ league.name }}" class="h-16 w-16 mb-4 rounded-full object-contain">
                 <h3 class="text-xl font-semibold text-gray-900 mb-2">
                     <a href="{{ league.get_absolute_url }}" class="hover:text-blue-600">
                         {{ league.name }}
@@ -156,7 +156,7 @@
             {% for team in teams %}
             <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow duration-300">
                 <div class="p-6">
-                    <img src="{% if team.logo %}{{ team.logo.url }}{% else %}{% static 'images/Default_League.png' %}{% endif %}" alt="{{ team.name }}" class="h-16 w-16 mb-4 rounded-full object-cover">
+                    <img src="{% if team.logo %}{{ team.logo.url }}{% else %}{% static 'images/Default_League.png' %}{% endif %}" alt="{{ team.name }}" class="h-16 w-16 mb-4 rounded-full object-contain">
                     <div class="flex items-center gap-2 mb-2">
                         <h3 class="text-xl font-semibold text-gray-900">
                             <a href="{{ team.get_absolute_url }}" class="hover:text-blue-600">

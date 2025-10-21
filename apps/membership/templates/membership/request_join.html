@@ -15,7 +15,7 @@
             <div class="bg-base-200 rounded-lg p-4 mb-6">
                 <div class="flex items-center gap-4">
                     {% if organization.logo %}
-                        <img src="{{ organization.logo.url }}" alt="{{ organization.name }}" class="h-16 w-16 rounded-lg object-cover">
+                        <img src="{{ organization.logo.url }}" alt="{{ organization.name }}" class="h-16 w-16 rounded-lg object-contain">
                     {% else %}
                         <div class="avatar placeholder">
                             <div class="bg-primary text-primary-content rounded-lg w-16">
