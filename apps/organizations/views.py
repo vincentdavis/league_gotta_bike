@@ -399,14 +399,24 @@ class OrganizationEditView(OrgAdminRequiredMixin, UpdateView):
 
         return context
 
+    def post(self, request, *args, **kwargs):
+        """Handle POST request with debug logging."""
+        print(f"📝 OrganizationEditView POST called")
+        print(f"📝 Files in request: {request.FILES}")
+        print(f"📝 POST data keys: {request.POST.keys()}")
+        return super().post(request, *args, **kwargs)
+
     def form_valid(self, form):
         """Save both organization and profile."""
+        print(f"✅ form_valid() called - Form is VALID")
+
         context = self.get_context_data()
         profile_form = context.get('profile_form')
 
         # Debug: Check if logo is in the request
         print(f"DEBUG: Files in request: {self.request.FILES}")
-        print(f"DEBUG: Logo in form: {form.cleaned_data.get('logo')}")
+        print(f"DEBUG: Logo in form.cleaned_data: {form.cleaned_data.get('logo')}")
+        print(f"DEBUG: Logo field has changed: {'logo' in form.changed_data}")
 
         with transaction.atomic():
             self.object = form.save()
@@ -416,6 +426,8 @@ class OrganizationEditView(OrgAdminRequiredMixin, UpdateView):
             if self.object.logo:
                 print(f"DEBUG: Logo URL: {self.object.logo.url}")
                 print(f"DEBUG: Logo path: {self.object.logo.name}")
+            else:
+                print(f"DEBUG: No logo saved!")
 
             # Save profile if it exists
             if profile_form and profile_form.is_valid():
@@ -430,6 +442,19 @@ class OrganizationEditView(OrgAdminRequiredMixin, UpdateView):
             messages.success(self.request, f'Organization "{self.object.name}" updated successfully!')
 
         return redirect(self.object.get_absolute_url())
+
+    def form_invalid(self, form):
+        """Handle invalid form with debug logging."""
+        print(f"❌ form_invalid() called - Form has ERRORS")
+        print(f"❌ Form errors: {form.errors}")
+        print(f"❌ Files in request: {self.request.FILES}")
+
+        context = self.get_context_data()
+        profile_form = context.get('profile_form')
+        if profile_form and not profile_form.is_valid():
+            print(f"❌ Profile form errors: {profile_form.errors}")
+
+        return super().form_invalid(form)
 
 
 class OrganizationSettingsView(OrgAdminRequiredMixin, DetailView):
