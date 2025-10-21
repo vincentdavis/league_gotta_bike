@@ -5,10 +5,80 @@
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 py-8">
     <div class="text-center mb-8">
+        {% if creating_sub_org %}
+        <h1 class="text-4xl font-bold text-gray-900 mb-2">Create Sub-Organization for {{ parent_team.name }}</h1>
+        <p class="text-gray-600">Choose the type of sub-organization you want to create</p>
+        {% else %}
         <h1 class="text-4xl font-bold text-gray-900 mb-2">Create New Organization</h1>
         <p class="text-gray-600">Choose the type of organization you want to create</p>
+        {% endif %}
     </div>
 
+    {% if creating_sub_org %}
+    <!-- Sub-Organization Cards (Squad, Club, Practice Group) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Squad Card -->
+        <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
+            <div class="card-body">
+                <h2 class="card-title text-xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    Squad
+                </h2>
+                <p class="text-gray-600 text-sm">
+                    A focused sub-group within a team for specific training or competition purposes.
+                </p>
+                <div class="card-actions justify-end mt-4">
+                    <a href="{% url 'organizations:squad_create' %}?parent={{ parent_team.slug }}" class="btn btn-info btn-sm">
+                        Create Squad
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Club Card -->
+        <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
+            <div class="card-body">
+                <h2 class="card-title text-xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                    Club
+                </h2>
+                <p class="text-gray-600 text-sm">
+                    A general sub-organization for social or specialized activities.
+                </p>
+                <div class="card-actions justify-end mt-4">
+                    <a href="{% url 'organizations:club_create' %}?parent={{ parent_team.slug }}" class="btn btn-warning btn-sm">
+                        Create Club
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Practice Group Card -->
+        <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
+            <div class="card-body">
+                <h2 class="card-title text-xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Practice Group
+                </h2>
+                <p class="text-gray-600 text-sm">
+                    A group organized around regular practice sessions and training rides.
+                </p>
+                <div class="card-actions justify-end mt-4">
+                    <a href="{% url 'organizations:practice_group_create' %}?parent={{ parent_team.slug }}" class="btn btn-accent btn-sm">
+                        Create Practice Group
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Top-Level Organization Cards (League, Team) -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- League Card -->
         <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
@@ -50,11 +120,18 @@
             </div>
         </div>
     </div>
+    {% endif %}
 
     <div class="mt-8 text-center">
+        {% if creating_sub_org %}
+        <a href="{{ parent_team.get_absolute_url }}" class="btn btn-ghost">
+            Cancel
+        </a>
+        {% else %}
         <a href="{% url 'organizations:league_list' %}" class="btn btn-ghost">
             Cancel
         </a>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

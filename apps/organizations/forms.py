@@ -221,6 +221,33 @@ class ClubCreateForm(OrganizationBaseForm):
         return organization
 
 
+class PracticeGroupCreateForm(OrganizationBaseForm):
+    """Form for creating a new practice group."""
+
+    # Parent team selection
+    parent = forms.ModelChoiceField(
+        queryset=Organization.objects.teams().active(),
+        widget=forms.Select(attrs={
+            'class': 'select select-bordered w-full'
+        }),
+        label='Team',
+        help_text='Select the team this practice group belongs to'
+    )
+
+    class Meta(OrganizationBaseForm.Meta):
+        fields = ['parent'] + OrganizationBaseForm.Meta.fields
+
+    def save(self, commit=True):
+        """Save organization as practice group type."""
+        organization = super().save(commit=False)
+        organization.type = Organization.PRACTICE_GROUP
+
+        if commit:
+            organization.save()
+
+        return organization
+
+
 # Edit Forms
 
 class OrganizationEditForm(forms.ModelForm):

@@ -4,9 +4,6 @@ from . import views
 app_name = 'organizations'
 
 urlpatterns = [
-    # User dashboard
-    path('my-organizations/', views.UserOrganizationsView.as_view(), name='user_organizations'),
-
     # League list
     path('', views.LeagueListView.as_view(), name='league_list'),
 
@@ -16,6 +13,7 @@ urlpatterns = [
     path('create/team/', views.TeamCreateView.as_view(), name='team_create'),
     path('create/squad/', views.SquadCreateView.as_view(), name='squad_create'),
     path('create/club/', views.ClubCreateView.as_view(), name='club_create'),
+    path('create/practice-group/', views.PracticeGroupCreateView.as_view(), name='practice_group_create'),
 
     # Organization management (by slug - works for all types)
     path('<slug:slug>/edit/', views.OrganizationEditView.as_view(), name='org_edit'),

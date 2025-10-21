@@ -312,7 +312,7 @@ class MembershipLeaveView(LoginRequiredMixin, View):
             request,
             f'You have left {organization.name}.'
         )
-        return redirect('organizations:user_organizations')
+        return redirect('organizations:league_list')
 
 
 # Role Management

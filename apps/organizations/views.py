@@ -15,13 +15,13 @@ from apps.membership.models import Membership
 
 from .models import Organization, LeagueProfile, TeamProfile, SquadProfile
 from .forms import (
-    LeagueCreateForm, TeamCreateForm, SquadCreateForm, ClubCreateForm,
+    LeagueCreateForm, TeamCreateForm, SquadCreateForm, ClubCreateForm, PracticeGroupCreateForm,
     OrganizationEditForm, LeagueProfileForm, TeamProfileForm, SquadProfileForm
 )
 from .mixins import UserNameRequiredMixin
 from .permissions import (
     OrgOwnerRequiredMixin, OrgAdminRequiredMixin,
-    is_org_admin, get_user_membership
+    is_org_admin, get_user_membership, can_create_sub_organization
 )
 
 
@@ -106,6 +106,7 @@ class TeamDetailView(DetailView):
         # Check if user can edit
         if self.request.user.is_authenticated:
             context['can_edit'] = is_org_admin(self.request.user, self.object)
+            context['can_create_sub_org'] = can_create_sub_organization(self.request.user, self.object)
             context['user_membership'] = get_user_membership(self.request.user, self.object)
             # Check for pending membership request
             context['has_pending_request'] = Membership.objects.filter(
@@ -240,6 +241,27 @@ class OrganizationTypeSelectView(LoginRequiredMixin, TemplateView):
     """View for selecting organization type to create."""
     template_name = 'organizations/organization_type_select.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Check if parent parameter is provided (for creating sub-organizations)
+        parent_slug = self.request.GET.get('parent')
+        if parent_slug:
+            try:
+                parent_team = Organization.objects.get(slug=parent_slug, type=Organization.TEAM)
+                # Verify user has permission to create sub-organizations
+                if can_create_sub_organization(self.request.user, parent_team):
+                    context['parent_team'] = parent_team
+                    context['creating_sub_org'] = True
+                else:
+                    messages.error(self.request, 'You do not have permission to create sub-organizations for this team.')
+            except Organization.DoesNotExist:
+                messages.error(self.request, 'Parent team not found.')
+        else:
+            context['creating_sub_org'] = False
+
+        return context
+
 
 class LeagueCreateView(UserNameRequiredMixin, LoginRequiredMixin, CreateView):
     """View for creating a new league."""
@@ -305,6 +327,22 @@ class SquadCreateView(UserNameRequiredMixin, LoginRequiredMixin, CreateView):
     form_class = SquadCreateForm
     template_name = 'organizations/organization_create.html'
 
+    def get_initial(self):
+        """Pre-populate parent field if provided in query parameter."""
+        initial = super().get_initial()
+        parent_slug = self.request.GET.get('parent')
+        if parent_slug:
+            try:
+                parent_team = Organization.objects.get(slug=parent_slug, type=Organization.TEAM)
+                # Verify user has permission to create sub-organizations
+                if can_create_sub_organization(self.request.user, parent_team):
+                    initial['parent'] = parent_team.pk
+                else:
+                    messages.error(self.request, 'You do not have permission to create sub-organizations for this team.')
+            except Organization.DoesNotExist:
+                messages.error(self.request, 'Parent team not found.')
+        return initial
+
     def form_valid(self, form):
         """Create squad and assign creator as owner."""
         with transaction.atomic():
@@ -334,6 +372,22 @@ class ClubCreateView(UserNameRequiredMixin, LoginRequiredMixin, CreateView):
     form_class = ClubCreateForm
     template_name = 'organizations/organization_create.html'
 
+    def get_initial(self):
+        """Pre-populate parent field if provided in query parameter."""
+        initial = super().get_initial()
+        parent_slug = self.request.GET.get('parent')
+        if parent_slug:
+            try:
+                parent_team = Organization.objects.get(slug=parent_slug, type=Organization.TEAM)
+                # Verify user has permission to create sub-organizations
+                if can_create_sub_organization(self.request.user, parent_team):
+                    initial['parent'] = parent_team.pk
+                else:
+                    messages.error(self.request, 'You do not have permission to create sub-organizations for this team.')
+            except Organization.DoesNotExist:
+                messages.error(self.request, 'Parent team not found.')
+        return initial
+
     def form_valid(self, form):
         """Create club and assign creator as owner."""
         with transaction.atomic():
@@ -354,6 +408,51 @@ class ClubCreateView(UserNameRequiredMixin, LoginRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
         context['org_type'] = 'Club'
         context['org_type_value'] = Organization.CLUB
+        return context
+
+
+class PracticeGroupCreateView(UserNameRequiredMixin, LoginRequiredMixin, CreateView):
+    """View for creating a new practice group."""
+    model = Organization
+    form_class = PracticeGroupCreateForm
+    template_name = 'organizations/organization_create.html'
+
+    def get_initial(self):
+        """Pre-populate parent field if provided in query parameter."""
+        initial = super().get_initial()
+        parent_slug = self.request.GET.get('parent')
+        if parent_slug:
+            try:
+                parent_team = Organization.objects.get(slug=parent_slug, type=Organization.TEAM)
+                # Verify user has permission to create sub-organizations
+                if can_create_sub_organization(self.request.user, parent_team):
+                    initial['parent'] = parent_team.pk
+                else:
+                    messages.error(self.request, 'You do not have permission to create sub-organizations for this team.')
+            except Organization.DoesNotExist:
+                messages.error(self.request, 'Parent team not found.')
+        return initial
+
+    def form_valid(self, form):
+        """Create practice group and assign creator as owner."""
+        with transaction.atomic():
+            self.object = form.save()
+            # Create membership for creator as Owner
+            Membership.objects.create(
+                user=self.request.user,
+                organization=self.object,
+                permission_level=Membership.OWNER,
+                status=Membership.ACTIVE
+            )
+            # Set up default chat rooms
+            self.object.setup_default_chat_rooms()
+            messages.success(self.request, f'Practice Group "{self.object.name}" created successfully!')
+        return redirect(self.object.get_absolute_url())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['org_type'] = 'Practice Group'
+        context['org_type_value'] = Organization.PRACTICE_GROUP
         return context
 
 
@@ -499,30 +598,3 @@ class OrganizationDeleteView(OrgOwnerRequiredMixin, DeleteView):
         return context
 
 
-# User Dashboard
-
-class UserOrganizationsView(LoginRequiredMixin, TemplateView):
-    """View showing user's organizations and memberships."""
-    template_name = 'organizations/user_organizations.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        # Get all user's memberships
-        memberships = Membership.objects.filter(
-            user=self.request.user
-        ).select_related('organization').order_by('-join_date')
-
-        # Separate by permission level
-        context['owned_orgs'] = [m for m in memberships if m.permission_level == Membership.OWNER]
-        context['admin_orgs'] = [m for m in memberships if m.permission_level == Membership.ADMIN]
-        context['member_orgs'] = [m for m in memberships if m.permission_level not in [Membership.OWNER, Membership.ADMIN]]
-
-        # Get pending requests (if user is admin of any org)
-        admin_org_ids = [m.organization.id for m in memberships if m.permission_level in [Membership.OWNER, Membership.ADMIN]]
-        context['pending_requests_count'] = Membership.objects.filter(
-            organization_id__in=admin_org_ids,
-            status=Membership.PROSPECT
-        ).count()
-
-        return context
