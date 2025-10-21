@@ -404,8 +404,18 @@ class OrganizationEditView(OrgAdminRequiredMixin, UpdateView):
         context = self.get_context_data()
         profile_form = context.get('profile_form')
 
+        # Debug: Check if logo is in the request
+        print(f"DEBUG: Files in request: {self.request.FILES}")
+        print(f"DEBUG: Logo in form: {form.cleaned_data.get('logo')}")
+
         with transaction.atomic():
             self.object = form.save()
+
+            # Debug: Check logo after save
+            print(f"DEBUG: Organization logo after save: {self.object.logo}")
+            if self.object.logo:
+                print(f"DEBUG: Logo URL: {self.object.logo.url}")
+                print(f"DEBUG: Logo path: {self.object.logo.name}")
 
             # Save profile if it exists
             if profile_form and profile_form.is_valid():
