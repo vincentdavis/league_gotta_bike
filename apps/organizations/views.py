@@ -368,21 +368,8 @@ class OrganizationEditView(OrgAdminRequiredMixin, UpdateView):
     slug_url_kwarg = 'slug'
 
     def get_form_kwargs(self):
-        """Get form kwargs with debug logging."""
-        kwargs = super().get_form_kwargs()
-        logger.info("🔍 get_form_kwargs called")
-        logger.info(f"🔍 FILES in kwargs: {kwargs.get('files')}")
-        logger.info(f"🔍 Instance: {kwargs.get('instance')}")
-        return kwargs
-
-    def get_form(self, form_class=None):
-        """Get form with debug logging."""
-        form = super().get_form(form_class)
-        logger.info("📋 get_form called")
-        logger.info(f"📋 Form class: {form.__class__.__name__}")
-        logger.info(f"📋 Form has logo field: {'logo' in form.fields}")
-        logger.info(f"📋 Form.files: {form.files}")
-        return form
+        """Get form kwargs."""
+        return super().get_form_kwargs()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -422,35 +409,13 @@ class OrganizationEditView(OrgAdminRequiredMixin, UpdateView):
 
         return context
 
-    def post(self, request, *args, **kwargs):
-        """Handle POST request with debug logging."""
-        logger.info("📝 OrganizationEditView POST called")
-        logger.info(f"📝 Files in request: {request.FILES}")
-        logger.info(f"📝 POST data keys: {request.POST.keys()}")
-        return super().post(request, *args, **kwargs)
-
     def form_valid(self, form):
         """Save both organization and profile."""
-        logger.info("✅ form_valid() called - Form is VALID")
-
         context = self.get_context_data()
         profile_form = context.get('profile_form')
 
-        # Debug: Check if logo is in the request
-        logger.info(f"DEBUG: Files in request: {self.request.FILES}")
-        logger.info(f"DEBUG: Logo in form.cleaned_data: {form.cleaned_data.get('logo')}")
-        logger.info(f"DEBUG: Logo field has changed: {'logo' in form.changed_data}")
-
         with transaction.atomic():
             self.object = form.save()
-
-            # Debug: Check logo after save
-            logger.info(f"DEBUG: Organization logo after save: {self.object.logo}")
-            if self.object.logo:
-                logger.info(f"DEBUG: Logo URL: {self.object.logo.url}")
-                logger.info(f"DEBUG: Logo path: {self.object.logo.name}")
-            else:
-                logger.warning("DEBUG: No logo saved!")
 
             # Save profile if it exists
             if profile_form and profile_form.is_valid():
@@ -467,15 +432,13 @@ class OrganizationEditView(OrgAdminRequiredMixin, UpdateView):
         return redirect(self.object.get_absolute_url())
 
     def form_invalid(self, form):
-        """Handle invalid form with debug logging."""
-        logger.error("❌ form_invalid() called - Form has ERRORS")
-        logger.error(f"❌ Form errors: {form.errors}")
-        logger.error(f"❌ Files in request: {self.request.FILES}")
+        """Handle invalid form."""
+        logger.error(f"Organization edit form validation failed: {form.errors}")
 
         context = self.get_context_data()
         profile_form = context.get('profile_form')
         if profile_form and not profile_form.is_valid():
-            logger.error(f"❌ Profile form errors: {profile_form.errors}")
+            logger.error(f"Profile form validation failed: {profile_form.errors}")
 
         return super().form_invalid(form)
 

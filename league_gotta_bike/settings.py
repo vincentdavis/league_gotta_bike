@@ -218,8 +218,7 @@ if env_settings.USE_S3:
     # Cloudflare R2 Storage Configuration (S3-compatible)
     import logging
     logger = logging.getLogger(__name__)
-    logger.info(f"🚀 R2 Storage ENABLED - Bucket: {env_settings.AWS_STORAGE_BUCKET_NAME}")
-    logger.info(f"🚀 R2 Endpoint: {env_settings.AWS_S3_ENDPOINT_URL}")
+    logger.info(f"R2 Storage enabled: {env_settings.AWS_STORAGE_BUCKET_NAME}")
 
     AWS_ACCESS_KEY_ID = env_settings.AWS_ACCESS_KEY_ID
     AWS_SECRET_ACCESS_KEY = env_settings.AWS_SECRET_ACCESS_KEY
