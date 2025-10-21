@@ -35,5 +35,6 @@ dev = [
     "cookiecutter>=2.6.0", # needed for tailwind app
     "ruff>=0.13.0",
     "ty>=0.0.1a20",
-        "honcho>=2.0.0",
+    "honcho>=2.0.0",
+    "logfire-mcp>=0.6.0",
 ]

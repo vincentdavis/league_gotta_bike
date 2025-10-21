@@ -226,7 +226,8 @@ class LeagueListView(ListView):
             context['user_leagues_teams'] = []
 
         # Separate leagues and teams for display
-        organizations = context['organizations']
+        # Get organizations from either paginated object_list or organizations context variable
+        organizations = context.get('object_list', context.get('organizations', []))
         context['leagues'] = [org for org in organizations if org.type == Organization.LEAGUE]
         context['teams'] = [org for org in organizations if org.type == Organization.TEAM]
 
