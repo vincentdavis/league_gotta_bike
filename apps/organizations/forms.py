@@ -253,16 +253,12 @@ class OrganizationEditForm(forms.ModelForm):
     class Meta:
         model = Organization
         fields = [
-            'name', 'slug', 'description', 'contact_email', 'contact_phone',
+            'name', 'description', 'contact_email', 'contact_phone',
             'website_url', 'logo', 'enable_member_chat', 'enable_news_channel', 'membership_open', 'is_active'
         ]
         widgets = {
             'name': forms.TextInput(attrs={
                 'class': 'input input-bordered w-full'
-            }),
-            'slug': forms.TextInput(attrs={
-                'class': 'input input-bordered w-full',
-                'readonly': 'readonly'
             }),
             'description': forms.Textarea(attrs={
                 'class': 'textarea textarea-bordered w-full',
