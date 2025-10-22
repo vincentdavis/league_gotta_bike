@@ -25,4 +25,7 @@ urlpatterns = [
     path('member/<int:membership_id>/role/', views.MembershipRoleUpdateView.as_view(), name='role_update'),
     path('<slug:slug>/member/<int:membership_id>/roles/', views.MemberRoleManagementView.as_view(), name='member_roles'),
     path('member/<int:membership_id>/remove/', views.MembershipRemoveView.as_view(), name='member_remove'),
+
+    # Sub-organization member management
+    path('<slug:slug>/manage-members/', views.SubOrgMemberManagementView.as_view(), name='sub_org_manage_members'),
 ]

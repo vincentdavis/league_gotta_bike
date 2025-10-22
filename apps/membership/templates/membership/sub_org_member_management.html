@@ -1,0 +1,197 @@
+{% extends "organizations/base.html" %}
+
+{% block title %}Manage Members - {{ organization.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Manage Members</h1>
+                <p class="text-gray-600 mt-2">{{ organization.name }}</p>
+                <p class="text-sm text-gray-500 mt-1">
+                    Select members from <strong>{{ parent_org.name }}</strong> to add to this {{ organization.get_type_display|lower }}
+                </p>
+            </div>
+            <a href="{{ organization.parent.get_absolute_url }}" class="btn btn-ghost btn-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back to {{ parent_org.name }}
+            </a>
+        </div>
+    </div>
+
+    <!-- Member Selection Form -->
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+
+                <!-- Select/Deselect All Controls -->
+                <div class="flex items-center justify-between mb-4 pb-4 border-b border-base-300">
+                    <div>
+                        <h2 class="text-xl font-bold">Team Members</h2>
+                        <p class="text-sm text-gray-500">{{ members_data|length }} member(s) available</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="selectAll()" class="btn btn-sm btn-outline">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Select All
+                        </button>
+                        <button type="button" onclick="deselectAll()" class="btn btn-sm btn-outline">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Deselect All
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Members Table -->
+                {% if members_data %}
+                <div class="overflow-x-auto">
+                    <table class="table table-zebra">
+                        <thead>
+                            <tr>
+                                <th class="w-12">
+                                    <input type="checkbox" id="select-all-checkbox" class="checkbox" onchange="toggleAll(this)">
+                                </th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role in Team</th>
+                                <th class="text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for data in members_data %}
+                            <tr>
+                                <td>
+                                    <input
+                                        type="checkbox"
+                                        name="selected_members"
+                                        value="{{ data.user.id }}"
+                                        class="checkbox member-checkbox"
+                                        {% if data.is_selected %}checked{% endif %}
+                                    >
+                                </td>
+                                <td>
+                                    <div class="flex items-center gap-3">
+                                        <div>
+                                            <div class="font-bold">{{ data.user.get_full_name }}</div>
+                                            <div class="text-sm text-gray-500">@{{ data.user.username }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="text-sm">{{ data.user.email }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-sm badge-ghost">
+                                        {{ data.membership.get_permission_level_display }}
+                                    </span>
+                                    {% if data.membership.member_roles.exists %}
+                                    <div class="text-xs text-gray-500 mt-1">
+                                        {{ data.membership.get_roles_display }}
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if data.is_selected %}
+                                    <span class="badge badge-success badge-sm">In {{ organization.get_type_display }}</span>
+                                    {% else %}
+                                    <span class="badge badge-ghost badge-sm">Not in {{ organization.get_type_display }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-8">
+                    <p class="text-gray-500">No members found in {{ parent_org.name }}</p>
+                </div>
+                {% endif %}
+
+                <!-- Submit Buttons -->
+                <div class="card-actions justify-end mt-6 pt-6 border-t border-base-300">
+                    <a href="{{ organization.parent.get_absolute_url }}" class="btn btn-ghost">Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Help Text -->
+    <div class="alert alert-info mt-6">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <div>
+            <h3 class="font-bold">How it works</h3>
+            <div class="text-sm">
+                <ul class="list-disc list-inside mt-1">
+                    <li>Only members of <strong>{{ parent_org.name }}</strong> can be added to this {{ organization.get_type_display|lower }}</li>
+                    <li>Check the boxes next to members you want to include</li>
+                    <li>Uncheck boxes to remove members from this {{ organization.get_type_display|lower }}</li>
+                    <li>Click "Save Changes" to apply your selections</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function selectAll() {
+        document.querySelectorAll('.member-checkbox').forEach(checkbox => {
+            checkbox.checked = true;
+        });
+        document.getElementById('select-all-checkbox').checked = true;
+    }
+
+    function deselectAll() {
+        document.querySelectorAll('.member-checkbox').forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        document.getElementById('select-all-checkbox').checked = false;
+    }
+
+    function toggleAll(checkbox) {
+        document.querySelectorAll('.member-checkbox').forEach(cb => {
+            cb.checked = checkbox.checked;
+        });
+    }
+
+    // Update select-all checkbox state when individual checkboxes change
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectAllCheckbox = document.getElementById('select-all-checkbox');
+        const memberCheckboxes = document.querySelectorAll('.member-checkbox');
+
+        memberCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const allChecked = Array.from(memberCheckboxes).every(cb => cb.checked);
+                const noneChecked = Array.from(memberCheckboxes).every(cb => !cb.checked);
+
+                if (allChecked) {
+                    selectAllCheckbox.checked = true;
+                    selectAllCheckbox.indeterminate = false;
+                } else if (noneChecked) {
+                    selectAllCheckbox.checked = false;
+                    selectAllCheckbox.indeterminate = false;
+                } else {
+                    selectAllCheckbox.indeterminate = true;
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

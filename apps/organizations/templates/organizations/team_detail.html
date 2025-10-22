@@ -216,15 +216,52 @@
             <div class="space-y-3">
                 {% for org in sub_orgs %}
                 <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                    <h3 class="text-lg font-semibold text-gray-900">
-                        <a href="{{ org.get_absolute_url }}" class="hover:text-blue-600">
-                            {{ org.name }}
-                        </a>
-                    </h3>
-                    <p class="text-sm text-gray-500">{{ org.get_type_display }}</p>
-                    {% if org.description %}
-                    <p class="text-gray-600 text-sm mt-2 line-clamp-2">{{ org.description }}</p>
-                    {% endif %}
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold text-gray-900">
+                                <a href="{{ org.get_absolute_url }}" class="hover:text-blue-600">
+                                    {{ org.name }}
+                                </a>
+                            </h3>
+                            <p class="text-sm text-gray-500">{{ org.get_type_display }}</p>
+                            {% if org.description %}
+                            <p class="text-gray-600 text-sm mt-2 line-clamp-2">{{ org.description }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="ml-4 flex flex-col gap-2">
+                            <!-- Add Members Button (for owners, admins, managers) -->
+                            {% if can_create_sub_org %}
+                            <a href="{% url 'membership:sub_org_manage_members' slug=org.slug %}" class="btn btn-sm btn-primary">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                                </svg>
+                                Add Members
+                            </a>
+                            {% endif %}
+                            <!-- Chat Room Buttons -->
+                            {% if org.chat_rooms.exists %}
+                            <div class="flex gap-2">
+                                {% for room in org.chat_rooms.all %}
+                                    {% if room.room_type == 'announcement' %}
+                                    <a href="{{ room.get_absolute_url }}" class="btn btn-sm btn-outline btn-warning">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                                        </svg>
+                                        News & Announcements
+                                    </a>
+                                    {% elif room.room_type == 'organization' %}
+                                    <a href="{{ room.get_absolute_url }}" class="btn btn-sm btn-outline btn-info">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                        </svg>
+                                        Chat
+                                    </a>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
                 {% endfor %}
             </div>

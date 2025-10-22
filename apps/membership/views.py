@@ -466,3 +466,120 @@ class MembershipRemoveView(OrgMemberManagerRequiredMixin, DeleteView):
         context = super().get_context_data(**kwargs)
         context['organization'] = self.get_object().organization
         return context
+
+
+class SubOrgMemberManagementView(OrgMemberManagerRequiredMixin, View):
+    """View for managing members of a sub-organization (Squad, Club, Practice Group)."""
+    template_name = 'membership/sub_org_member_management.html'
+
+    def get_organization(self):
+        """Get the sub-organization."""
+        return get_object_or_404(Organization, slug=self.kwargs['slug'])
+
+    def get(self, request, slug):
+        """Display the member management interface."""
+        sub_org = self.get_organization()
+
+        # Ensure this is actually a sub-organization
+        if not sub_org.parent:
+            messages.error(request, 'This feature is only available for sub-organizations.')
+            return redirect(sub_org.get_absolute_url())
+
+        # Get all active members from parent organization
+        parent_members = Membership.objects.filter(
+            organization=sub_org.parent,
+            status=Membership.ACTIVE
+        ).select_related('user').order_by('user__first_name', 'user__last_name')
+
+        # Get current members of sub-org
+        sub_org_member_ids = set(
+            Membership.objects.filter(
+                organization=sub_org,
+                status=Membership.ACTIVE
+            ).values_list('user_id', flat=True)
+        )
+
+        # Build member list with selection status
+        members_data = []
+        for membership in parent_members:
+            members_data.append({
+                'membership': membership,
+                'user': membership.user,
+                'is_selected': membership.user.id in sub_org_member_ids,
+            })
+
+        context = {
+            'organization': sub_org,
+            'parent_org': sub_org.parent,
+            'members_data': members_data,
+        }
+
+        return render(request, self.template_name, context)
+
+    def post(self, request, slug):
+        """Process member selection changes."""
+        sub_org = self.get_organization()
+
+        # Ensure this is a sub-organization
+        if not sub_org.parent:
+            messages.error(request, 'This feature is only available for sub-organizations.')
+            return redirect(sub_org.get_absolute_url())
+
+        # Get selected member IDs from form
+        selected_member_ids = request.POST.getlist('selected_members')
+        selected_member_ids = [int(id) for id in selected_member_ids]
+
+        # Get current members of sub-org
+        current_memberships = Membership.objects.filter(
+            organization=sub_org,
+            status=Membership.ACTIVE
+        )
+        current_member_ids = set(current_memberships.values_list('user_id', flat=True))
+
+        # Get all valid parent members
+        parent_member_ids = set(
+            Membership.objects.filter(
+                organization=sub_org.parent,
+                status=Membership.ACTIVE
+            ).values_list('user_id', flat=True)
+        )
+
+        # Only process members that are in the parent org
+        valid_selected_ids = set(selected_member_ids) & parent_member_ids
+
+        with transaction.atomic():
+            # Members to add (selected but not currently in sub-org)
+            members_to_add = valid_selected_ids - current_member_ids
+            for user_id in members_to_add:
+                from django.contrib.auth import get_user_model
+                User = get_user_model()
+                user = User.objects.get(id=user_id)
+                Membership.objects.create(
+                    user=user,
+                    organization=sub_org,
+                    permission_level=Membership.MEMBER,
+                    status=Membership.ACTIVE
+                )
+
+            # Members to remove (currently in sub-org but not selected)
+            members_to_remove = current_member_ids - valid_selected_ids
+            Membership.objects.filter(
+                organization=sub_org,
+                user_id__in=members_to_remove,
+                status=Membership.ACTIVE
+            ).delete()
+
+        added_count = len(members_to_add)
+        removed_count = len(members_to_remove)
+
+        if added_count > 0 or removed_count > 0:
+            message_parts = []
+            if added_count > 0:
+                message_parts.append(f'{added_count} member(s) added')
+            if removed_count > 0:
+                message_parts.append(f'{removed_count} member(s) removed')
+            messages.success(request, f'{sub_org.name}: {", ".join(message_parts)}.')
+        else:
+            messages.info(request, 'No changes made to member list.')
+
+        return redirect(sub_org.parent.get_absolute_url())

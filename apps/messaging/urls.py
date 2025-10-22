@@ -8,4 +8,5 @@ app_name = 'messaging'
 
 urlpatterns = [
     path('', views.ChatRoomView.as_view(), name='chat_room'),
+    path('<slug:slug>/', views.ChatRoomDetailView.as_view(), name='chat_room_detail'),
 ]
