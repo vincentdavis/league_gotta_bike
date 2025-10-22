@@ -227,12 +227,12 @@ class LeagueListView(ListView):
         # Get search query from GET parameters
         search_query = self.request.GET.get('q', '').strip()
 
-        # Get leagues and standalone teams (teams without a parent)
+        # Get all leagues and teams (teams can belong to a league or be standalone)
         queryset = Organization.objects.filter(
             is_active=True
         ).filter(
             Q(type=Organization.LEAGUE) |
-            Q(type=Organization.TEAM, parent__isnull=True)
+            Q(type=Organization.TEAM)
         ).select_related('parent').prefetch_related('league_profile', 'team_profile')
 
         # Apply search filter if query exists

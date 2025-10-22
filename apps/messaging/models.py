@@ -151,6 +151,18 @@ class ChatRoom(models.Model):
             chatroomparticipant__is_active=True
         )
 
+    def get_total_message_count(self):
+        """Get total number of messages in this room."""
+        return self.messages.count()
+
+    def get_recent_message_count(self, hours=24):
+        """Get number of messages in the last N hours."""
+        from django.utils import timezone
+        from datetime import timedelta
+
+        cutoff_time = timezone.now() - timedelta(hours=hours)
+        return self.messages.filter(timestamp__gte=cutoff_time).count()
+
 
 class ChatRoomParticipant(models.Model):
     """
