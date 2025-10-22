@@ -1,0 +1,266 @@
+{% extends "organizations/base.html" %}
+
+{% block title %}Create Event - {{ organization.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Create Event</h1>
+        <p class="text-gray-600">Create a new event for {{ organization.name }}</p>
+    </div>
+
+    <!-- Form -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            <!-- Display form errors -->
+            {% if form.non_field_errors %}
+            <div class="alert alert-error">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <!-- Basic Information -->
+            <div class="space-y-4">
+                <h2 class="text-xl font-semibold text-gray-900 border-b pb-2">Basic Information</h2>
+
+                <div>
+                    <label for="{{ form.title.id_for_label }}" class="label">
+                        <span class="label-text font-medium">Event Title <span class="text-error">*</span></span>
+                    </label>
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ form.title.errors.0 }}</span>
+                    </label>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="{{ form.description.id_for_label }}" class="label">
+                        <span class="label-text font-medium">Description</span>
+                    </label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ form.description.errors.0 }}</span>
+                    </label>
+                    {% endif %}
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="{{ form.event_type.id_for_label }}" class="label">
+                            <span class="label-text font-medium">Event Type <span class="text-error">*</span></span>
+                        </label>
+                        {{ form.event_type }}
+                        {% if form.event_type.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.event_type.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label for="{{ form.view_permissions.id_for_label }}" class="label">
+                            <span class="label-text font-medium">Visibility <span class="text-error">*</span></span>
+                        </label>
+                        {{ form.view_permissions }}
+                        {% if form.view_permissions.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.view_permissions.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                        <label class="label">
+                            <span class="label-text-alt text-gray-500">Members Only = organization members, Public = any logged-in user</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Date & Time -->
+            <div class="space-y-4">
+                <h2 class="text-xl font-semibold text-gray-900 border-b pb-2">Date & Time</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="{{ form.start_datetime.id_for_label }}" class="label">
+                            <span class="label-text font-medium">Start Date & Time <span class="text-error">*</span></span>
+                        </label>
+                        {{ form.start_datetime }}
+                        {% if form.start_datetime.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.start_datetime.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label for="{{ form.end_datetime.id_for_label }}" class="label">
+                            <span class="label-text font-medium">End Date & Time <span class="text-error">*</span></span>
+                        </label>
+                        {{ form.end_datetime }}
+                        {% if form.end_datetime.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.end_datetime.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-control">
+                    <label class="label cursor-pointer justify-start gap-2">
+                        {{ form.all_day }}
+                        <span class="label-text">All-day event</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Location -->
+            <div class="space-y-4">
+                <h2 class="text-xl font-semibold text-gray-900 border-b pb-2">Location</h2>
+
+                <div>
+                    <label for="{{ form.location.id_for_label }}" class="label">
+                        <span class="label-text font-medium">Location</span>
+                    </label>
+                    {{ form.location }}
+                    {% if form.location.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ form.location.errors.0 }}</span>
+                    </label>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="{{ form.location_address.id_for_label }}" class="label">
+                        <span class="label-text font-medium">Full Address</span>
+                    </label>
+                    {{ form.location_address }}
+                    {% if form.location_address.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ form.location_address.errors.0 }}</span>
+                    </label>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="{{ form.location_url.id_for_label }}" class="label">
+                        <span class="label-text font-medium">Location URL</span>
+                    </label>
+                    {{ form.location_url }}
+                    {% if form.location_url.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ form.location_url.errors.0 }}</span>
+                    </label>
+                    {% endif %}
+                    <label class="label">
+                        <span class="label-text-alt text-gray-500">Link to Google Maps or other location service</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Registration & Attendance -->
+            <div class="space-y-4">
+                <h2 class="text-xl font-semibold text-gray-900 border-b pb-2">Registration & Attendance</h2>
+
+                <div class="form-control">
+                    <label class="label cursor-pointer justify-start gap-2">
+                        {{ form.registration_required }}
+                        <span class="label-text">Require registration/RSVP</span>
+                    </label>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="{{ form.max_attendees.id_for_label }}" class="label">
+                            <span class="label-text font-medium">Max Attendees</span>
+                        </label>
+                        {{ form.max_attendees }}
+                        {% if form.max_attendees.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.max_attendees.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                        <label class="label">
+                            <span class="label-text-alt text-gray-500">Leave blank for unlimited</span>
+                        </label>
+                    </div>
+
+                    <div>
+                        <label for="{{ form.registration_deadline.id_for_label }}" class="label">
+                            <span class="label-text font-medium">Registration Deadline</span>
+                        </label>
+                        {{ form.registration_deadline }}
+                        {% if form.registration_deadline.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.registration_deadline.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div>
+                    <label for="{{ form.cost.id_for_label }}" class="label">
+                        <span class="label-text font-medium">Cost per Attendee</span>
+                    </label>
+                    {{ form.cost }}
+                    {% if form.cost.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ form.cost.errors.0 }}</span>
+                    </label>
+                    {% endif %}
+                    <label class="label">
+                        <span class="label-text-alt text-gray-500">Leave blank or 0 for free events</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Additional Details -->
+            <div class="space-y-4">
+                <h2 class="text-xl font-semibold text-gray-900 border-b pb-2">Additional Details</h2>
+
+                <div>
+                    <label for="{{ form.equipment_needed.id_for_label }}" class="label">
+                        <span class="label-text font-medium">Equipment Needed</span>
+                    </label>
+                    {{ form.equipment_needed }}
+                    {% if form.equipment_needed.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ form.equipment_needed.errors.0 }}</span>
+                    </label>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="{{ form.notes.id_for_label }}" class="label">
+                        <span class="label-text font-medium">Internal Notes</span>
+                    </label>
+                    {{ form.notes }}
+                    {% if form.notes.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ form.notes.errors.0 }}</span>
+                    </label>
+                    {% endif %}
+                    <label class="label">
+                        <span class="label-text-alt text-gray-500">These notes are only visible to organizers</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex gap-4 pt-4 border-t">
+                <button type="submit" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Create Event
+                </button>
+                <a href="{{ organization.get_absolute_url }}" class="btn btn-ghost">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

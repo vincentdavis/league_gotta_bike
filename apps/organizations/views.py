@@ -12,6 +12,7 @@ from django.views.generic import DetailView, ListView, CreateView, UpdateView, D
 from django.views import View
 
 from apps.membership.models import Membership
+from apps.events.models import Event
 
 from .models import Organization, LeagueProfile, TeamProfile, SquadProfile
 from .forms import (
@@ -21,7 +22,7 @@ from .forms import (
 from .mixins import UserNameRequiredMixin
 from .permissions import (
     OrgOwnerRequiredMixin, OrgAdminRequiredMixin,
-    is_org_admin, get_user_membership, can_create_sub_organization
+    is_org_admin, get_user_membership, can_create_sub_organization, can_manage_members
 )
 
 
@@ -46,9 +47,30 @@ class LeagueDetailView(DetailView):
         ).order_by('name')
         # Get league profile if exists
         context['league_profile'] = getattr(self.object, 'league_profile', None)
+
+        # Get events for this league
+        if self.request.user.is_authenticated:
+            user_membership = get_user_membership(self.request.user, self.object)
+            if user_membership and user_membership.status == Membership.ACTIVE:
+                # User is a member - show all events (members + public)
+                context['events'] = Event.objects.filter(
+                    organization=self.object,
+                    status=Event.PUBLISHED
+                ).order_by('start_datetime')[:10]
+            else:
+                # User is not a member - show only public events
+                context['events'] = Event.objects.filter(
+                    organization=self.object,
+                    status=Event.PUBLISHED,
+                    view_permissions=Event.PUBLIC
+                ).order_by('start_datetime')[:10]
+        else:
+            context['events'] = Event.objects.none()
+
         # Check if user can edit
         if self.request.user.is_authenticated:
             context['can_edit'] = is_org_admin(self.request.user, self.object)
+            context['can_manage_events'] = can_manage_members(self.request.user, self.object)
             context['user_membership'] = get_user_membership(self.request.user, self.object)
             # Check for pending membership request
             context['has_pending_request'] = Membership.objects.filter(
@@ -103,10 +125,31 @@ class TeamDetailView(DetailView):
         context['team_profile'] = getattr(self.object, 'team_profile', None)
         # Get team members
         context['members'] = self.object.get_members()
+
+        # Get events for this team
+        if self.request.user.is_authenticated:
+            user_membership = get_user_membership(self.request.user, self.object)
+            if user_membership and user_membership.status == Membership.ACTIVE:
+                # User is a member - show all events (members + public)
+                context['events'] = Event.objects.filter(
+                    organization=self.object,
+                    status=Event.PUBLISHED
+                ).order_by('start_datetime')[:10]
+            else:
+                # User is not a member - show only public events
+                context['events'] = Event.objects.filter(
+                    organization=self.object,
+                    status=Event.PUBLISHED,
+                    view_permissions=Event.PUBLIC
+                ).order_by('start_datetime')[:10]
+        else:
+            context['events'] = Event.objects.none()
+
         # Check if user can edit
         if self.request.user.is_authenticated:
             context['can_edit'] = is_org_admin(self.request.user, self.object)
             context['can_create_sub_org'] = can_create_sub_organization(self.request.user, self.object)
+            context['can_manage_events'] = can_manage_members(self.request.user, self.object)
             context['user_membership'] = get_user_membership(self.request.user, self.object)
             # Check for pending membership request
             context['has_pending_request'] = Membership.objects.filter(

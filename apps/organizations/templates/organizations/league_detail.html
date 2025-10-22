@@ -154,6 +154,65 @@
         {% endif %}
     </div>
 
+    <!-- Events Section -->
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-2xl font-bold text-gray-900">Upcoming Events</h2>
+            {% if can_manage_events %}
+            <a href="{% url 'events:event_create' org_slug=league.slug %}" class="btn btn-primary btn-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Create Event
+            </a>
+            {% endif %}
+        </div>
+
+        {% if events %}
+        <div class="space-y-3">
+            {% for event in events %}
+            <div class="p-4 border border-gray-200 rounded-lg hover:border-primary transition-colors">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <h3 class="font-semibold text-gray-900">{{ event.title }}</h3>
+                        <div class="mt-2 space-y-1">
+                            <p class="text-sm text-gray-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                {{ event.start_datetime|date:"M d, Y - g:i A" }}
+                            </p>
+                            {% if event.location %}
+                            <p class="text-sm text-gray-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                {{ event.location }}
+                            </p>
+                            {% endif %}
+                        </div>
+                        {% if event.description %}
+                        <p class="text-gray-600 text-sm mt-2 line-clamp-2">{{ event.description }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="ml-4">
+                        <span class="badge badge-sm {% if event.event_type == 'race' %}badge-error{% elif event.event_type == 'practice' %}badge-info{% elif event.event_type == 'meeting' %}badge-warning{% else %}badge-ghost{% endif %}">
+                            {{ event.get_event_type_display }}
+                        </span>
+                        {% if event.view_permissions == 'public' %}
+                        <span class="badge badge-sm badge-success ml-1">Public</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-500">No upcoming events</p>
+        {% endif %}
+    </div>
+
     <!-- Teams List -->
     <div class="bg-white shadow rounded-lg p-6">
         <h2 class="text-2xl font-bold text-gray-900 mb-4">Teams</h2>

@@ -57,6 +57,15 @@ class Event(models.Model):
         (MONTHLY, "Monthly"),
     ]
 
+    # View permissions
+    MEMBERS = "members"
+    PUBLIC = "public"
+
+    VIEW_PERMISSION_CHOICES = [
+        (MEMBERS, "Members Only"),
+        (PUBLIC, "Public (Login Required)"),
+    ]
+
     # Core fields
     title = models.CharField(max_length=200, help_text="Event title")
     description = models.TextField(blank=True, help_text="Event description and details")
@@ -97,7 +106,13 @@ class Event(models.Model):
     registration_deadline = models.DateTimeField(
         null=True, blank=True, help_text="Deadline for registration/RSVP"
     )
-    is_public = models.BooleanField(default=False, help_text="Is this event visible to non-members?")
+    view_permissions = models.CharField(
+        max_length=20,
+        choices=VIEW_PERMISSION_CHOICES,
+        default=MEMBERS,
+        help_text="Who can view this event? Members = organization members only, Public = any logged-in user",
+    )
+    is_public = models.BooleanField(default=False, help_text="Deprecated: Use view_permissions instead")
 
     # Additional details
     notes = models.TextField(blank=True, help_text="Internal notes (not visible to attendees)")

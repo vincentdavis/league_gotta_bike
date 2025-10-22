@@ -52,6 +52,11 @@ urlpatterns += [
     path('chat/', include('apps.messaging.urls')),
 ]
 
+# Events URLs
+urlpatterns += [
+    path('events/', include('apps.events.urls')),
+]
+
 # Organizations URLs (must be last due to catch-all slug patterns)
 urlpatterns += [
     path('', include('apps.organizations.urls')),
