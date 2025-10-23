@@ -88,6 +88,15 @@ class LeagueCreateForm(OrganizationBaseForm):
         label='Region',
         help_text='Geographic region or state'
     )
+    banner = forms.ImageField(
+        required=False,
+        widget=forms.FileInput(attrs={
+            'class': 'file-input file-input-bordered w-full',
+            'accept': 'image/*'
+        }),
+        label='Banner Image',
+        help_text='Banner image displayed at the top of the league page'
+    )
     membership_requirements = forms.CharField(
         required=False,
         widget=forms.Textarea(attrs={
@@ -114,7 +123,8 @@ class LeagueCreateForm(OrganizationBaseForm):
                 organization=organization,
                 sanctioning_body=self.cleaned_data.get('sanctioning_body', ''),
                 region=self.cleaned_data.get('region', ''),
-                membership_requirements=self.cleaned_data.get('membership_requirements', '')
+                membership_requirements=self.cleaned_data.get('membership_requirements', ''),
+                banner=self.cleaned_data.get('banner')
             )
 
         return organization
@@ -135,6 +145,15 @@ class TeamCreateForm(OrganizationBaseForm):
     )
 
     # Team-specific fields
+    banner = forms.ImageField(
+        required=False,
+        widget=forms.FileInput(attrs={
+            'class': 'file-input file-input-bordered w-full',
+            'accept': 'image/*'
+        }),
+        label='Banner Image',
+        help_text='Banner image displayed at the top of the team page'
+    )
     team_type = forms.ChoiceField(
         required=False,
         choices=TeamProfile.TEAM_TYPES,
@@ -157,7 +176,8 @@ class TeamCreateForm(OrganizationBaseForm):
             # Create team profile
             TeamProfile.objects.create(
                 organization=organization,
-                team_type=self.cleaned_data.get('team_type', '')
+                team_type=self.cleaned_data.get('team_type', ''),
+                banner=self.cleaned_data.get('banner')
             )
 
         return organization
@@ -301,13 +321,17 @@ class LeagueProfileForm(forms.ModelForm):
 
     class Meta:
         model = LeagueProfile
-        fields = ['sanctioning_body', 'region', 'membership_requirements']
+        fields = ['sanctioning_body', 'region', 'banner', 'membership_requirements']
         widgets = {
             'sanctioning_body': forms.TextInput(attrs={
                 'class': 'input input-bordered w-full'
             }),
             'region': forms.TextInput(attrs={
                 'class': 'input input-bordered w-full'
+            }),
+            'banner': forms.FileInput(attrs={
+                'class': 'file-input file-input-bordered w-full',
+                'accept': 'image/*'
             }),
             'membership_requirements': forms.Textarea(attrs={
                 'class': 'textarea textarea-bordered w-full',
@@ -321,11 +345,15 @@ class TeamProfileForm(forms.ModelForm):
 
     class Meta:
         model = TeamProfile
-        fields = ['team_type']
+        fields = ['banner', 'team_type']
         widgets = {
+            'banner': forms.FileInput(attrs={
+                'class': 'file-input file-input-bordered w-full',
+                'accept': 'image/*'
+            }),
             'team_type': forms.Select(attrs={
                 'class': 'select select-bordered w-full'
-            })
+            }),
         }
 
 

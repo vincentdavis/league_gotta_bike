@@ -331,6 +331,12 @@ class LeagueProfile(models.Model):
     )
     region = models.CharField(max_length=100, blank=True, help_text="Geographic region or state")
     membership_requirements = models.TextField(blank=True, help_text="Requirements for league membership")
+    banner = models.ImageField(
+        upload_to='organizations/banners/',
+        blank=True,
+        null=True,
+        help_text="Banner image displayed at the top of the league page"
+    )
 
     class Meta:
         verbose_name = "League Profile"
@@ -363,6 +369,12 @@ class TeamProfile(models.Model):
     )
     team_type = models.CharField(
         max_length=20, choices=TEAM_TYPES, blank=True, help_text="Type of team"
+    )
+    banner = models.ImageField(
+        upload_to='organizations/banners/',
+        blank=True,
+        null=True,
+        help_text="Banner image displayed at the top of the team page"
     )
 
     class Meta:

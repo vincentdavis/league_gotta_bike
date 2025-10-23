@@ -248,6 +248,22 @@
                                 <label class="label">
                                     <span class="label-text font-medium">{{ field.label }}{% if field.field.required %} *{% endif %}</span>
                                 </label>
+
+                                {# Show current banner image preview if it exists #}
+                                {% if field.name == 'banner' %}
+                                    {% if object.type == 'league' and object.league_profile.banner %}
+                                    <div class="mb-2">
+                                        <img src="{{ object.league_profile.banner.url }}" alt="Current banner" class="h-32 w-auto object-contain rounded-lg border border-gray-300">
+                                        <p class="text-sm text-gray-500 mt-1">Current banner (upload new to replace)</p>
+                                    </div>
+                                    {% elif object.type == 'team' and object.team_profile.banner %}
+                                    <div class="mb-2">
+                                        <img src="{{ object.team_profile.banner.url }}" alt="Current banner" class="h-32 w-auto object-contain rounded-lg border border-gray-300">
+                                        <p class="text-sm text-gray-500 mt-1">Current banner (upload new to replace)</p>
+                                    </div>
+                                    {% endif %}
+                                {% endif %}
+
                                 {{ field }}
                                 {% if field.help_text %}
                                 <label class="label">
