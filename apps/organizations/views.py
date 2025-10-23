@@ -216,6 +216,81 @@ class OrganizationDetailView(DetailView):
         return context
 
 
+class LeagueGuestView(DetailView):
+    """Public/guest view of a league for non-members and non-logged-in users."""
+    model = Organization
+    template_name = 'organizations/league_guest.html'
+    context_object_name = 'league'
+    slug_url_kwarg = 'league_slug'
+
+    def get_queryset(self):
+        return Organization.objects.leagues().active()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Get league profile
+        context['league_profile'] = getattr(self.object, 'league_profile', None)
+
+        # Check if user is already a member (if logged in)
+        context['is_member'] = False
+        if self.request.user.is_authenticated:
+            user_membership = get_user_membership(self.request.user, self.object)
+            if user_membership and user_membership.status == Membership.ACTIVE:
+                context['is_member'] = True
+
+        # Membership status for call-to-action
+        context['membership_open'] = self.object.membership_open
+
+        return context
+
+
+class TeamGuestView(DetailView):
+    """Public/guest view of a team for non-members and non-logged-in users."""
+    model = Organization
+    template_name = 'organizations/team_guest.html'
+    context_object_name = 'team'
+
+    def get_object(self):
+        # Handle both standalone teams and teams within a league
+        if 'league_slug' in self.kwargs:
+            # Team within a league
+            league = get_object_or_404(
+                Organization.objects.leagues().active(),
+                slug=self.kwargs['league_slug']
+            )
+            return get_object_or_404(
+                Organization.objects.teams().active(),
+                slug=self.kwargs['team_slug'],
+                parent=league
+            )
+        else:
+            # Standalone team (no league parent)
+            return get_object_or_404(
+                Organization.objects.teams().active(),
+                slug=self.kwargs['team_slug'],
+                parent__isnull=True
+            )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Get parent league if exists
+        context['league'] = self.object.parent
+        # Get team profile
+        context['team_profile'] = getattr(self.object, 'team_profile', None)
+
+        # Check if user is already a member (if logged in)
+        context['is_member'] = False
+        if self.request.user.is_authenticated:
+            user_membership = get_user_membership(self.request.user, self.object)
+            if user_membership and user_membership.status == Membership.ACTIVE:
+                context['is_member'] = True
+
+        # Membership status for call-to-action
+        context['membership_open'] = self.object.membership_open
+
+        return context
+
+
 class LeagueListView(ListView):
     """Display list of all leagues and teams with search"""
     model = Organization

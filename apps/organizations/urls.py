@@ -23,6 +23,11 @@ urlpatterns = [
     path('<slug:slug>/settings/', views.OrganizationSettingsView.as_view(), name='org_settings'),
     path('<slug:slug>/delete/', views.OrganizationDeleteView.as_view(), name='org_delete'),
 
+    # Guest/Public views (before detail views to avoid conflicts)
+    path('leagues/<slug:league_slug>/guest/', views.LeagueGuestView.as_view(), name='league_guest'),
+    path('teams/<slug:team_slug>/guest/', views.TeamGuestView.as_view(), name='team_guest_standalone'),
+    path('<slug:league_slug>/<slug:team_slug>/guest/', views.TeamGuestView.as_view(), name='team_guest'),
+
     # League detail
     path('<slug:league_slug>/', views.LeagueDetailView.as_view(), name='league_detail'),
 
