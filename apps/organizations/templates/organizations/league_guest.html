@@ -100,6 +100,26 @@
         {% endif %}
     </div>
 
+    <!-- Sponsors Section -->
+    {% if sponsors %}
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-3">Our Sponsors</h2>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {% for sponsor in sponsors %}
+            <a href="{{ sponsor.get_absolute_url }}" class="border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-shadow block">
+                {% if sponsor.logo %}
+                <img src="{{ sponsor.logo.url }}" alt="{{ sponsor.name }}" class="h-16 w-16 object-contain mb-3 mx-auto">
+                {% endif %}
+                <h3 class="font-semibold text-gray-900 text-center mb-2">{{ sponsor.name }}</h3>
+                {% if sponsor.description %}
+                <p class="text-sm text-gray-600 line-clamp-2 text-center">{{ sponsor.description }}</p>
+                {% endif %}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Membership Requirements -->
     {% if league_profile.membership_requirements %}
     <div class="bg-white shadow rounded-lg p-6 mb-6">

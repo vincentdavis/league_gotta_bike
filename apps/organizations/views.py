@@ -84,6 +84,10 @@ class LeagueDetailView(DetailView):
 
         # Add membership_open flag
         context['membership_open'] = self.object.membership_open
+
+        # Get sponsors for this league (active only)
+        context['sponsors'] = self.object.sponsors.filter(status='active')
+
         return context
 
 
@@ -163,6 +167,10 @@ class TeamDetailView(DetailView):
 
         # Add membership_open flag
         context['membership_open'] = self.object.membership_open
+
+        # Get sponsors for this team (active only)
+        context['sponsors'] = self.object.sponsors.filter(status='active')
+
         return context
 
 
@@ -241,6 +249,9 @@ class LeagueGuestView(DetailView):
         # Membership status for call-to-action
         context['membership_open'] = self.object.membership_open
 
+        # Get sponsors for this league (active only)
+        context['sponsors'] = self.object.sponsors.filter(status='active')
+
         return context
 
 
@@ -287,6 +298,9 @@ class TeamGuestView(DetailView):
 
         # Membership status for call-to-action
         context['membership_open'] = self.object.membership_open
+
+        # Get sponsors for this team (active only)
+        context['sponsors'] = self.object.sponsors.filter(status='active')
 
         return context
 
