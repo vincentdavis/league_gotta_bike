@@ -1,0 +1,237 @@
+{% extends "organizations/base.html" %}
+{% load static %}
+
+{% block title %}{{ form_title }} - Sponsors{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0 max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="mb-6">
+        <h2 class="text-3xl font-bold text-gray-900 mb-2">{{ form_title }}</h2>
+        <p class="text-gray-600">Fill out the form below to {% if object %}update{% else %}create{% endif %} a sponsor</p>
+    </div>
+
+    <!-- Form -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- Basic Information Section -->
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold text-gray-900 mb-4 border-b pb-2">Basic Information</h3>
+                <div class="space-y-4">
+                    <div class="form-control">
+                        <label class="label" for="{{ form.name.id_for_label }}">
+                            <span class="label-text font-semibold">Name <span class="text-error">*</span></span>
+                        </label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.name.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label" for="{{ form.description.id_for_label }}">
+                            <span class="label-text font-semibold">Description</span>
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.help_text %}
+                        <label class="label">
+                            <span class="label-text-alt">{{ form.description.help_text }}</span>
+                        </label>
+                        {% endif %}
+                        {% if form.description.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.description.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label" for="{{ form.status.id_for_label }}">
+                            <span class="label-text font-semibold">Status <span class="text-error">*</span></span>
+                        </label>
+                        {{ form.status }}
+                        {% if form.status.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.status.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- General Contact Section -->
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold text-gray-900 mb-4 border-b pb-2">General Contact Information</h3>
+                <div class="space-y-4">
+                    <div class="form-control">
+                        <label class="label" for="{{ form.phone_number.id_for_label }}">
+                            <span class="label-text font-semibold">Phone Number</span>
+                        </label>
+                        {{ form.phone_number }}
+                        {% if form.phone_number.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.phone_number.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label" for="{{ form.email.id_for_label }}">
+                            <span class="label-text font-semibold">Email</span>
+                        </label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.email.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label" for="{{ form.url.id_for_label }}">
+                            <span class="label-text font-semibold">Website URL</span>
+                        </label>
+                        {{ form.url }}
+                        {% if form.url.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.url.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Person Section -->
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold text-gray-900 mb-4 border-b pb-2">Contact Person (Optional)</h3>
+                <div class="space-y-4">
+                    <div class="form-control">
+                        <label class="label" for="{{ form.contact_name.id_for_label }}">
+                            <span class="label-text font-semibold">Name</span>
+                        </label>
+                        {{ form.contact_name }}
+                        {% if form.contact_name.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.contact_name.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label" for="{{ form.contact_email.id_for_label }}">
+                            <span class="label-text font-semibold">Email</span>
+                        </label>
+                        {{ form.contact_email }}
+                        {% if form.contact_email.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.contact_email.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label" for="{{ form.contact_phone.id_for_label }}">
+                            <span class="label-text font-semibold">Phone</span>
+                        </label>
+                        {{ form.contact_phone }}
+                        {% if form.contact_phone.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.contact_phone.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Images Section -->
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold text-gray-900 mb-4 border-b pb-2">Images</h3>
+                <div class="space-y-4">
+                    <div class="form-control">
+                        <label class="label" for="{{ form.logo.id_for_label }}">
+                            <span class="label-text font-semibold">Logo</span>
+                        </label>
+                        {{ form.logo }}
+                        {% if form.logo.help_text %}
+                        <label class="label">
+                            <span class="label-text-alt">{{ form.logo.help_text }}</span>
+                        </label>
+                        {% endif %}
+                        {% if object and object.logo %}
+                        <div class="mt-2">
+                            <p class="text-sm text-gray-600 mb-2">Current logo:</p>
+                            <img src="{{ object.logo.url }}" alt="Current logo" class="h-24 w-24 object-contain border border-gray-300 rounded">
+                        </div>
+                        {% endif %}
+                        {% if form.logo.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.logo.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label" for="{{ form.banner_image.id_for_label }}">
+                            <span class="label-text font-semibold">Banner Image</span>
+                        </label>
+                        {{ form.banner_image }}
+                        {% if form.banner_image.help_text %}
+                        <label class="label">
+                            <span class="label-text-alt">{{ form.banner_image.help_text }}</span>
+                        </label>
+                        {% endif %}
+                        {% if object and object.banner_image %}
+                        <div class="mt-2">
+                            <p class="text-sm text-gray-600 mb-2">Current banner:</p>
+                            <img src="{{ object.banner_image.url }}" alt="Current banner" class="h-32 w-auto object-contain border border-gray-300 rounded">
+                        </div>
+                        {% endif %}
+                        {% if form.banner_image.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.banner_image.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Organization Section -->
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold text-gray-900 mb-4 border-b pb-2">Settings</h3>
+                <div class="space-y-4">
+                    <div class="form-control">
+                        <label class="label" for="{{ form.organization.id_for_label }}">
+                            <span class="label-text font-semibold">Organization (Optional)</span>
+                        </label>
+                        {{ form.organization }}
+                        {% if form.organization.help_text %}
+                        <label class="label">
+                            <span class="label-text-alt">{{ form.organization.help_text }}</span>
+                        </label>
+                        {% endif %}
+                        {% if form.organization.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.organization.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex gap-4 justify-end border-t pt-6">
+                <a href="{% if object %}{{ object.get_absolute_url }}{% else %}{% url 'sponsors:sponsor_list' %}{% endif %}" class="btn btn-ghost">
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    {{ submit_text }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
