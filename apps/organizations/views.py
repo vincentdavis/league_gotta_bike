@@ -278,6 +278,36 @@ class LeagueListView(ListView):
         return context
 
 
+class UserOrganizationsView(LoginRequiredMixin, ListView):
+    """Display all organizations the user is a member of"""
+    model = Membership
+    template_name = 'organizations/user_organizations.html'
+    context_object_name = 'memberships'
+
+    def get_queryset(self):
+        return Membership.objects.filter(
+            user=self.request.user,
+            status=Membership.ACTIVE
+        ).select_related('organization').prefetch_related(
+            'organization__league_profile',
+            'organization__team_profile',
+            'organization__squad_profile'
+        ).order_by('-join_date')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        memberships = context['memberships']
+
+        # Organize by organization type
+        context['leagues'] = [m for m in memberships if m.organization.type == Organization.LEAGUE]
+        context['teams'] = [m for m in memberships if m.organization.type == Organization.TEAM]
+        context['sub_orgs'] = [m for m in memberships if m.organization.type in [
+            Organization.SQUAD, Organization.CLUB, Organization.PRACTICE_GROUP
+        ]]
+
+        return context
+
+
 # Create Views
 
 class OrganizationTypeSelectView(LoginRequiredMixin, TemplateView):

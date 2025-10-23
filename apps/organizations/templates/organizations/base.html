@@ -45,6 +45,19 @@
                 <a href="{% url 'organizations:league_list' %}" class="text-xl font-bold text-gray-900 hover:text-primary">
                     League Gotta Bike
                 </a>
+                <div class="hidden sm:flex sm:space-x-2 sm:ml-6">
+                    <a href="{% url 'sponsors:sponsor_list' %}" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-primary hover:bg-gray-50">
+                        Sponsors
+                    </a>
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'organizations:org_type_select' %}" class="btn btn-primary btn-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Create
+                    </a>
+                    {% endif %}
+                </div>
             </div>
             <div class="flex-none gap-2 pr-2">
                 {% if user.is_authenticated %}

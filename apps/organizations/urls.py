@@ -7,6 +7,9 @@ urlpatterns = [
     # League list
     path('', views.LeagueListView.as_view(), name='league_list'),
 
+    # User's organizations
+    path('my-organizations/', views.UserOrganizationsView.as_view(), name='user_organizations'),
+
     # Create organization (type selection)
     path('create/', views.OrganizationTypeSelectView.as_view(), name='org_type_select'),
     path('create/league/', views.LeagueCreateView.as_view(), name='league_create'),
