@@ -186,7 +186,7 @@ class Organization(models.Model):
                 current = current.parent
 
     def get_absolute_url(self):
-        """Generate hierarchical URL for organization."""
+        """Generate base URL for organization (auto-redirects to member or guest view)."""
         if self.type == self.LEAGUE:
             return reverse("organizations:league_detail", kwargs={"league_slug": self.slug})
         elif self.type == self.TEAM:
@@ -201,6 +201,63 @@ class Organization(models.Model):
                 return reverse("organizations:standalone_team_detail", kwargs={"team_slug": self.slug})
         else:
             # For squads and other sub-organizations
+            team = self.parent
+            league = team.parent if team else None
+
+            if league:
+                # Sub-org within a league hierarchy
+                return reverse(
+                    "organizations:org_detail",
+                    kwargs={
+                        "league_slug": league.slug,
+                        "team_slug": team.slug,
+                        "org_type": self.type,
+                        "org_slug": self.slug,
+                    },
+                )
+            else:
+                # Sub-org of a standalone team
+                return reverse(
+                    "organizations:standalone_org_detail",
+                    kwargs={
+                        "team_slug": team.slug,
+                        "org_type": self.type,
+                        "org_slug": self.slug,
+                    },
+                )
+
+    def get_member_url(self):
+        """Generate member-only URL for organization."""
+        if self.type == self.LEAGUE:
+            return reverse("organizations:league_member", kwargs={"league_slug": self.slug})
+        elif self.type == self.TEAM:
+            if self.parent:
+                # Team within a league
+                return reverse(
+                    "organizations:team_member", kwargs={"league_slug": self.parent.slug, "team_slug": self.slug}
+                )
+            else:
+                # Standalone team
+                return reverse("organizations:standalone_team_member", kwargs={"team_slug": self.slug})
+        else:
+            # Sub-orgs use the existing detail view
+            return self.get_absolute_url()
+
+    def get_guest_url(self):
+        """Generate guest/public URL for organization."""
+        if self.type == self.LEAGUE:
+            return reverse("organizations:league_guest", kwargs={"league_slug": self.slug})
+        elif self.type == self.TEAM:
+            if self.parent:
+                # Team within a league
+                return reverse(
+                    "organizations:team_guest", kwargs={"league_slug": self.parent.slug, "team_slug": self.slug}
+                )
+            else:
+                # Standalone team
+                return reverse("organizations:team_guest_standalone", kwargs={"team_slug": self.slug})
+        else:
+            # Sub-orgs don't have member/guest separation currently
             team = self.parent
             league = team.parent if team else None
 

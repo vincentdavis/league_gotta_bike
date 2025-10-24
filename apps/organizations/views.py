@@ -27,10 +27,67 @@ from .permissions import (
 )
 
 
-# Detail Views (existing)
+# Redirect Views (auto-route to member or guest based on membership)
 
-class LeagueDetailView(DetailView):
-    """Display details of a league"""
+class LeagueRedirectView(View):
+    """Redirect to member or guest view based on user membership status."""
+
+    def get(self, request, league_slug):
+        league = get_object_or_404(Organization.objects.leagues().active(), slug=league_slug)
+
+        # Check if user is authenticated and is a member
+        if request.user.is_authenticated:
+            user_membership = get_user_membership(request.user, league)
+            if user_membership and user_membership.status == Membership.ACTIVE:
+                # User is a member - redirect to member view
+                return redirect('organizations:league_member', league_slug=league_slug)
+
+        # User is not authenticated or not a member - redirect to guest view
+        return redirect('organizations:league_guest', league_slug=league_slug)
+
+
+class TeamRedirectView(View):
+    """Redirect to member or guest view based on user membership status."""
+
+    def get(self, request, team_slug, league_slug=None):
+        # Handle both standalone teams and teams within a league
+        if league_slug:
+            # Team within a league
+            league = get_object_or_404(Organization.objects.leagues().active(), slug=league_slug)
+            team = get_object_or_404(
+                Organization.objects.teams().active(),
+                slug=team_slug,
+                parent=league
+            )
+        else:
+            # Standalone team
+            team = get_object_or_404(
+                Organization.objects.teams().active(),
+                slug=team_slug,
+                parent__isnull=True
+            )
+
+        # Check if user is authenticated and is a member
+        if request.user.is_authenticated:
+            user_membership = get_user_membership(request.user, team)
+            if user_membership and user_membership.status == Membership.ACTIVE:
+                # User is a member - redirect to member view
+                if league_slug:
+                    return redirect('organizations:team_member', league_slug=league_slug, team_slug=team_slug)
+                else:
+                    return redirect('organizations:standalone_team_member', team_slug=team_slug)
+
+        # User is not authenticated or not a member - redirect to guest view
+        if league_slug:
+            return redirect('organizations:team_guest', league_slug=league_slug, team_slug=team_slug)
+        else:
+            return redirect('organizations:team_guest_standalone', team_slug=team_slug)
+
+
+# Member Views (require active membership)
+
+class LeagueMemberView(LoginRequiredMixin, DetailView):
+    """Display details of a league (members only)"""
     model = Organization
     template_name = 'organizations/league_detail.html'
     context_object_name = 'league'
@@ -38,6 +95,19 @@ class LeagueDetailView(DetailView):
 
     def get_queryset(self):
         return Organization.objects.leagues().active()
+
+    def dispatch(self, request, *args, **kwargs):
+        """Check membership and redirect to guest view if not a member."""
+        # Get the object first
+        self.object = self.get_object()
+
+        # Check if user is an active member
+        user_membership = get_user_membership(request.user, self.object)
+        if not user_membership or user_membership.status != Membership.ACTIVE:
+            # Not a member - redirect to guest view
+            return redirect('organizations:league_guest', league_slug=self.object.slug)
+
+        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -92,8 +162,8 @@ class LeagueDetailView(DetailView):
         return context
 
 
-class TeamDetailView(DetailView):
-    """Display details of a team"""
+class TeamMemberView(LoginRequiredMixin, DetailView):
+    """Display details of a team (members only)"""
     model = Organization
     template_name = 'organizations/team_detail.html'
     context_object_name = 'team'
@@ -118,6 +188,25 @@ class TeamDetailView(DetailView):
                 slug=self.kwargs['team_slug'],
                 parent__isnull=True
             )
+
+    def dispatch(self, request, *args, **kwargs):
+        """Check membership and redirect to guest view if not a member."""
+        # Get the object first
+        self.object = self.get_object()
+
+        # Check if user is an active member
+        user_membership = get_user_membership(request.user, self.object)
+        if not user_membership or user_membership.status != Membership.ACTIVE:
+            # Not a member - redirect to guest view
+            if 'league_slug' in self.kwargs:
+                return redirect('organizations:team_guest',
+                              league_slug=self.kwargs['league_slug'],
+                              team_slug=self.object.slug)
+            else:
+                return redirect('organizations:team_guest_standalone',
+                              team_slug=self.object.slug)
+
+        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

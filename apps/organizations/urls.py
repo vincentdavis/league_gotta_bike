@@ -23,19 +23,20 @@ urlpatterns = [
     path('<slug:slug>/settings/', views.OrganizationSettingsView.as_view(), name='org_settings'),
     path('<slug:slug>/delete/', views.OrganizationDeleteView.as_view(), name='org_delete'),
 
-    # Guest/Public views (before detail views to avoid conflicts)
+    # Guest/Public views
     path('leagues/<slug:league_slug>/guest/', views.LeagueGuestView.as_view(), name='league_guest'),
     path('teams/<slug:team_slug>/guest/', views.TeamGuestView.as_view(), name='team_guest_standalone'),
     path('<slug:league_slug>/<slug:team_slug>/guest/', views.TeamGuestView.as_view(), name='team_guest'),
 
-    # League detail
-    path('<slug:league_slug>/', views.LeagueDetailView.as_view(), name='league_detail'),
+    # Member views (require active membership)
+    path('leagues/<slug:league_slug>/member/', views.LeagueMemberView.as_view(), name='league_member'),
+    path('teams/<slug:team_slug>/member/', views.TeamMemberView.as_view(), name='standalone_team_member'),
+    path('<slug:league_slug>/<slug:team_slug>/member/', views.TeamMemberView.as_view(), name='team_member'),
 
-    # Standalone team detail (teams without a league parent)
-    path('teams/<slug:team_slug>/', views.TeamDetailView.as_view(), name='standalone_team_detail'),
-
-    # Team detail (teams within a league)
-    path('<slug:league_slug>/<slug:team_slug>/', views.TeamDetailView.as_view(), name='team_detail'),
+    # Base redirect views (auto-route to member or guest)
+    path('<slug:league_slug>/', views.LeagueRedirectView.as_view(), name='league_detail'),
+    path('teams/<slug:team_slug>/', views.TeamRedirectView.as_view(), name='standalone_team_detail'),
+    path('<slug:league_slug>/<slug:team_slug>/', views.TeamRedirectView.as_view(), name='team_detail'),
 
     # Sub-organization detail for standalone teams (squad, club, etc. of standalone teams)
     path(

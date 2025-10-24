@@ -21,48 +21,7 @@
         </h3>
         <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {% for membership in user_leagues_teams %}
-            <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg hover:border-primary transition-all duration-300 border-l-4 border {% if membership.permission_level == 'owner' %}border-primary{% elif membership.permission_level == 'admin' %}border-success{% elif membership.permission_level == 'manager' %}border-info{% else %}border-gray-300{% endif %} flex flex-col">
-                <a href="{{ membership.organization.get_absolute_url }}" class="p-6 flex-1 block">
-                    <div class="flex items-start justify-between mb-3">
-                        <div class="flex justify-center flex-1">
-                            <img src="{% if membership.organization.logo %}{{ membership.organization.logo.url }}{% else %}{% static 'images/Default_League.png' %}{% endif %}" alt="{{ membership.organization.name }}" class="h-24 w-24 rounded-full object-contain">
-                        </div>
-                        <span class="badge {% if membership.permission_level == 'owner' %}badge-primary{% elif membership.permission_level == 'admin' %}badge-success{% elif membership.permission_level == 'manager' %}badge-info{% else %}badge-ghost{% endif %}">
-                            {{ membership.get_permission_level_display }}
-                        </span>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-1 text-center">
-                        {{ membership.organization.name }}
-                    </h3>
-                    <p class="text-sm text-gray-500 mb-2 text-center">{{ membership.organization.get_type_display }}</p>
-                    {% if membership.organization.type == 'league' and membership.organization.league_profile.short_description %}
-                    <p class="text-gray-600 text-sm">{{ membership.organization.league_profile.short_description }}</p>
-                    {% elif membership.organization.type == 'team' and membership.organization.team_profile.short_description %}
-                    <p class="text-gray-600 text-sm">{{ membership.organization.team_profile.short_description }}</p>
-                    {% elif membership.organization.description %}
-                    <p class="text-gray-600 text-sm line-clamp-2">{{ membership.organization.description }}</p>
-                    {% endif %}
-                </a>
-
-                {% if membership.organization.sponsors.all %}
-                <div class="px-4 py-3 bg-gray-50 border-t border-gray-200">
-                    <p class="text-xs font-medium text-gray-500 mb-2">Sponsors</p>
-                    <div class="flex flex-wrap gap-3">
-                        {% for sponsor in membership.organization.sponsors.all %}
-                        <a href="{% if sponsor.url %}{{ sponsor.url }}{% else %}{{ sponsor.get_absolute_url }}{% endif %}"
-                           class="flex items-center gap-2 hover:opacity-75 transition-opacity"
-                           {% if sponsor.url %}target="_blank" rel="noopener noreferrer"{% endif %}
-                           title="{{ sponsor.name }}">
-                            {% if sponsor.logo %}
-                            <img src="{{ sponsor.logo.url }}" alt="{{ sponsor.name }}" class="h-6 w-6 object-contain">
-                            {% endif %}
-                            <span class="text-xs text-gray-700">{{ sponsor.name }}</span>
-                        </a>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endif %}
-            </div>
+            {% include "organizations/_organization_card.html" with organization=membership.organization permission_level=membership.permission_level permission_level_display=membership.get_permission_level_display %}
             {% endfor %}
         </div>
     </div>
@@ -128,56 +87,8 @@
         </div>
         <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {% for league in leagues %}
-        <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg hover:border-primary transition-all duration-300 border border-transparent flex flex-col">
-            <a href="{{ league.get_absolute_url }}" class="p-6 flex-1 block">
-                <div class="flex justify-center mb-4">
-                    <img src="{% if league.logo %}{{ league.logo.url }}{% else %}{% static 'images/Default_League.png' %}{% endif %}" alt="{{ league.name }}" class="h-24 w-24 rounded-full object-contain">
-                </div>
-                <h3 class="text-xl font-semibold text-gray-900 mb-2 text-center">
-                    {{ league.name }}
-                </h3>
-                {% if league.league_profile.short_description %}
-                <p class="text-gray-600 text-sm mb-4">{{ league.league_profile.short_description }}</p>
-                {% elif league.description %}
-                <p class="text-gray-600 text-sm line-clamp-3 mb-4">{{ league.description }}</p>
-                {% endif %}
-
-                {% if league.league_profile %}
-                <div class="space-y-1">
-                    {% if league.league_profile.region %}
-                    <p class="text-sm text-gray-500">
-                        <span class="font-medium">Region:</span> {{ league.league_profile.region }}
-                    </p>
-                    {% endif %}
-                    {% if league.league_profile.sanctioning_body %}
-                    <p class="text-sm text-gray-500">
-                        <span class="font-medium">Sanctioned by:</span> {{ league.league_profile.sanctioning_body }}
-                    </p>
-                    {% endif %}
-                </div>
-                {% endif %}
-            </a>
-
-            {% if league.sponsors.all %}
-            <div class="px-4 py-3 bg-gray-50 border-t border-gray-200">
-                <p class="text-xs font-medium text-gray-500 mb-2">Sponsors</p>
-                <div class="flex flex-wrap gap-3">
-                    {% for sponsor in league.sponsors.all %}
-                    <a href="{% if sponsor.url %}{{ sponsor.url }}{% else %}{{ sponsor.get_absolute_url }}{% endif %}"
-                       class="flex items-center gap-2 hover:opacity-75 transition-opacity"
-                       {% if sponsor.url %}target="_blank" rel="noopener noreferrer"{% endif %}
-                       title="{{ sponsor.name }}">
-                        {% if sponsor.logo %}
-                        <img src="{{ sponsor.logo.url }}" alt="{{ sponsor.name }}" class="h-6 w-6 object-contain">
-                        {% endif %}
-                        <span class="text-xs text-gray-700">{{ sponsor.name }}</span>
-                    </a>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-        </div>
-        {% endfor %}
+            {% include "organizations/_organization_card.html" with organization=league %}
+            {% endfor %}
         </div>
     </div>
     {% endif %}
@@ -203,45 +114,7 @@
         </div>
         <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {% for team in teams %}
-            <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg hover:border-primary transition-all duration-300 border border-transparent flex flex-col">
-                <a href="{{ team.get_absolute_url }}" class="p-6 flex-1 block">
-                    <div class="flex justify-center mb-4">
-                        <img src="{% if team.logo %}{{ team.logo.url }}{% else %}{% static 'images/Default_League.png' %}{% endif %}" alt="{{ team.name }}" class="h-24 w-24 rounded-full object-contain">
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-1 text-center">
-                        {{ team.name }}
-                    </h3>
-                    {% if team.team_profile and team.team_profile.team_type %}
-                    <p class="text-sm text-gray-500 mb-3 text-center">
-                        {{ team.team_profile.get_team_type_display }}
-                    </p>
-                    {% endif %}
-                    {% if team.team_profile.short_description %}
-                    <p class="text-gray-600 text-sm">{{ team.team_profile.short_description }}</p>
-                    {% elif team.description %}
-                    <p class="text-gray-600 text-sm line-clamp-3">{{ team.description }}</p>
-                    {% endif %}
-                </a>
-
-                {% if team.sponsors.all %}
-                <div class="px-4 py-3 bg-gray-50 border-t border-gray-200">
-                    <p class="text-xs font-medium text-gray-500 mb-2">Sponsors</p>
-                    <div class="flex flex-wrap gap-3">
-                        {% for sponsor in team.sponsors.all %}
-                        <a href="{% if sponsor.url %}{{ sponsor.url }}{% else %}{{ sponsor.get_absolute_url }}{% endif %}"
-                           class="flex items-center gap-2 hover:opacity-75 transition-opacity"
-                           {% if sponsor.url %}target="_blank" rel="noopener noreferrer"{% endif %}
-                           title="{{ sponsor.name }}">
-                            {% if sponsor.logo %}
-                            <img src="{{ sponsor.logo.url }}" alt="{{ sponsor.name }}" class="h-6 w-6 object-contain">
-                            {% endif %}
-                            <span class="text-xs text-gray-700">{{ sponsor.name }}</span>
-                        </a>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endif %}
-            </div>
+            {% include "organizations/_organization_card.html" with organization=team %}
             {% endfor %}
         </div>
     </div>
