@@ -326,6 +326,9 @@ class LeagueProfile(models.Model):
         limit_choices_to={"type": Organization.LEAGUE},
         related_name="league_profile",
     )
+    short_description = models.CharField(
+        max_length=200, blank=True, help_text="Brief description for display on cards (200 characters max)"
+    )
     sanctioning_body = models.CharField(
         max_length=200, blank=True, help_text="Official sanctioning body (e.g., USA Cycling, UCI)"
     )
@@ -366,6 +369,9 @@ class TeamProfile(models.Model):
         primary_key=True,
         limit_choices_to={"type": Organization.TEAM},
         related_name="team_profile",
+    )
+    short_description = models.CharField(
+        max_length=200, blank=True, help_text="Brief description for display on cards (200 characters max)"
     )
     team_type = models.CharField(
         max_length=20, choices=TEAM_TYPES, blank=True, help_text="Type of team"

@@ -68,6 +68,17 @@ class LeagueCreateForm(OrganizationBaseForm):
     """Form for creating a new league."""
 
     # League-specific fields
+    short_description = forms.CharField(
+        required=False,
+        max_length=200,
+        widget=forms.TextInput(attrs={
+            'class': 'input input-bordered w-full',
+            'maxlength': '200',
+            'placeholder': 'Brief description for card display (200 characters max)'
+        }),
+        label='Short Description',
+        help_text='Brief description shown on league cards'
+    )
     sanctioning_body = forms.CharField(
         required=False,
         max_length=200,
@@ -121,6 +132,7 @@ class LeagueCreateForm(OrganizationBaseForm):
             # Create league profile
             LeagueProfile.objects.create(
                 organization=organization,
+                short_description=self.cleaned_data.get('short_description', ''),
                 sanctioning_body=self.cleaned_data.get('sanctioning_body', ''),
                 region=self.cleaned_data.get('region', ''),
                 membership_requirements=self.cleaned_data.get('membership_requirements', ''),
@@ -145,6 +157,17 @@ class TeamCreateForm(OrganizationBaseForm):
     )
 
     # Team-specific fields
+    short_description = forms.CharField(
+        required=False,
+        max_length=200,
+        widget=forms.TextInput(attrs={
+            'class': 'input input-bordered w-full',
+            'maxlength': '200',
+            'placeholder': 'Brief description for card display (200 characters max)'
+        }),
+        label='Short Description',
+        help_text='Brief description shown on team cards'
+    )
     banner = forms.ImageField(
         required=False,
         widget=forms.FileInput(attrs={
@@ -176,6 +199,7 @@ class TeamCreateForm(OrganizationBaseForm):
             # Create team profile
             TeamProfile.objects.create(
                 organization=organization,
+                short_description=self.cleaned_data.get('short_description', ''),
                 team_type=self.cleaned_data.get('team_type', ''),
                 banner=self.cleaned_data.get('banner')
             )
@@ -321,8 +345,13 @@ class LeagueProfileForm(forms.ModelForm):
 
     class Meta:
         model = LeagueProfile
-        fields = ['sanctioning_body', 'region', 'banner', 'membership_requirements']
+        fields = ['short_description', 'sanctioning_body', 'region', 'banner', 'membership_requirements']
         widgets = {
+            'short_description': forms.TextInput(attrs={
+                'class': 'input input-bordered w-full',
+                'maxlength': '200',
+                'placeholder': 'Brief description for card display (200 characters max)'
+            }),
             'sanctioning_body': forms.TextInput(attrs={
                 'class': 'input input-bordered w-full'
             }),
@@ -345,8 +374,13 @@ class TeamProfileForm(forms.ModelForm):
 
     class Meta:
         model = TeamProfile
-        fields = ['banner', 'team_type']
+        fields = ['short_description', 'banner', 'team_type']
         widgets = {
+            'short_description': forms.TextInput(attrs={
+                'class': 'input input-bordered w-full',
+                'maxlength': '200',
+                'placeholder': 'Brief description for card display (200 characters max)'
+            }),
             'banner': forms.FileInput(attrs={
                 'class': 'file-input file-input-bordered w-full',
                 'accept': 'image/*'

@@ -4,7 +4,7 @@ import logfire
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db import transaction
+from django.db import transaction, models
 from django.db.models import Q
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
@@ -13,6 +13,7 @@ from django.views import View
 
 from apps.membership.models import Membership
 from apps.events.models import Event
+from apps.sponsors.models import Sponsor
 
 from .models import Organization, LeagueProfile, TeamProfile, SquadProfile
 from .forms import (
@@ -322,7 +323,14 @@ class LeagueListView(ListView):
         ).filter(
             Q(type=Organization.LEAGUE) |
             Q(type=Organization.TEAM)
-        ).select_related('parent').prefetch_related('league_profile', 'team_profile')
+        ).select_related('parent').prefetch_related(
+            'league_profile',
+            'team_profile',
+            models.Prefetch(
+                'sponsors',
+                queryset=Sponsor.objects.filter(status='active')
+            )
+        )
 
         # Apply search filter if query exists
         if search_query:
@@ -352,7 +360,11 @@ class LeagueListView(ListView):
                 Q(organization__type=Organization.TEAM)
             ).select_related('organization').prefetch_related(
                 'organization__league_profile',
-                'organization__team_profile'
+                'organization__team_profile',
+                models.Prefetch(
+                    'organization__sponsors',
+                    queryset=Sponsor.objects.filter(status='active')
+                )
             ).order_by('-join_date')
             context['user_leagues_teams'] = user_memberships
         else:
