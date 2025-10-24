@@ -60,17 +60,15 @@
     <!-- Sponsors Section -->
     {% if organization.sponsors.all %}
     <div class="px-4 py-3 bg-gray-50 border-t border-gray-200">
-        <p class="text-xs font-medium text-gray-500 mb-2">Sponsors</p>
         <div class="flex flex-wrap gap-3">
             {% for sponsor in organization.sponsors.all %}
             <a href="{% if sponsor.url %}{{ sponsor.url }}{% else %}{{ sponsor.get_absolute_url }}{% endif %}"
-               class="flex items-center gap-2 hover:opacity-75 transition-opacity"
+               class="hover:opacity-75 transition-opacity"
                {% if sponsor.url %}target="_blank" rel="noopener noreferrer"{% endif %}
                title="{{ sponsor.name }}">
                 {% if sponsor.logo %}
                 <img src="{{ sponsor.logo.url }}" alt="{{ sponsor.name }}" class="h-6 w-6 object-contain">
                 {% endif %}
-                <span class="text-xs text-gray-700">{{ sponsor.name }}</span>
             </a>
             {% endfor %}
         </div>
