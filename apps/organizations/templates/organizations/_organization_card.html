@@ -2,7 +2,7 @@
 {# Reusable organization card component #}
 {# Parameters: organization (required), permission_level (optional) #}
 
-<div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-all duration-300 flex flex-col {% if permission_level %}border-l-4 border {% if permission_level == 'owner' %}border-primary{% elif permission_level == 'admin' %}border-success{% elif permission_level == 'manager' %}border-info{% else %}border-gray-300{% endif %}{% else %}border border-transparent hover:border-primary{% endif %}">
+<div class="bg-white overflow-visible shadow rounded-lg hover:shadow-lg transition-all duration-300 flex flex-col {% if permission_level %}border-l-4 border {% if permission_level == 'owner' %}border-primary{% elif permission_level == 'admin' %}border-success{% elif permission_level == 'manager' %}border-info{% else %}border-gray-300{% endif %}{% else %}border border-transparent hover:border-primary{% endif %}">
     <a href="{{ organization.get_absolute_url }}" class="p-6 flex-1 block">
         <!-- Logo + Permission Badge Header -->
         <div class="{% if permission_level %}flex items-start justify-between mb-3{% else %}flex justify-center mb-4{% endif %}">
@@ -63,11 +63,11 @@
         <div class="flex flex-wrap gap-3">
             {% for sponsor in organization.sponsors.all %}
             <a href="{% if sponsor.url %}{{ sponsor.url }}{% else %}{{ sponsor.get_absolute_url }}{% endif %}"
-               class="hover:opacity-75 transition-opacity"
-               {% if sponsor.url %}target="_blank" rel="noopener noreferrer"{% endif %}
-               title="{{ sponsor.name }}">
+               class="tooltip tooltip-top hover:opacity-75 transition-opacity"
+               data-tip="{{ sponsor.name }}"
+               {% if sponsor.url %}target="_blank" rel="noopener noreferrer"{% endif %}>
                 {% if sponsor.logo %}
-                <img src="{{ sponsor.logo.url }}" alt="{{ sponsor.name }}" class="h-6 w-6 object-contain">
+                <img src="{{ sponsor.logo.url }}" alt="{{ sponsor.name }}" class="h-10 w-10 object-contain">
                 {% endif %}
             </a>
             {% endfor %}
