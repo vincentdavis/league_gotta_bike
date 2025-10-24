@@ -408,10 +408,81 @@ print(f"Roles: {', '.join([r.get_role_type_display() for r in membership.roles.a
 Organization(type, parent, name, logo, contact_info, etc.)
 
 # Type-specific profiles (one-to-one with Organization)
-TeamProfile(race_category, team_colors, etc.)
-LeagueProfile(sanctioning_body, region, etc.)
+TeamProfile(short_description, team_type, banner, etc.)
+LeagueProfile(short_description, sanctioning_body, region, banner, etc.)
 SquadProfile(parent_team, focus_area, etc.)
 ```
+
+#### Organization URL Access Control
+
+**Member vs Guest Views**: The system automatically routes users to appropriate views based on their membership status.
+
+**URL Structure**:
+- `/{slug}/` - Base URL that auto-redirects based on membership
+- `/{slug}/member/` - Member-only view (requires active membership)
+- `/{slug}/guest/` - Public/guest view (no login required)
+
+**Examples**:
+- `/colorado-cycling-league/` → redirects to `/member/` or `/guest/`
+- `/teams/golden-hs/` → redirects to `/member/` or `/guest/`
+- `/league/team/` → redirects to `/member/` or `/guest/`
+
+**Access Flow**:
+1. User clicks organization link → goes to base URL
+2. System checks: Is user authenticated? Is user an active member?
+3. Routes to appropriate view:
+   - Active member → `/member/` view (full access)
+   - Non-member/guest → `/guest/` view (public info only)
+4. Direct access protection: Non-members accessing `/member/` URLs are redirected to `/guest/`
+
+**Model URL Methods**:
+```python
+# Get base redirect URL (use in templates/links)
+organization.get_absolute_url()  # Returns /{slug}/
+
+# Get specific view URLs (internal use)
+organization.get_member_url()    # Returns /{slug}/member/
+organization.get_guest_url()     # Returns /{slug}/guest/
+```
+
+**Implementation**:
+- `LeagueRedirectView` / `TeamRedirectView` - Check membership and redirect
+- `LeagueMemberView` / `TeamMemberView` - Member-only content (requires LoginRequiredMixin)
+- `LeagueGuestView` / `TeamGuestView` - Public content
+
+#### Organization Card Template System
+
+**Reusable Card Component**: All organization cards use a single template component for consistency.
+
+**Template**: `organizations/_organization_card.html`
+
+**Usage**:
+```django
+{% include "organizations/_organization_card.html" with organization=league %}
+{% include "organizations/_organization_card.html" with organization=team %}
+{% include "organizations/_organization_card.html" with organization=membership.organization permission_level=membership.permission_level permission_level_display=membership.get_permission_level_display %}
+```
+
+**Card Display Elements**:
+- Logo (24x24, centered, rounded)
+- Name (bold, centered)
+- Type badge (League/Team with color coding)
+- Parent league name (for teams in a league, with icon)
+- Team type (for teams with team_profile)
+- Short description (with fallback to full description)
+- Sponsors section (horizontal layout at bottom)
+- Permission level badge (optional, for "My Organizations")
+
+**Locations Used**:
+- `league_list.html` - My Organizations, Leagues, Teams sections
+- `league_detail.html` - Team cards within league
+- Any future pages that need to display organization cards
+
+**Benefits**:
+- Single source of truth for card display
+- Consistent styling across all pages
+- Easy to maintain and update
+- Supports both logged-in and logged-out users
 
 #### accounts.User (Extended)
 - Custom user model with role-based permissions
