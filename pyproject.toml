@@ -11,6 +11,7 @@ dependencies = [
     "django-allauth[mfa]>=65.12.0",
     "django-anymail[resend]>=13.1",
     "django-htmx>=1.26.0",
+    "django-ninja>=1.4.5",
     "django-phonenumber-field>=8.3.0",
     "django-push-notifications[wp]>=3.2.1",
     "django-storages[s3]>=1.14.0",

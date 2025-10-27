@@ -67,7 +67,7 @@ DEFAULT_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 ]
-LOCAL_APPS = ["accounts", "apps.organizations", "apps.membership", "apps.events", "apps.messaging", "apps.sponsors"]
+LOCAL_APPS = ["accounts", "apps.organizations", "apps.membership", "apps.events", "apps.messaging", "apps.sponsors", "apps.mobile_api"]
 
 # Conditionally add debug tools only in DEBUG mode
 ADDON_APPS = [

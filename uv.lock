@@ -497,6 +497,19 @@ wheels = [
 ]
 
 [[package]]
+name = "django-ninja"
+version = "1.4.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+    { name = "pydantic" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/fa/9a/558489e0e25173772fbd826306b7d1777e80285b02d69e0e1aaec41e3eec/django_ninja-1.4.5.tar.gz", hash = "sha256:aa1a2ee2b22c5f1c2f4bfbc004386be7074cbfaf133680c2b359a31221965503", size = 3710511, upload-time = "2025-10-19T18:28:02.362Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/49/e3/168274a8def4b9a2fb2540319a68914e8e4e529cd7f7b5f1ba8939d011bc/django_ninja-1.4.5-py3-none-any.whl", hash = "sha256:d779702ddc6e17b10739049ddb075a6a1e6c6270bdc04e0b0429f6adbf670373", size = 2426449, upload-time = "2025-10-19T18:28:00.518Z" },
+]
+
+[[package]]
 name = "django-phonenumber-field"
 version = "8.3.0"
 source = { registry = "https://pypi.org/simple" }
@@ -868,6 +881,7 @@ dependencies = [
     { name = "django-allauth", extra = ["mfa"] },
     { name = "django-anymail", extra = ["resend"] },
     { name = "django-htmx" },
+    { name = "django-ninja" },
     { name = "django-phonenumber-field" },
     { name = "django-push-notifications", extra = ["wp"] },
     { name = "django-storages", extra = ["s3"] },
@@ -905,6 +919,7 @@ requires-dist = [
     { name = "django-allauth", extras = ["mfa"], specifier = ">=65.12.0" },
     { name = "django-anymail", extras = ["resend"], specifier = ">=13.1" },
     { name = "django-htmx", specifier = ">=1.26.0" },
+    { name = "django-ninja", specifier = ">=1.4.5" },
     { name = "django-phonenumber-field", specifier = ">=8.3.0" },
     { name = "django-push-notifications", extras = ["wp"], specifier = ">=3.2.1" },
     { name = "django-storages", extras = ["s3"], specifier = ">=1.14.0" },

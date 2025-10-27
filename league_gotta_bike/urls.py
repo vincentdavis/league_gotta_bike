@@ -62,6 +62,11 @@ urlpatterns += [
     path('sponsors/', include('apps.sponsors.urls')),
 ]
 
+# Mobile API URLs
+urlpatterns += [
+    path('api/mobile/', include('apps.mobile_api.urls')),
+]
+
 # Organizations URLs (must be last due to catch-all slug patterns)
 urlpatterns += [
     path('', include('apps.organizations.urls')),
