@@ -5,6 +5,8 @@ All endpoints are automatically documented at /api/mobile/docs
 """
 
 from ninja import NinjaAPI
+from .routers.auth_router import router as auth_router
+from .routers.organizations_router import router as organizations_router
 
 # Create the main API instance
 api = NinjaAPI(
@@ -28,17 +30,8 @@ def health_check(request):
     }
 
 
-# Additional API endpoints will be organized into routers
-# Example:
-#
-# from ninja import Router
-# from .schemas import UserSchema
-#
-# user_router = Router(tags=["users"])
-#
-# @user_router.get("/profile", response=UserSchema, auth=...)
-# def user_profile(request):
-#     """Get current user profile."""
-#     return request.user
-#
-# api.add_router("/users", user_router)
+# Add authentication router
+api.add_router("/auth", auth_router)
+
+# Add organizations router
+api.add_router("/organizations", organizations_router)
