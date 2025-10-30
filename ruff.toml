@@ -1,5 +1,5 @@
 # Ruff configuration file
-target-version = "py313"
+target-version = "py314"
 line-length = 120
 preview = true
 
@@ -48,7 +48,11 @@ select = [
     "W",
 
 ]
-ignore = ["D107"]
+ignore = [
+    "D107",  # Missing docstring in __init__
+    "D203",  # Conflicts with D211 (no blank line before class)
+    "D213",  # Conflicts with D212 (multi-line summary first line)
+]
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
 unfixable = []
