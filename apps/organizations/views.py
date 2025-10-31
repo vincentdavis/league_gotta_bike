@@ -465,6 +465,25 @@ class LeagueListView(ListView):
         context['leagues'] = [org for org in organizations if org.type == Organization.LEAGUE]
         context['teams'] = [org for org in organizations if org.type == Organization.TEAM]
 
+        # Sponsor search and display
+        sponsor_query = self.request.GET.get('sponsor_q', '').strip()
+        context['sponsor_search_query'] = sponsor_query
+
+        # Get all active sponsors with organization count annotation
+        sponsors_queryset = Sponsor.objects.filter(
+            status=Sponsor.ACTIVE
+        ).annotate(
+            org_count=models.Count('organization', filter=~Q(organization=None))
+        ).select_related('organization')
+
+        # Apply sponsor search filter if query exists
+        if sponsor_query:
+            sponsors_queryset = sponsors_queryset.filter(
+                name__icontains=sponsor_query
+            )
+
+        context['sponsors'] = list(sponsors_queryset)
+
         return context
 
 

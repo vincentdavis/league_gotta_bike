@@ -25,6 +25,7 @@ class Sponsor(models.Model):
     phone_number = PhoneNumberField(blank=True, help_text="Primary phone number")
     url = models.URLField(blank=True, help_text="Website URL")
     email = models.EmailField(blank=True, help_text="General contact email")
+    city = models.CharField(max_length=100, blank=True, help_text="City or location")
 
     # Contact person information
     contact_name = models.CharField(max_length=200, blank=True, help_text="Contact person name")
