@@ -329,6 +329,12 @@ class LeagueGuestView(DetailView):
         # Get league profile
         context['league_profile'] = getattr(self.object, 'league_profile', None)
 
+        # Get all teams in this league
+        context['teams'] = self.object.children.filter(
+            type=Organization.TEAM,
+            is_active=True
+        ).select_related('team_profile').order_by('name')
+
         # Check if user is already a member (if logged in)
         context['is_member'] = False
         if self.request.user.is_authenticated:
@@ -699,21 +705,21 @@ class PracticeGroupCreateView(UserNameRequiredMixin, LoginRequiredMixin, CreateV
     form_class = PracticeGroupCreateForm
     template_name = 'organizations/organization_create.html'
 
-    def get_initial(self):
-        """Pre-populate parent field if provided in query parameter."""
-        initial = super().get_initial()
+    def get_form_kwargs(self):
+        """Pass parent team to the form."""
+        kwargs = super().get_form_kwargs()
         parent_slug = self.request.GET.get('parent')
         if parent_slug:
             try:
                 parent_team = Organization.objects.get(slug=parent_slug, type=Organization.TEAM)
                 # Verify user has permission to create sub-organizations
                 if can_create_sub_organization(self.request.user, parent_team):
-                    initial['parent'] = parent_team.pk
+                    kwargs['parent_team'] = parent_team
                 else:
                     messages.error(self.request, 'You do not have permission to create sub-organizations for this team.')
             except Organization.DoesNotExist:
                 messages.error(self.request, 'Parent team not found.')
-        return initial
+        return kwargs
 
     def form_valid(self, form):
         """Create practice group and assign creator as owner."""
@@ -735,6 +741,14 @@ class PracticeGroupCreateView(UserNameRequiredMixin, LoginRequiredMixin, CreateV
         context = super().get_context_data(**kwargs)
         context['org_type'] = 'Practice Group'
         context['org_type_value'] = Organization.PRACTICE_GROUP
+        # Add parent team to context for display
+        parent_slug = self.request.GET.get('parent')
+        if parent_slug:
+            try:
+                parent_team = Organization.objects.get(slug=parent_slug, type=Organization.TEAM)
+                context['parent_team'] = parent_team
+            except Organization.DoesNotExist:
+                pass
         return context
 
 

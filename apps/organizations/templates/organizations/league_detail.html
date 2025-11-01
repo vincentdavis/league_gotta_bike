@@ -24,34 +24,6 @@
             </a>
             {% endif %}
         </div>
-
-        {% if league.description %}
-        <p class="text-gray-600 mt-4">{{ league.description }}</p>
-        {% endif %}
-
-        <!-- League Profile Details -->
-        {% if league_profile %}
-        <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-            {% if league_profile.region %}
-            <div>
-                <p class="text-sm font-medium text-gray-500">Region</p>
-                <p class="mt-1 text-sm text-gray-900">{{ league_profile.region }}</p>
-            </div>
-            {% endif %}
-            {% if league_profile.sanctioning_body %}
-            <div>
-                <p class="text-sm font-medium text-gray-500">Sanctioning Body</p>
-                <p class="mt-1 text-sm text-gray-900">{{ league_profile.sanctioning_body }}</p>
-            </div>
-            {% endif %}
-            {% if league.contact_email %}
-            <div>
-                <p class="text-sm font-medium text-gray-500">Contact</p>
-                <p class="mt-1 text-sm text-gray-900">{{ league.contact_email }}</p>
-            </div>
-            {% endif %}
-        </div>
-        {% endif %}
     </div>
 
     <!-- Membership Actions Card -->

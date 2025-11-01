@@ -4,12 +4,26 @@
 
 <div class="bg-white overflow-visible shadow rounded-lg hover:shadow-lg transition-all duration-300 flex flex-col {% if permission_level %}border-l-4 border {% if permission_level == 'owner' %}border-primary{% elif permission_level == 'admin' %}border-success{% elif permission_level == 'manager' %}border-info{% else %}border-gray-300{% endif %}{% else %}border border-transparent hover:border-primary{% endif %}">
     <a href="{{ organization.get_absolute_url }}" class="p-6 flex-1 block">
-        <!-- Logo + Permission Badge Header -->
-        <div class="{% if permission_level %}flex items-start justify-between mb-3{% else %}flex justify-center mb-4{% endif %}">
-            <div class="flex justify-center {% if permission_level %}flex-1{% endif %}">
+        <!-- Logo and Name - Left Aligned -->
+        <div class="flex items-start justify-between mb-4">
+            <div class="flex items-start gap-3">
                 <img src="{% if organization.logo %}{{ organization.logo.url }}{% else %}{% static 'images/Default_League.png' %}{% endif %}"
                      alt="{{ organization.name }}"
-                     class="h-24 w-24 rounded-full object-contain">
+                     class="h-16 w-16 rounded-full object-contain">
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-1">
+                        {{ organization.name }}
+                    </h3>
+                    <!-- Parent League (if team belongs to a league) -->
+                    {% if organization.type == 'team' and organization.parent %}
+                    <p class="text-xs text-gray-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        {{ organization.parent.name }}
+                    </p>
+                    {% endif %}
+                </div>
             </div>
             {% if permission_level %}
             <span class="badge {% if permission_level == 'owner' %}badge-primary{% elif permission_level == 'admin' %}badge-success{% elif permission_level == 'manager' %}badge-info{% else %}badge-ghost{% endif %}">
@@ -17,44 +31,6 @@
             </span>
             {% endif %}
         </div>
-
-        <!-- Organization Name -->
-        <h3 class="text-xl font-semibold text-gray-900 mb-1 text-center">
-            {{ organization.name }}
-        </h3>
-
-        <!-- Type Badge -->
-        <p class="text-sm text-gray-500 mb-2 text-center">
-            <span class="badge badge-sm {% if organization.type == 'league' %}badge-primary{% else %}badge-success{% endif %}">
-                {{ organization.get_type_display }}
-            </span>
-        </p>
-
-        <!-- Parent League (if team belongs to a league) -->
-        {% if organization.type == 'team' and organization.parent %}
-        <p class="text-xs text-gray-500 text-center mb-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-            </svg>
-            {{ organization.parent.name }}
-        </p>
-        {% endif %}
-
-        <!-- Team Type (if team has team_profile) -->
-        {% if organization.type == 'team' and organization.team_profile.team_type %}
-        <p class="text-sm text-gray-500 mb-3 text-center">
-            {{ organization.team_profile.get_team_type_display }}
-        </p>
-        {% endif %}
-
-        <!-- Short Description -->
-        {% if organization.type == 'league' and organization.league_profile.short_description %}
-        <p class="text-gray-600 text-sm">{{ organization.league_profile.short_description }}</p>
-        {% elif organization.type == 'team' and organization.team_profile.short_description %}
-        <p class="text-gray-600 text-sm">{{ organization.team_profile.short_description }}</p>
-        {% elif organization.description %}
-        <p class="text-gray-600 text-sm line-clamp-2">{{ organization.description }}</p>
-        {% endif %}
     </a>
 
     <!-- Sponsors Section -->

@@ -90,6 +90,7 @@
                 </div>
 
                 <!-- Contact Information -->
+                {% if form.contact_email %}
                 <div class="divider"></div>
                 <div class="mb-6">
                     <h2 class="text-xl font-semibold text-gray-900 mb-4">Contact Information</h2>
@@ -139,6 +140,7 @@
                         </div>
                     </div>
                 </div>
+                {% endif %}
 
                 <!-- Logo -->
                 <div class="mb-6">
@@ -204,6 +206,7 @@
                 </div>
 
                 <!-- Membership Settings -->
+                {% if form.membership_open %}
                 <div class="divider"></div>
                 <div class="mb-6">
                     <h2 class="text-xl font-semibold text-gray-900 mb-4">Membership Settings</h2>
@@ -227,6 +230,7 @@
                         </div>
                     </div>
                 </div>
+                {% endif %}
 
                 <!-- Type-Specific Fields -->
                 {% if org_type_value != 'club' %}
