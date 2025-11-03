@@ -1,0 +1,157 @@
+{% extends "organizations/base.html" %}
+{% load static %}
+
+{% block title %}Seasons - {{ organization.name }} - League Gotta Bike{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+    <!-- Header -->
+    <div class="mb-6 flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Seasons</h1>
+            <p class="text-gray-600 mt-1">{{ organization.name }}</p>
+        </div>
+        {% if can_manage %}
+        <a href="{% url 'organizations:season_create' slug=organization.slug %}" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Create Season
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Seasons Table -->
+    {% if seasons %}
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="table w-full">
+                <thead>
+                    <tr>
+                        <th>Season</th>
+                        <th>Dates</th>
+                        <th>Registration Window</th>
+                        <th>Status</th>
+                        <th>Members</th>
+                        {% if can_manage %}
+                        <th class="text-right">Actions</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for season in seasons %}
+                    <tr class="hover">
+                        <td>
+                            <div class="flex items-center gap-2">
+                                <div>
+                                    <div class="font-semibold">{{ season.name }}</div>
+                                    {% if season.description %}
+                                    <div class="text-sm text-gray-500 line-clamp-1">{{ season.description }}</div>
+                                    {% endif %}
+                                </div>
+                                {% if season.is_active %}
+                                <span class="badge badge-success badge-sm">Active</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="text-sm">
+                                <div>{{ season.start_date|date:"M d, Y" }}</div>
+                                <div class="text-gray-500">to {{ season.end_date|date:"M d, Y" }}</div>
+                            </div>
+                            {% if season.is_current %}
+                            <span class="badge badge-info badge-xs mt-1">Current</span>
+                            {% elif season.has_ended %}
+                            <span class="badge badge-ghost badge-xs mt-1">Ended</span>
+                            {% elif season.has_started %}
+                            <span class="badge badge-warning badge-xs mt-1">In Progress</span>
+                            {% else %}
+                            <span class="badge badge-ghost badge-xs mt-1">Upcoming</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="text-sm">
+                                <div>Opens: {{ season.registration_open_date|date:"M d, Y" }}</div>
+                                {% if season.registration_close_date %}
+                                <div class="text-gray-500">Closes: {{ season.registration_close_date|date:"M d, Y" }}</div>
+                                {% else %}
+                                <div class="text-gray-500">No deadline</div>
+                                {% endif %}
+                            </div>
+                            {% if season.registration_is_open %}
+                            <span class="badge badge-success badge-xs mt-1">Open</span>
+                            {% else %}
+                            <span class="badge badge-error badge-xs mt-1">Closed</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if season.is_published %}
+                            <span class="badge badge-success badge-sm">Published</span>
+                            {% else %}
+                            <span class="badge badge-ghost badge-sm">Draft</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="text-sm">
+                                <div class="font-semibold">{{ season.get_registered_count }}</div>
+                                {% if season.max_members %}
+                                <div class="text-gray-500">of {{ season.max_members }} max</div>
+                                {% else %}
+                                <div class="text-gray-500">unlimited</div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        {% if can_manage %}
+                        <td class="text-right">
+                            <div class="flex gap-2 justify-end">
+                                <a href="{% url 'organizations:season_edit' slug=organization.slug season_slug=season.slug %}" class="btn btn-sm btn-outline">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                    Edit
+                                </a>
+                                <a href="{% url 'organizations:season_delete' slug=organization.slug season_slug=season.slug %}" class="btn btn-sm btn-outline btn-error">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                    Delete
+                                </a>
+                            </div>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="bg-white shadow rounded-lg p-12 text-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">No Seasons Yet</h3>
+        <p class="text-gray-600 mb-6">Get started by creating your first season for {{ organization.name }}.</p>
+        {% if can_manage %}
+        <a href="{% url 'organizations:season_create' slug=organization.slug %}" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Create First Season
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Back Button -->
+    <div class="mt-6">
+        <a href="{{ organization.get_absolute_url }}" class="btn btn-ghost">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to {{ organization.name }}
+        </a>
+    </div>
+</div>
+{% endblock %}

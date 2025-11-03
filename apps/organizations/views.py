@@ -11,14 +11,14 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic import DetailView, ListView, CreateView, UpdateView, DeleteView, TemplateView
 from django.views import View
 
-from apps.membership.models import Membership
+from apps.membership.models import Membership, Season
 from apps.events.models import Event
 from apps.sponsors.models import Sponsor
 
 from .models import Organization, LeagueProfile, TeamProfile, SquadProfile
 from .forms import (
     LeagueCreateForm, TeamCreateForm, SquadCreateForm, ClubCreateForm, PracticeGroupCreateForm,
-    OrganizationEditForm, LeagueProfileForm, TeamProfileForm, SquadProfileForm
+    OrganizationEditForm, LeagueProfileForm, TeamProfileForm, SquadProfileForm, SeasonForm
 )
 from .mixins import UserNameRequiredMixin
 from .permissions import (
@@ -891,6 +891,158 @@ class OrganizationDeleteView(OrgOwnerRequiredMixin, DeleteView):
         # Count members and child organizations
         context['member_count'] = self.object.memberships.count()
         context['child_count'] = self.object.children.count()
+        return context
+
+
+# Season Management Views (for Leagues and Teams only)
+
+class SeasonListView(LoginRequiredMixin, ListView):
+    """List all seasons for a League or Team."""
+    model = Season
+    template_name = 'organizations/season_list.html'
+    context_object_name = 'seasons'
+
+    def dispatch(self, request, *args, **kwargs):
+        # Get the organization and validate it's a League or Team
+        self.organization = get_object_or_404(
+            Organization.objects.filter(
+                type__in=[Organization.LEAGUE, Organization.TEAM]
+            ),
+            slug=self.kwargs['slug']
+        )
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return Season.objects.filter(
+            organization=self.organization
+        ).order_by('-start_date')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['organization'] = self.organization
+        context['can_manage'] = is_org_admin(self.request.user, self.organization)
+        return context
+
+
+class SeasonCreateView(OrgAdminRequiredMixin, CreateView):
+    """Create a new season for a League or Team."""
+    model = Season
+    form_class = SeasonForm
+    template_name = 'organizations/season_form.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        # Get the organization and validate it's a League or Team
+        self.organization = get_object_or_404(
+            Organization.objects.filter(
+                type__in=[Organization.LEAGUE, Organization.TEAM]
+            ),
+            slug=self.kwargs['slug']
+        )
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        with transaction.atomic():
+            self.object = form.save(commit=False)
+            self.object.organization = self.organization
+            self.object.save()
+            logfire.info(
+                'Season created',
+                organization_id=self.organization.id,
+                organization_name=self.organization.name,
+                season_id=self.object.id,
+                season_name=self.object.name,
+                user_id=self.request.user.id
+            )
+            messages.success(self.request, f'Season "{self.object.name}" created successfully!')
+        return redirect('organizations:season_list', slug=self.organization.slug)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['organization'] = self.organization
+        context['action'] = 'Create'
+        return context
+
+
+class SeasonEditView(OrgAdminRequiredMixin, UpdateView):
+    """Edit an existing season."""
+    model = Season
+    form_class = SeasonForm
+    template_name = 'organizations/season_form.html'
+    slug_url_kwarg = 'season_slug'
+
+    def dispatch(self, request, *args, **kwargs):
+        # Get the organization and validate it's a League or Team
+        self.organization = get_object_or_404(
+            Organization.objects.filter(
+                type__in=[Organization.LEAGUE, Organization.TEAM]
+            ),
+            slug=self.kwargs['slug']
+        )
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        # Only allow editing seasons for this organization
+        return Season.objects.filter(organization=self.organization)
+
+    def form_valid(self, form):
+        with transaction.atomic():
+            self.object = form.save()
+            logfire.info(
+                'Season updated',
+                organization_id=self.organization.id,
+                organization_name=self.organization.name,
+                season_id=self.object.id,
+                season_name=self.object.name,
+                user_id=self.request.user.id
+            )
+            messages.success(self.request, f'Season "{self.object.name}" updated successfully!')
+        return redirect('organizations:season_list', slug=self.organization.slug)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['organization'] = self.organization
+        context['action'] = 'Edit'
+        # Show warning if editing active season with members
+        if self.object.is_active and self.object.get_registered_count() > 0:
+            context['has_members_warning'] = True
+        return context
+
+
+class SeasonDeleteView(OrgOwnerRequiredMixin, DeleteView):
+    """Delete a season (Owners only)."""
+    model = Season
+    template_name = 'organizations/season_delete_confirm.html'
+    slug_url_kwarg = 'season_slug'
+
+    def dispatch(self, request, *args, **kwargs):
+        # Get the organization and validate it's a League or Team
+        self.organization = get_object_or_404(
+            Organization.objects.filter(
+                type__in=[Organization.LEAGUE, Organization.TEAM]
+            ),
+            slug=self.kwargs['slug']
+        )
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        # Only allow deleting seasons for this organization
+        return Season.objects.filter(organization=self.organization)
+
+    def get_success_url(self):
+        logfire.info(
+            'Season deleted',
+            organization_id=self.organization.id,
+            organization_name=self.organization.name,
+            season_name=self.object.name,
+            user_id=self.request.user.id
+        )
+        messages.success(self.request, f'Season "{self.object.name}" has been deleted.')
+        return reverse('organizations:season_list', kwargs={'slug': self.organization.slug})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['organization'] = self.organization
+        context['member_count'] = self.object.get_registered_count()
         return context
 
 

@@ -1,0 +1,122 @@
+{% extends "organizations/base.html" %}
+{% load static %}
+
+{% block title %}Delete Season - {{ season.name }} - {{ organization.name }} - League Gotta Bike{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">Delete Season</h1>
+        <p class="text-gray-600 mt-1">{{ organization.name }}</p>
+    </div>
+
+    <!-- Confirmation Card -->
+    <div class="card bg-white shadow max-w-2xl">
+        <div class="card-body">
+            <!-- Warning Icon -->
+            <div class="flex justify-center mb-4">
+                <div class="rounded-full bg-error/10 p-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Confirmation Message -->
+            <h2 class="text-2xl font-bold text-center mb-2">Are you sure?</h2>
+            <p class="text-center text-gray-600 mb-6">
+                You are about to permanently delete this season. This action cannot be undone.
+            </p>
+
+            <!-- Season Details -->
+            <div class="bg-base-200 rounded-lg p-4 mb-6">
+                <div class="space-y-3">
+                    <div>
+                        <div class="text-sm text-gray-500">Season Name</div>
+                        <div class="font-semibold text-lg">{{ season.name }}</div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <div class="text-sm text-gray-500">Start Date</div>
+                            <div class="font-semibold">{{ season.start_date|date:"M d, Y" }}</div>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-500">End Date</div>
+                            <div class="font-semibold">{{ season.end_date|date:"M d, Y" }}</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="text-sm text-gray-500">Status</div>
+                        <div class="flex gap-2 mt-1">
+                            {% if season.is_active %}
+                            <span class="badge badge-success badge-sm">Active</span>
+                            {% endif %}
+                            {% if season.is_published %}
+                            <span class="badge badge-success badge-sm">Published</span>
+                            {% endif %}
+                            {% if season.registration_is_open %}
+                            <span class="badge badge-info badge-sm">Registration Open</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="text-sm text-gray-500">Registered Members</div>
+                        <div class="font-semibold text-lg">{{ season.get_registered_count }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Member Warning -->
+            {% if season.get_registered_count > 0 %}
+            <div class="alert alert-error mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                    <h3 class="font-bold">Warning: Active Members</h3>
+                    <div class="text-sm">
+                        This season has <strong>{{ season.get_registered_count }} registered member{{ season.get_registered_count|pluralize }}</strong>.
+                        Deleting this season will remove all season memberships and associated data.
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- What Will Be Deleted -->
+            <div class="mb-6">
+                <h3 class="font-semibold mb-2">What will be deleted:</h3>
+                <ul class="list-disc list-inside space-y-1 text-sm text-gray-600">
+                    <li>Season record: {{ season.name }}</li>
+                    {% if season.get_registered_count > 0 %}
+                    <li>{{ season.get_registered_count }} season membership record{{ season.get_registered_count|pluralize }}</li>
+                    {% endif %}
+                    <li>All season-specific settings and data</li>
+                </ul>
+            </div>
+
+            <!-- Confirmation Form -->
+            <form method="post">
+                {% csrf_token %}
+                <div class="flex gap-4 justify-end">
+                    <a href="{% url 'organizations:season_list' slug=organization.slug %}" class="btn btn-ghost">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-error">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Delete Season
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

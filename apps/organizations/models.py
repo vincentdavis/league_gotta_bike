@@ -372,6 +372,20 @@ class Organization(models.Model):
             # Deactivate news channel if it exists
             ChatRoom.objects.filter(slug=news_slug).update(is_active=False)
 
+    # Helper methods for working with seasons
+
+    def get_active_season(self):
+        """Get the current active season for this organization"""
+        return self.seasons.filter(is_active=True).first()
+
+    def registration_is_open(self):
+        """Check if registration is open for the active season"""
+        active_season = self.get_active_season()
+        if not active_season:
+            # Fallback to old membership_open for orgs without seasons
+            return self.membership_open
+        return active_season.registration_is_open
+
 
 class LeagueProfile(models.Model):
     """Extended profile for League organizations"""

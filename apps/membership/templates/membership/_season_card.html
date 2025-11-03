@@ -1,0 +1,104 @@
+{% load static %}
+
+<!-- Season Card Component -->
+<div class="card bg-white shadow hover:shadow-lg transition-shadow">
+    <div class="card-body">
+        <!-- Season Header -->
+        <div class="flex items-start justify-between mb-3">
+            <div class="flex-1">
+                <h3 class="card-title text-lg">
+                    <a href="{% url 'membership:season_detail' slug=season.organization.slug season_slug=season.slug %}" class="hover:text-primary">
+                        {{ season.name }}
+                    </a>
+                </h3>
+                <div class="flex gap-2 mt-2">
+                    {% if season.is_active %}
+                    <span class="badge badge-success badge-sm">Active</span>
+                    {% endif %}
+                    {% if season.is_current %}
+                    <span class="badge badge-info badge-sm">Current</span>
+                    {% elif season.has_ended %}
+                    <span class="badge badge-ghost badge-sm">Ended</span>
+                    {% elif season.has_started %}
+                    <span class="badge badge-warning badge-sm">In Progress</span>
+                    {% else %}
+                    <span class="badge badge-ghost badge-sm">Upcoming</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Season Dates -->
+        <div class="grid grid-cols-2 gap-3 mb-3 text-sm">
+            <div>
+                <div class="text-gray-500">Season</div>
+                <div class="font-semibold">{{ season.start_date|date:"M d" }} - {{ season.end_date|date:"M d, Y" }}</div>
+            </div>
+            <div>
+                <div class="text-gray-500">Registration</div>
+                {% if season.registration_is_open %}
+                <div class="font-semibold text-success">Open</div>
+                {% if season.registration_close_date %}
+                <div class="text-xs text-gray-500">Until {{ season.registration_close_date|date:"M d" }}</div>
+                {% endif %}
+                {% else %}
+                <div class="font-semibold text-error">Closed</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Capacity -->
+        <div class="flex items-center gap-4 mb-3 text-sm">
+            <div>
+                <span class="text-gray-500">Members:</span>
+                <span class="font-semibold">{{ season.get_registered_count }}</span>
+                {% if season.max_members %}
+                <span class="text-gray-500">/ {{ season.max_members }}</span>
+                {% endif %}
+            </div>
+            {% if season.default_membership_fee %}
+            <div>
+                <span class="text-gray-500">Fee:</span>
+                <span class="font-semibold">${{ season.default_membership_fee }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Description (if provided) -->
+        {% if season.description %}
+        <p class="text-sm text-gray-600 mb-4 line-clamp-2">{{ season.description }}</p>
+        {% endif %}
+
+        <!-- Action Buttons -->
+        <div class="card-actions">
+            <a href="{% url 'membership:season_detail' slug=season.organization.slug season_slug=season.slug %}" class="btn btn-outline btn-sm flex-1">
+                View Details
+            </a>
+
+            {% if user_season_registration %}
+                <!-- Already registered -->
+                <span class="btn btn-success btn-sm flex-1" disabled>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Registered
+                </span>
+            {% elif can_register_for_season %}
+                <!-- Can register -->
+                <a href="{% url 'membership:season_register' slug=season.organization.slug season_slug=season.slug %}" class="btn btn-primary btn-sm flex-1">
+                    Register
+                </a>
+            {% elif user.is_authenticated and not user_membership %}
+                <!-- Not a member - can join & register -->
+                <a href="{% url 'membership:join_and_register_season' slug=season.organization.slug season_slug=season.slug %}" class="btn btn-primary btn-sm flex-1">
+                    Join & Register
+                </a>
+            {% elif not user.is_authenticated %}
+                <!-- Not logged in -->
+                <a href="{% url 'account_login' %}?next={% url 'membership:season_detail' slug=season.organization.slug season_slug=season.slug %}" class="btn btn-primary btn-sm flex-1">
+                    Sign In
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>

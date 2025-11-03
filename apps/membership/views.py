@@ -15,7 +15,7 @@ from apps.organizations.permissions import (
     is_org_member, get_user_membership
 )
 
-from .models import Membership, MemberRole
+from .models import Membership, MemberRole, Season, SeasonMembership
 from .forms import (
     MembershipInviteForm, MembershipPermissionUpdateForm,
     MembershipStatusUpdateForm, MembershipRequestForm,
@@ -583,3 +583,59 @@ class SubOrgMemberManagementView(OrgMemberManagerRequiredMixin, View):
             messages.info(request, 'No changes made to member list.')
 
         return redirect(sub_org.parent.get_absolute_url())
+
+
+# Season Registration Views
+
+class SeasonDetailView(DetailView):
+    """Public view of a season with registration options."""
+    model = Season
+    template_name = 'membership/season_detail.html'
+    context_object_name = 'season'
+    slug_url_kwarg = 'season_slug'
+
+    def get_queryset(self):
+        """Get season for the specified organization."""
+        organization = get_object_or_404(Organization, slug=self.kwargs['slug'])
+        return Season.objects.filter(organization=organization)
+
+    def get_context_data(self, **kwargs):
+        """Add organization and user registration status to context."""
+        context = super().get_context_data(**kwargs)
+        season = self.get_object()
+
+        context['organization'] = season.organization
+        context['user_membership'] = None
+        context['user_season_registration'] = None
+        context['can_register'] = False
+
+        if self.request.user.is_authenticated:
+            # Check if user is a member of the organization
+            try:
+                membership = Membership.objects.get(
+                    user=self.request.user,
+                    organization=season.organization
+                )
+                context['user_membership'] = membership
+
+                # Check if user is registered for this season
+                try:
+                    season_membership = SeasonMembership.objects.get(
+                        membership=membership,
+                        season=season
+                    )
+                    context['user_season_registration'] = season_membership
+                except SeasonMembership.DoesNotExist:
+                    pass
+
+                # User can register if they're an active member and not already registered
+                context['can_register'] = (
+                    membership.status == Membership.ACTIVE and
+                    not context['user_season_registration'] and
+                    season.registration_is_open
+                )
+
+            except Membership.DoesNotExist:
+                pass
+
+        return context

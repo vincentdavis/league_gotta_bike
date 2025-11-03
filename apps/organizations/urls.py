@@ -23,6 +23,12 @@ urlpatterns = [
     path('<slug:slug>/settings/', views.OrganizationSettingsView.as_view(), name='org_settings'),
     path('<slug:slug>/delete/', views.OrganizationDeleteView.as_view(), name='org_delete'),
 
+    # Season management (for leagues and teams only)
+    path('<slug:slug>/seasons/', views.SeasonListView.as_view(), name='season_list'),
+    path('<slug:slug>/seasons/create/', views.SeasonCreateView.as_view(), name='season_create'),
+    path('<slug:slug>/seasons/<slug:season_slug>/edit/', views.SeasonEditView.as_view(), name='season_edit'),
+    path('<slug:slug>/seasons/<slug:season_slug>/delete/', views.SeasonDeleteView.as_view(), name='season_delete'),
+
     # Guest/Public views
     path('leagues/<slug:league_slug>/guest/', views.LeagueGuestView.as_view(), name='league_guest'),
     path('teams/<slug:team_slug>/guest/', views.TeamGuestView.as_view(), name='team_guest_standalone'),

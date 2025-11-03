@@ -1,0 +1,257 @@
+{% extends "organizations/base.html" %}
+{% load static %}
+
+{% block title %}{{ season.name}} - {{ organization.name }} - League Gotta Bike{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+    <!-- Breadcrumbs -->
+    <nav class="mb-4">
+        <ol class="flex items-center space-x-2 text-sm text-gray-500">
+            <li><a href="{% url 'organizations:league_list' %}" class="hover:text-gray-700">Organizations</a></li>
+            <li>/</li>
+            <li><a href="{{ organization.get_absolute_url }}" class="hover:text-gray-700">{{ organization.name }}</a></li>
+            <li>/</li>
+            <li><a href="{% url 'organizations:season_list' slug=organization.slug %}" class="hover:text-gray-700">Seasons</a></li>
+            <li>/</li>
+            <li class="text-gray-900">{{ season.name }}</li>
+        </ol>
+    </nav>
+
+    <!-- Season Header -->
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <div class="flex items-start justify-between">
+            <div>
+                <div class="flex items-center gap-3">
+                    <h1 class="text-3xl font-bold text-gray-900">{{ season.name }}</h1>
+                    {% if season.is_active %}
+                    <span class="badge badge-success">Active</span>
+                    {% endif %}
+                    {% if season.is_current %}
+                    <span class="badge badge-info">Current</span>
+                    {% elif season.has_ended %}
+                    <span class="badge badge-ghost">Ended</span>
+                    {% elif season.has_started %}
+                    <span class="badge badge-warning">In Progress</span>
+                    {% else %}
+                    <span class="badge badge-ghost">Upcoming</span>
+                    {% endif %}
+                </div>
+                <p class="text-gray-600 mt-2">{{ organization.name }}</p>
+                {% if season.description %}
+                <p class="text-gray-700 mt-4">{{ season.description }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Season Details Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- Season Dates Card -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Season Dates</h2>
+            <div class="space-y-3">
+                <div>
+                    <div class="text-sm text-gray-500">Start Date</div>
+                    <div class="font-semibold">{{ season.start_date|date:"F d, Y" }}</div>
+                </div>
+                <div>
+                    <div class="text-sm text-gray-500">End Date</div>
+                    <div class="font-semibold">{{ season.end_date|date:"F d, Y" }}</div>
+                </div>
+                <div class="pt-2">
+                    <div class="text-sm text-gray-500">Duration</div>
+                    <div class="font-semibold">{{ season.start_date|timesince:season.end_date }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Registration Window Card -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Registration</h2>
+            <div class="space-y-3">
+                <div>
+                    <div class="text-sm text-gray-500">Opens</div>
+                    <div class="font-semibold">{{ season.registration_open_date|date:"F d, Y" }}</div>
+                </div>
+                {% if season.registration_close_date %}
+                <div>
+                    <div class="text-sm text-gray-500">Closes</div>
+                    <div class="font-semibold">{{ season.registration_close_date|date:"F d, Y" }}</div>
+                </div>
+                {% else %}
+                <div>
+                    <div class="text-sm text-gray-500">Closes</div>
+                    <div class="font-semibold">No deadline</div>
+                </div>
+                {% endif %}
+                <div class="pt-2">
+                    <div class="text-sm text-gray-500">Status</div>
+                    {% if season.registration_is_open %}
+                    <span class="badge badge-success">Open</span>
+                    {% else %}
+                    <span class="badge badge-error">Closed</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Capacity Card -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Capacity</h2>
+            <div class="space-y-3">
+                <div>
+                    <div class="text-sm text-gray-500">Registered Members</div>
+                    <div class="font-semibold text-2xl">{{ season.get_registered_count }}</div>
+                </div>
+                {% if season.max_members %}
+                <div>
+                    <div class="text-sm text-gray-500">Maximum</div>
+                    <div class="font-semibold">{{ season.max_members }}</div>
+                </div>
+                <div>
+                    <div class="text-sm text-gray-500">Available Spots</div>
+                    <div class="font-semibold">{{ season.get_available_spots }}</div>
+                </div>
+                {% else %}
+                <div>
+                    <div class="text-sm text-gray-500">Maximum</div>
+                    <div class="font-semibold">Unlimited</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Fee Card -->
+        {% if season.default_membership_fee %}
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Season Fee</h2>
+            <div class="space-y-3">
+                <div>
+                    <div class="text-sm text-gray-500">Registration Fee</div>
+                    <div class="font-semibold text-2xl">${{ season.default_membership_fee }}</div>
+                </div>
+                {% if season.payment_instructions %}
+                <div class="pt-2">
+                    <div class="text-sm text-gray-500">Payment Instructions</div>
+                    <div class="text-sm text-gray-700 whitespace-pre-line">{{ season.payment_instructions }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Registration Action Card -->
+    <div class="bg-white shadow rounded-lg p-6">
+        {% if user_season_registration %}
+            <!-- Already Registered -->
+            <div class="text-center py-8">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-success mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">You're Registered!</h2>
+                <p class="text-gray-600 mb-4">
+                    {% if user_season_registration.status == 'registered' or user_season_registration.status == 'active' %}
+                        You're registered for this season.
+                    {% elif user_season_registration.status == 'waitlist' %}
+                        Your registration is pending approval.
+                    {% else %}
+                        Status: {{ user_season_registration.get_status_display }}
+                    {% endif %}
+                </p>
+                <div class="flex gap-4 justify-center">
+                    <a href="{{ organization.get_absolute_url }}" class="btn btn-outline">
+                        Back to {{ organization.name }}
+                    </a>
+                    {% if user_season_registration.payment_status != 'paid' and season.payment_instructions %}
+                    <button class="btn btn-primary" onclick="payment_modal.showModal()">
+                        View Payment Instructions
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        {% elif can_register %}
+            <!-- Active Member - Can Register -->
+            <div class="text-center py-8">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-primary mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">Register for This Season</h2>
+                <p class="text-gray-600 mb-6">You're a member of {{ organization.name }}. Register for this season to participate.</p>
+                <a href="{% url 'membership:season_register' slug=organization.slug season_slug=season.slug %}" class="btn btn-primary btn-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Register Now
+                </a>
+            </div>
+        {% elif user.is_authenticated and user_membership %}
+            <!-- Member but can't register -->
+            <div class="text-center py-8">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-warning mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">Registration Closed</h2>
+                <p class="text-gray-600 mb-4">
+                    {% if not season.registration_is_open %}
+                        Registration for this season is currently closed.
+                    {% elif user_membership.status == 'prospect' %}
+                        Your organization membership is pending approval.
+                    {% else %}
+                        Unable to register at this time.
+                    {% endif %}
+                </p>
+                <a href="{{ organization.get_absolute_url }}" class="btn btn-outline">
+                    Back to {{ organization.name }}
+                </a>
+            </div>
+        {% elif user.is_authenticated %}
+            <!-- Logged in but not a member -->
+            <div class="text-center py-8">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-info mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                </svg>
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">Join & Register</h2>
+                <p class="text-gray-600 mb-6">Join {{ organization.name }} and register for this season in one step.</p>
+                <a href="{% url 'membership:join_and_register_season' slug=organization.slug season_slug=season.slug %}" class="btn btn-primary btn-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Join & Register for Season
+                </a>
+            </div>
+        {% else %}
+            <!-- Not logged in -->
+            <div class="text-center py-8">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                </svg>
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">Sign In to Register</h2>
+                <p class="text-gray-600 mb-6">Sign in to join {{ organization.name }} and register for this season.</p>
+                <a href="{% url 'account_login' %}?next={{ request.path }}" class="btn btn-primary btn-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                    </svg>
+                    Sign In
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Payment Instructions Modal -->
+{% if user_season_registration and season.payment_instructions and user_season_registration.payment_status != 'paid' %}
+<dialog id="payment_modal" class="modal">
+    <div class="modal-box">
+        <h3 class="font-bold text-lg mb-4">Payment Instructions</h3>
+        <p class="whitespace-pre-line text-gray-700">{{ season.payment_instructions }}</p>
+        <div class="modal-action">
+            <form method="dialog">
+                <button class="btn">Close</button>
+            </form>
+        </div>
+    </div>
+</dialog>
+{% endif %}
+{% endblock %}

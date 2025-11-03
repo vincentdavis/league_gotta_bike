@@ -3,6 +3,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 
+from apps.membership.models import Season
 from .models import Organization, LeagueProfile, TeamProfile, SquadProfile
 
 
@@ -399,3 +400,120 @@ class SquadProfileForm(forms.ModelForm):
         model = SquadProfile
         fields = []
         widgets = {}
+
+
+class SeasonForm(forms.ModelForm):
+    """Form for creating and editing seasons."""
+
+    class Meta:
+        model = Season
+        fields = [
+            'name',
+            'description',
+            'start_date',
+            'end_date',
+            'registration_open_date',
+            'registration_close_date',
+            'is_published',
+            'auto_approve_registration',
+            'default_membership_fee',
+            'max_members',
+            'payment_instructions',
+        ]
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'input input-bordered w-full',
+                'placeholder': 'e.g., Fall 2024, Spring 2025'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'textarea textarea-bordered w-full',
+                'rows': 3,
+                'placeholder': 'Describe this season'
+            }),
+            'start_date': forms.DateInput(attrs={
+                'class': 'input input-bordered w-full',
+                'type': 'date'
+            }),
+            'end_date': forms.DateInput(attrs={
+                'class': 'input input-bordered w-full',
+                'type': 'date'
+            }),
+            'registration_open_date': forms.DateInput(attrs={
+                'class': 'input input-bordered w-full',
+                'type': 'date'
+            }),
+            'registration_close_date': forms.DateInput(attrs={
+                'class': 'input input-bordered w-full',
+                'type': 'date'
+            }),
+            'is_published': forms.CheckboxInput(attrs={
+                'class': 'checkbox checkbox-primary'
+            }),
+            'auto_approve_registration': forms.CheckboxInput(attrs={
+                'class': 'checkbox checkbox-primary'
+            }),
+            'default_membership_fee': forms.NumberInput(attrs={
+                'class': 'input input-bordered w-full',
+                'step': '0.01',
+                'min': '0',
+                'placeholder': '0.00'
+            }),
+            'max_members': forms.NumberInput(attrs={
+                'class': 'input input-bordered w-full',
+                'min': '1',
+                'placeholder': 'Leave blank for unlimited'
+            }),
+            'payment_instructions': forms.Textarea(attrs={
+                'class': 'textarea textarea-bordered w-full',
+                'rows': 4,
+                'placeholder': 'E.g., Mail check to: [address], or Venmo @username, or pay online at [url]'
+            }),
+        }
+        labels = {
+            'name': 'Season Name',
+            'description': 'Description',
+            'start_date': 'Start Date',
+            'end_date': 'End Date',
+            'registration_open_date': 'Registration Opens',
+            'registration_close_date': 'Registration Closes',
+            'is_published': 'Published (visible to members)',
+            'auto_approve_registration': 'Auto-Approve Registrations',
+            'default_membership_fee': 'Default Membership Fee',
+            'max_members': 'Maximum Members',
+            'payment_instructions': 'Payment Instructions',
+        }
+        help_texts = {
+            'name': 'Unique name for this season',
+            'start_date': 'When this season begins',
+            'end_date': 'When this season ends',
+            'registration_open_date': 'When registration opens (can be before season starts)',
+            'registration_close_date': 'When registration closes (optional - leave blank for no deadline)',
+            'is_published': 'Make this season visible and allow registrations',
+            'auto_approve_registration': 'Automatically approve season registrations without admin review (if unchecked, registrations will be pending until approved)',
+            'default_membership_fee': 'Default fee for this season (can be overridden per member)',
+            'max_members': 'Maximum number of members allowed (optional - leave blank for unlimited)',
+            'payment_instructions': 'Instructions for how members should pay the season fee (displayed during registration)',
+        }
+
+    def clean(self):
+        """Validate date ranges."""
+        cleaned_data = super().clean()
+        start_date = cleaned_data.get('start_date')
+        end_date = cleaned_data.get('end_date')
+        registration_open_date = cleaned_data.get('registration_open_date')
+        registration_close_date = cleaned_data.get('registration_close_date')
+
+        # Validate season date range
+        if start_date and end_date and start_date >= end_date:
+            raise ValidationError({
+                'end_date': 'End date must be after start date.'
+            })
+
+        # Validate registration date range
+        if registration_open_date and registration_close_date:
+            if registration_open_date >= registration_close_date:
+                raise ValidationError({
+                    'registration_close_date': 'Registration close date must be after open date.'
+                })
+
+        return cleaned_data

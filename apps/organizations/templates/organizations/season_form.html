@@ -1,0 +1,290 @@
+{% extends "organizations/base.html" %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Edit Season{% else %}Create Season{% endif %} - {{ organization.name }} - League Gotta Bike{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">{% if form.instance.pk %}Edit Season{% else %}Create Season{% endif %}</h1>
+        <p class="text-gray-600 mt-1">{{ organization.name }}</p>
+    </div>
+
+    <!-- Warning for editing active season with members -->
+    {% if form.instance.pk and form.instance.is_active and form.instance.get_registered_count > 0 %}
+    <div class="alert alert-warning mb-6">
+        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <div>
+            <h3 class="font-bold">Editing Active Season</h3>
+            <div class="text-sm">This season is currently active with {{ form.instance.get_registered_count }} registered member{{ form.instance.get_registered_count|pluralize }}. Changes may affect existing registrations.</div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Form -->
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+
+        <!-- Non-field errors -->
+        {% if form.non_field_errors %}
+        <div class="alert alert-error">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+                {% for error in form.non_field_errors %}
+                <div>{{ error }}</div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Season Information -->
+        <div class="card bg-white shadow">
+            <div class="card-body">
+                <h2 class="card-title text-xl mb-4">Season Information</h2>
+
+                <div class="form-control w-full">
+                    <label class="label" for="{{ form.name.id_for_label }}">
+                        <span class="label-text font-semibold">{{ form.name.label }}</span>
+                    </label>
+                    {{ form.name }}
+                    {% if form.name.help_text %}
+                    <label class="label">
+                        <span class="label-text-alt text-gray-500">{{ form.name.help_text }}</span>
+                    </label>
+                    {% endif %}
+                    {% if form.name.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ form.name.errors.0 }}</span>
+                    </label>
+                    {% endif %}
+                </div>
+
+                <div class="form-control w-full">
+                    <label class="label" for="{{ form.description.id_for_label }}">
+                        <span class="label-text font-semibold">{{ form.description.label }}</span>
+                    </label>
+                    {{ form.description }}
+                    {% if form.description.help_text %}
+                    <label class="label">
+                        <span class="label-text-alt text-gray-500">{{ form.description.help_text }}</span>
+                    </label>
+                    {% endif %}
+                    {% if form.description.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ form.description.errors.0 }}</span>
+                    </label>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Season Dates -->
+        <div class="card bg-white shadow">
+            <div class="card-body">
+                <h2 class="card-title text-xl mb-4">Season Dates</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="form-control w-full">
+                        <label class="label" for="{{ form.start_date.id_for_label }}">
+                            <span class="label-text font-semibold">{{ form.start_date.label }}</span>
+                        </label>
+                        {{ form.start_date }}
+                        {% if form.start_date.help_text %}
+                        <label class="label">
+                            <span class="label-text-alt text-gray-500">{{ form.start_date.help_text }}</span>
+                        </label>
+                        {% endif %}
+                        {% if form.start_date.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.start_date.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-control w-full">
+                        <label class="label" for="{{ form.end_date.id_for_label }}">
+                            <span class="label-text font-semibold">{{ form.end_date.label }}</span>
+                        </label>
+                        {{ form.end_date }}
+                        {% if form.end_date.help_text %}
+                        <label class="label">
+                            <span class="label-text-alt text-gray-500">{{ form.end_date.help_text }}</span>
+                        </label>
+                        {% endif %}
+                        {% if form.end_date.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.end_date.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Registration Window -->
+        <div class="card bg-white shadow">
+            <div class="card-body">
+                <h2 class="card-title text-xl mb-4">Registration Window</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="form-control w-full">
+                        <label class="label" for="{{ form.registration_open_date.id_for_label }}">
+                            <span class="label-text font-semibold">{{ form.registration_open_date.label }}</span>
+                        </label>
+                        {{ form.registration_open_date }}
+                        {% if form.registration_open_date.help_text %}
+                        <label class="label">
+                            <span class="label-text-alt text-gray-500">{{ form.registration_open_date.help_text }}</span>
+                        </label>
+                        {% endif %}
+                        {% if form.registration_open_date.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.registration_open_date.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-control w-full">
+                        <label class="label" for="{{ form.registration_close_date.id_for_label }}">
+                            <span class="label-text font-semibold">{{ form.registration_close_date.label }}</span>
+                        </label>
+                        {{ form.registration_close_date }}
+                        {% if form.registration_close_date.help_text %}
+                        <label class="label">
+                            <span class="label-text-alt text-gray-500">{{ form.registration_close_date.help_text }}</span>
+                        </label>
+                        {% endif %}
+                        {% if form.registration_close_date.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.registration_close_date.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings -->
+        <div class="card bg-white shadow">
+            <div class="card-body">
+                <h2 class="card-title text-xl mb-4">Settings</h2>
+
+                <div class="form-control mb-4">
+                    <label class="label cursor-pointer justify-start gap-4">
+                        {{ form.is_published }}
+                        <div>
+                            <span class="label-text font-semibold">{{ form.is_published.label }}</span>
+                            {% if form.is_published.help_text %}
+                            <p class="text-sm text-gray-500 mt-1">{{ form.is_published.help_text }}</p>
+                            {% endif %}
+                        </div>
+                    </label>
+                    {% if form.is_published.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ form.is_published.errors.0 }}</span>
+                    </label>
+                    {% endif %}
+                </div>
+
+                <div class="form-control">
+                    <label class="label cursor-pointer justify-start gap-4">
+                        {{ form.auto_approve_registration }}
+                        <div>
+                            <span class="label-text font-semibold">{{ form.auto_approve_registration.label }}</span>
+                            {% if form.auto_approve_registration.help_text %}
+                            <p class="text-sm text-gray-500 mt-1">{{ form.auto_approve_registration.help_text }}</p>
+                            {% endif %}
+                        </div>
+                    </label>
+                    {% if form.auto_approve_registration.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ form.auto_approve_registration.errors.0 }}</span>
+                    </label>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Membership -->
+        <div class="card bg-white shadow">
+            <div class="card-body">
+                <h2 class="card-title text-xl mb-4">Membership</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="form-control w-full">
+                        <label class="label" for="{{ form.default_membership_fee.id_for_label }}">
+                            <span class="label-text font-semibold">{{ form.default_membership_fee.label }}</span>
+                        </label>
+                        {{ form.default_membership_fee }}
+                        {% if form.default_membership_fee.help_text %}
+                        <label class="label">
+                            <span class="label-text-alt text-gray-500">{{ form.default_membership_fee.help_text }}</span>
+                        </label>
+                        {% endif %}
+                        {% if form.default_membership_fee.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.default_membership_fee.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-control w-full">
+                        <label class="label" for="{{ form.max_members.id_for_label }}">
+                            <span class="label-text font-semibold">{{ form.max_members.label }}</span>
+                        </label>
+                        {{ form.max_members }}
+                        {% if form.max_members.help_text %}
+                        <label class="label">
+                            <span class="label-text-alt text-gray-500">{{ form.max_members.help_text }}</span>
+                        </label>
+                        {% endif %}
+                        {% if form.max_members.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.max_members.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-control w-full">
+                    <label class="label" for="{{ form.payment_instructions.id_for_label }}">
+                        <span class="label-text font-semibold">{{ form.payment_instructions.label }}</span>
+                    </label>
+                    {{ form.payment_instructions }}
+                    {% if form.payment_instructions.help_text %}
+                    <label class="label">
+                        <span class="label-text-alt text-gray-500">{{ form.payment_instructions.help_text }}</span>
+                    </label>
+                    {% endif %}
+                    {% if form.payment_instructions.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ form.payment_instructions.errors.0 }}</span>
+                    </label>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex gap-4">
+            <a href="{% url 'organizations:season_list' slug=organization.slug %}" class="btn btn-ghost">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Cancel
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                {% if form.instance.pk %}Save Changes{% else %}Create Season{% endif %}
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
