@@ -10,6 +10,7 @@ dependencies = [
     "django>=5.2.6",
     "django-allauth[mfa]>=65.12.0",
     "django-anymail[resend]>=13.1",
+    "apscheduler>=3.10.4",
     "django-htmx>=1.26.0",
     "django-ninja>=1.4.5",
     "django-phonenumber-field>=8.3.0",

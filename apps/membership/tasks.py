@@ -14,10 +14,10 @@ def sync_membership_status_with_seasons():
     Daily task to sync Membership.status with current season participation.
 
     Rules:
-    - Owners/Admins: Always ACTIVE
-    - Prospect/Banned: Status preserved
-    - Has active SeasonMembership: ACTIVE
-    - No active SeasonMembership: INACTIVE
+    - Owners/Admins: Always ACTIVE (not synced)
+    - Prospect/Expired/Pending Renewal: Status preserved (not synced)
+    - Has active SeasonMembership: Set to ACTIVE
+    - No active SeasonMembership: Set to INACTIVE
 
     Returns:
         dict: Summary of organizations processed and memberships updated
@@ -35,22 +35,24 @@ def sync_membership_status_with_seasons():
         if not active_season:
             continue
 
-        # Get all memberships for this org (exclude prospects and banned)
+        # Get all memberships for this org
+        # Exclude special statuses that shouldn't be auto-synced
         # Also exclude owners and admins - they're always active
         memberships = Membership.objects.filter(
             organization=org
         ).exclude(
-            status__in=[Membership.PROSPECT, Membership.BANNED]
+            status__in=[Membership.PROSPECT, Membership.EXPIRED, Membership.PENDING_RENEWAL]
         ).exclude(
             permission_level__in=[Membership.OWNER, Membership.ADMIN]
         ).select_related('user')
 
         for membership in memberships:
             # Check if user has active season membership
+            # SeasonMembership status values: "registered", "active", "inactive", "waitlist", "withdrew"
             has_active_season = SeasonMembership.objects.filter(
                 membership=membership,
                 season=active_season,
-                status__in=[SeasonMembership.REGISTERED, SeasonMembership.ACTIVE]
+                status__in=["registered", "active"]
             ).exists()
 
             # Update status if needed
