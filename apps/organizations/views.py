@@ -18,7 +18,8 @@ from apps.sponsors.models import Sponsor
 from .models import Organization, LeagueProfile, TeamProfile, SquadProfile
 from .forms import (
     LeagueCreateForm, TeamCreateForm, SquadCreateForm, ClubCreateForm, PracticeGroupCreateForm,
-    OrganizationEditForm, LeagueProfileForm, TeamProfileForm, SquadProfileForm, SeasonForm
+    OrganizationEditForm, LeagueProfileForm, TeamProfileForm, SquadProfileForm, SeasonForm,
+    SocialMediaAccountFormSet
 )
 from .mixins import UserNameRequiredMixin
 from .permissions import (
@@ -801,12 +802,28 @@ class OrganizationEditView(OrgAdminRequiredMixin, UpdateView):
                     instance=getattr(self.object, 'squad_profile', None)
                 )
 
+        # Add social media accounts formset
+        if self.request.POST:
+            context['social_formset'] = SocialMediaAccountFormSet(
+                self.request.POST,
+                instance=self.object
+            )
+        else:
+            context['social_formset'] = SocialMediaAccountFormSet(
+                instance=self.object
+            )
+
         return context
 
     def form_valid(self, form):
         """Save both organization and profile."""
         context = self.get_context_data()
         profile_form = context.get('profile_form')
+        social_formset = context.get('social_formset')
+
+        # Validate formset
+        if social_formset and not social_formset.is_valid():
+            return self.form_invalid(form)
 
         with transaction.atomic():
             self.object = form.save()
@@ -817,6 +834,11 @@ class OrganizationEditView(OrgAdminRequiredMixin, UpdateView):
                 if not hasattr(profile, 'organization') or not profile.organization:
                     profile.organization = self.object
                 profile.save()
+
+            # Save social media accounts
+            if social_formset and social_formset.is_valid():
+                social_formset.instance = self.object
+                social_formset.save()
 
             # Update chat rooms based on settings
             self.object.setup_default_chat_rooms()

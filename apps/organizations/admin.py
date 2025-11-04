@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from apps.membership.models import Membership
 
-from .models import Organization, LeagueProfile, TeamProfile, SquadProfile
+from .models import Organization, LeagueProfile, TeamProfile, SquadProfile, SocialMediaAccount
 
 
 class LeagueProfileInline(admin.StackedInline):
@@ -37,6 +37,14 @@ class MembershipInline(admin.TabularInline):
     readonly_fields = ['modified_date']
 
 
+class SocialMediaAccountInline(admin.TabularInline):
+    """Inline admin for Social Media Accounts"""
+    model = SocialMediaAccount
+    extra = 1
+    fields = ['platform', 'username', 'profile_url', 'display_order', 'is_active']
+    readonly_fields = ['created_at', 'updated_at']
+
+
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
     """Admin interface for Organization model"""
@@ -66,7 +74,7 @@ class OrganizationAdmin(admin.ModelAdmin):
         }),
     )
 
-    inlines = [MembershipInline]
+    inlines = [SocialMediaAccountInline, MembershipInline]
 
     def get_inlines(self, request, obj=None):
         """Dynamically add type-specific profile inline"""

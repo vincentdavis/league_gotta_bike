@@ -2,9 +2,10 @@
 
 from django import forms
 from django.core.exceptions import ValidationError
+from django.forms import inlineformset_factory
 
 from apps.membership.models import Season
-from .models import Organization, LeagueProfile, TeamProfile, SquadProfile
+from .models import Organization, LeagueProfile, TeamProfile, SquadProfile, SocialMediaAccount
 
 
 class OrganizationBaseForm(forms.ModelForm):
@@ -517,3 +518,50 @@ class SeasonForm(forms.ModelForm):
                 })
 
         return cleaned_data
+
+
+class SocialMediaAccountForm(forms.ModelForm):
+    """Form for managing a single social media account."""
+
+    class Meta:
+        model = SocialMediaAccount
+        fields = ['platform', 'username', 'profile_url', 'display_order', 'is_active']
+        widgets = {
+            'platform': forms.Select(attrs={
+                'class': 'select select-bordered w-full select-sm',
+            }),
+            'username': forms.TextInput(attrs={
+                'class': 'input input-bordered w-full input-sm',
+                'placeholder': '@username or handle (optional for Strava)',
+            }),
+            'profile_url': forms.URLInput(attrs={
+                'class': 'input input-bordered w-full input-sm',
+                'placeholder': 'https://...',
+            }),
+            'display_order': forms.NumberInput(attrs={
+                'class': 'input input-bordered w-20 input-sm',
+                'min': '0',
+                'value': '0',
+            }),
+            'is_active': forms.CheckboxInput(attrs={
+                'class': 'checkbox checkbox-primary checkbox-sm',
+            }),
+        }
+        labels = {
+            'platform': 'Platform',
+            'username': 'Username/Handle (Optional)',
+            'profile_url': 'Profile URL',
+            'display_order': 'Order',
+            'is_active': 'Active',
+        }
+
+
+# Inline formset for managing multiple social media accounts
+SocialMediaAccountFormSet = inlineformset_factory(
+    Organization,
+    SocialMediaAccount,
+    form=SocialMediaAccountForm,
+    extra=3,  # Show 3 empty forms for adding new accounts
+    can_delete=True,
+    can_delete_extra=True,
+)

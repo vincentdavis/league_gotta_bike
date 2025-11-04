@@ -24,6 +24,10 @@
                 <div>
                     <h1 class="text-3xl font-bold text-gray-900">{{ team.name }}</h1>
                     <p class="text-gray-500 mt-1">{{ team.get_type_display }} in {{ league.name }}</p>
+                    <!-- Social Media Links -->
+                    <div class="mt-2">
+                        {% include "organizations/_social_media_links.html" with organization=team %}
+                    </div>
                 </div>
             </div>
             {% if can_edit %}

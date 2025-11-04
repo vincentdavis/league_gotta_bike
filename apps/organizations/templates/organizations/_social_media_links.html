@@ -1,0 +1,21 @@
+{% comment %}
+Social Media Links Component
+Usage: {% include "organizations/_social_media_links.html" with organization=league %}
+{% endcomment %}
+
+{% if organization.social_accounts.all %}
+<div class="flex flex-wrap gap-2 items-center">
+    {% for account in organization.social_accounts.all %}
+        {% if account.is_active %}
+        <a href="{{ account.profile_url }}"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="btn btn-sm btn-circle btn-ghost hover:btn-primary"
+           title="{% if account.username %}{{ account.get_platform_display }}: {{ account.username }}{% else %}{{ account.get_platform_display }}{% endif %}"
+           style="color: {{ account.get_platform_color }}">
+            <i class="fa-brands {{ account.get_platform_icon }} text-lg"></i>
+        </a>
+        {% endif %}
+    {% endfor %}
+</div>
+{% endif %}

@@ -479,3 +479,105 @@ class SquadProfile(models.Model):
 
     def __str__(self):
         return f"Squad Profile: {self.organization.name}"
+
+
+class SocialMediaAccount(models.Model):
+    """Social media account links for organizations (leagues, teams, etc.).
+
+    Allows organizations to have multiple social media profiles across different platforms.
+    Each account includes the platform type, username/handle, and full profile URL.
+    """
+
+    # Platform choices
+    FACEBOOK = "facebook"
+    INSTAGRAM = "instagram"
+    STRAVA = "strava"
+    TWITTER = "twitter"
+    BLUESKY = "bluesky"
+    YOUTUBE = "youtube"
+
+    PLATFORM_CHOICES = [
+        (FACEBOOK, "Facebook"),
+        (INSTAGRAM, "Instagram"),
+        (STRAVA, "Strava"),
+        (TWITTER, "Twitter / X"),
+        (BLUESKY, "Bluesky"),
+        (YOUTUBE, "YouTube"),
+    ]
+
+    # Platform brand colors (for UI display)
+    PLATFORM_COLORS = {
+        FACEBOOK: "#1877F2",
+        INSTAGRAM: "#E4405F",
+        STRAVA: "#FC4C02",
+        TWITTER: "#1DA1F2",
+        BLUESKY: "#1185FE",
+        YOUTUBE: "#FF0000",
+    }
+
+    # Platform icon classes (Font Awesome)
+    PLATFORM_ICONS = {
+        FACEBOOK: "fa-facebook",
+        INSTAGRAM: "fa-instagram",
+        STRAVA: "fa-strava",
+        TWITTER: "fa-x-twitter",
+        BLUESKY: "fa-bluesky",  # May need custom icon
+        YOUTUBE: "fa-youtube",
+    }
+
+    organization = models.ForeignKey(
+        Organization,
+        on_delete=models.CASCADE,
+        related_name="social_accounts",
+        help_text="Organization this social account belongs to",
+    )
+
+    platform = models.CharField(
+        max_length=20,
+        choices=PLATFORM_CHOICES,
+        help_text="Social media platform",
+    )
+
+    username = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Username or handle (e.g., @teamname). Optional for platforms like Strava.",
+    )
+
+    profile_url = models.URLField(
+        max_length=500,
+        help_text="Full URL to the social media profile",
+    )
+
+    display_order = models.IntegerField(
+        default=0,
+        help_text="Order for displaying accounts (lower numbers first)",
+    )
+
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Whether to display this account publicly",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["display_order", "platform"]
+        verbose_name = "Social Media Account"
+        verbose_name_plural = "Social Media Accounts"
+        # Prevent duplicate URLs for the same organization
+        unique_together = [["organization", "profile_url"]]
+
+    def __str__(self):
+        if self.username:
+            return f"{self.organization.name} - {self.get_platform_display()}: {self.username}"
+        return f"{self.organization.name} - {self.get_platform_display()}"
+
+    def get_platform_icon(self):
+        """Return Font Awesome icon class for the platform."""
+        return self.PLATFORM_ICONS.get(self.platform, "fa-link")
+
+    def get_platform_color(self):
+        """Return brand color hex code for the platform."""
+        return self.PLATFORM_COLORS.get(self.platform, "#666666")
