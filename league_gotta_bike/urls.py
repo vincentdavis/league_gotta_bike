@@ -67,11 +67,6 @@ urlpatterns += [
     path('api/mobile/', include('apps.mobile_api.urls')),
 ]
 
-# Admin API URLs
-urlpatterns += [
-    path('api/admin/', include('apps.admin_api.urls')),
-]
-
 # Organizations URLs (must be last due to catch-all slug patterns)
 urlpatterns += [
     path('', include('apps.organizations.urls')),

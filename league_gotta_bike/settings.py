@@ -67,7 +67,7 @@ DEFAULT_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 ]
-LOCAL_APPS = ["accounts", "apps.organizations", "apps.membership", "apps.events", "apps.messaging", "apps.sponsors", "apps.mobile_api", "apps.admin_api"]
+LOCAL_APPS = ["accounts", "apps.organizations", "apps.membership", "apps.events", "apps.messaging", "apps.sponsors", "apps.mobile_api"]
 
 # Conditionally add debug tools only in DEBUG mode
 ADDON_APPS = [
@@ -302,9 +302,6 @@ SINCH_SMS_AUTH_TOKEN = env_settings.SINCH_SMS_AUTH_TOKEN
 SINCH_PLAN_ID = env_settings.SINCH_PLAN_ID
 SINCH_URL = env_settings.SINCH_URL
 SINCH_FROM_NUMBER = env_settings.SINCH_FROM_NUMBER
-
-# Admin API Configuration
-ADMIN_API_KEY = env_settings.ADMIN_API_KEY
 
 # Django-allauth Configuration
 # https://docs.allauth.org/

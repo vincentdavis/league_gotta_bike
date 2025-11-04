@@ -57,9 +57,6 @@ class Settings(BaseSettings):
     DJANGO_SUPERUSER_EMAIL: str = ""
     DJANGO_SUPERUSER_PASSWORD: str = ""
 
-    # Admin API
-    ADMIN_API_KEY: str = ""  # API key for triggering admin tasks via /api/admin/ endpoints
-
     # Cloudflare R2 Object Storage (S3-compatible)
     USE_S3: bool = False
     AWS_ACCESS_KEY_ID: str = ""
