@@ -20,6 +20,10 @@
         <div class="text-center sm:text-left">
             <h1 class="text-4xl font-bold text-gray-900 mb-2">{{ league.name }}</h1>
             <p class="text-lg text-gray-600">{{ league.get_type_display }}</p>
+            <!-- Social Media Links -->
+            <div class="mt-3 flex justify-center sm:justify-start">
+                {% include "organizations/_social_media_links.html" with organization=league %}
+            </div>
         </div>
     </div>
 

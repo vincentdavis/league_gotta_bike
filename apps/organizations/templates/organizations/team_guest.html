@@ -33,6 +33,10 @@
             <p class="text-lg text-gray-600">
                 {{ team.get_type_display }}{% if team_profile.team_type %} : {{ team_profile.get_team_type_display }}{% endif %}
             </p>
+            <!-- Social Media Links -->
+            <div class="mt-3 flex justify-center sm:justify-start">
+                {% include "organizations/_social_media_links.html" with organization=team %}
+            </div>
         </div>
     </div>
 

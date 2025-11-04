@@ -2,6 +2,7 @@
 Social Media Links Component
 Usage: {% include "organizations/_social_media_links.html" with organization=league %}
 {% endcomment %}
+{% load static %}
 
 {% if organization.social_accounts.all %}
 <div class="flex flex-wrap gap-2 items-center">
@@ -10,10 +11,11 @@ Usage: {% include "organizations/_social_media_links.html" with organization=lea
         <a href="{{ account.profile_url }}"
            target="_blank"
            rel="noopener noreferrer"
-           class="btn btn-sm btn-circle btn-ghost hover:btn-primary"
-           title="{% if account.username %}{{ account.get_platform_display }}: {{ account.username }}{% else %}{{ account.get_platform_display }}{% endif %}"
-           style="color: {{ account.get_platform_color }}">
-            <i class="fa-brands {{ account.get_platform_icon }} text-lg"></i>
+           class="opacity-70 hover:opacity-100 transition-opacity"
+           title="{% if account.username %}{{ account.get_platform_display }}: {{ account.username }}{% else %}{{ account.get_platform_display }}{% endif %}">
+            <img src="{% static account.get_platform_icon_image %}"
+                 alt="{{ account.get_platform_display }}"
+                 class="h-6 w-6">
         </a>
         {% endif %}
     {% endfor %}

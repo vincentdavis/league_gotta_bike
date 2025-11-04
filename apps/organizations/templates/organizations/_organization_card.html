@@ -23,6 +23,13 @@
                         {{ organization.parent.name }}
                     </p>
                     {% endif %}
+
+                    <!-- Social Media Links -->
+                    {% if organization.social_accounts.all %}
+                    <div class="mt-2">
+                        {% include "organizations/_social_media_links.html" with organization=organization %}
+                    </div>
+                    {% endif %}
                 </div>
             </div>
             {% if permission_level %}

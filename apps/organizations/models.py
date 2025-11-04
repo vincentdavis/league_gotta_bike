@@ -525,6 +525,16 @@ class SocialMediaAccount(models.Model):
         YOUTUBE: "fa-youtube",
     }
 
+    # Platform icon image paths
+    PLATFORM_ICON_IMAGES = {
+        FACEBOOK: "images/social_icons/facebook.svg",
+        INSTAGRAM: "images/social_icons/instagram.svg",
+        STRAVA: "images/social_icons/strava_icon.svg",
+        TWITTER: "images/social_icons/twitter-x.svg",
+        BLUESKY: "images/social_icons/bluesky.svg",
+        YOUTUBE: "images/social_icons/youtube.svg",
+    }
+
     organization = models.ForeignKey(
         Organization,
         on_delete=models.CASCADE,
@@ -577,6 +587,10 @@ class SocialMediaAccount(models.Model):
     def get_platform_icon(self):
         """Return Font Awesome icon class for the platform."""
         return self.PLATFORM_ICONS.get(self.platform, "fa-link")
+
+    def get_platform_icon_image(self):
+        """Return image path for the platform icon."""
+        return self.PLATFORM_ICON_IMAGES.get(self.platform, "images/social_icons/default.svg")
 
     def get_platform_color(self):
         """Return brand color hex code for the platform."""
