@@ -69,14 +69,6 @@
                 </svg>
                 Leagues
             </h3>
-            {% if user.is_authenticated %}
-            <a href="{% url 'organizations:league_create' %}" class="btn btn-primary btn-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                Create League
-            </a>
-            {% endif %}
         </div>
         <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {% for league in leagues %}
@@ -96,14 +88,6 @@
                 </svg>
                 Teams
             </h3>
-            {% if user.is_authenticated %}
-            <a href="{% url 'organizations:team_create' %}" class="btn btn-success btn-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                Create Team
-            </a>
-            {% endif %}
         </div>
         <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {% for team in teams %}
