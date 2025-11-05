@@ -444,7 +444,8 @@ class LeagueListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['search_query'] = self.request.GET.get('q', '')
+        search_query = self.request.GET.get('q', '').strip()
+        context['search_query'] = search_query
 
         # Get user's leagues and teams (if authenticated)
         if self.request.user.is_authenticated:
@@ -472,21 +473,17 @@ class LeagueListView(ListView):
         context['leagues'] = [org for org in organizations if org.type == Organization.LEAGUE]
         context['teams'] = [org for org in organizations if org.type == Organization.TEAM]
 
-        # Sponsor search and display
-        sponsor_query = self.request.GET.get('sponsor_q', '').strip()
-        context['sponsor_search_query'] = sponsor_query
-
-        # Get all active sponsors with organization count annotation
+        # Unified search - also search sponsors with the same query
         sponsors_queryset = Sponsor.objects.filter(
             status=Sponsor.ACTIVE
         ).annotate(
             org_count=models.Count('organization', filter=~Q(organization=None))
         ).select_related('organization')
 
-        # Apply sponsor search filter if query exists
-        if sponsor_query:
+        # Apply search filter to sponsors if query exists
+        if search_query:
             sponsors_queryset = sponsors_queryset.filter(
-                name__icontains=sponsor_query
+                name__icontains=search_query
             )
 
         context['sponsors'] = list(sponsors_queryset)

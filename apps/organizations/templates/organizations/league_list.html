@@ -5,11 +5,6 @@
 
 {% block content %}
 <div class="px-4 sm:px-0">
-    <!-- Header -->
-    <div class="mb-8">
-        <h2 class="text-3xl font-bold text-gray-900 mb-4">Leagues & Teams</h2>
-    </div>
-
     <!-- My Organizations Section (for authenticated users) -->
     {% if user.is_authenticated and user_leagues_teams %}
     <div class="mb-10">
@@ -27,7 +22,7 @@
     </div>
     {% endif %}
 
-    <!-- Search Form -->
+    <!-- Unified Search Form -->
     <div class="mb-8">
         <form method="get" action="{% url 'organizations:league_list' %}" class="max-w-2xl">
             <div class="flex gap-2">
@@ -36,7 +31,7 @@
                         type="text"
                         name="q"
                         value="{{ search_query }}"
-                        placeholder="Search leagues and teams by name, region, or sanctioning body..."
+                        placeholder="Search leagues, teams, and sponsors..."
                         class="input input-bordered w-full"
                     />
                 </div>
@@ -58,9 +53,7 @@
             <div class="mt-4">
                 <p class="text-sm text-gray-600">
                     Search results for <strong>"{{ search_query }}"</strong>
-                    {% if organizations %}
-                        - Found {{ organizations|length }} result{{ organizations|length|pluralize }}
-                    {% endif %}
+                    - Found {{ leagues|length }} league{{ leagues|length|pluralize }}, {{ teams|length }} team{{ teams|length|pluralize }}, and {{ sponsors|length }} sponsor{{ sponsors|length|pluralize }}
                 </p>
             </div>
         {% endif %}
@@ -129,45 +122,6 @@
                 </svg>
                 Sponsors
             </h3>
-        </div>
-
-        <!-- Sponsor Search Form -->
-        <div class="mb-6">
-            <form method="get" action="{% url 'organizations:league_list' %}" class="max-w-2xl">
-                <div class="flex gap-2">
-                    <div class="form-control flex-1">
-                        <input
-                            type="text"
-                            name="sponsor_q"
-                            value="{{ sponsor_search_query }}"
-                            placeholder="Search sponsors by name..."
-                            class="input input-bordered w-full"
-                        />
-                    </div>
-                    <button type="submit" class="btn btn-primary">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                        Search
-                    </button>
-                    {% if sponsor_search_query %}
-                        <a href="{% url 'organizations:league_list' %}" class="btn btn-ghost">
-                            Clear
-                        </a>
-                    {% endif %}
-                </div>
-            </form>
-
-            {% if sponsor_search_query %}
-                <div class="mt-4">
-                    <p class="text-sm text-gray-600">
-                        Search results for <strong>"{{ sponsor_search_query }}"</strong>
-                        {% if sponsors %}
-                            - Found {{ sponsors|length }} sponsor{{ sponsors|length|pluralize }}
-                        {% endif %}
-                    </p>
-                </div>
-            {% endif %}
         </div>
 
         {% if sponsors %}
