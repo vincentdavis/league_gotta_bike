@@ -3,13 +3,13 @@
 {# Parameters: organization (required), permission_level (optional) #}
 
 <div class="bg-white overflow-visible shadow rounded-lg hover:shadow-lg transition-all duration-300 flex flex-col {% if permission_level %}border-l-4 border {% if permission_level == 'owner' %}border-primary{% elif permission_level == 'admin' %}border-success{% elif permission_level == 'manager' %}border-info{% else %}border-gray-300{% endif %}{% else %}border border-transparent hover:border-primary{% endif %}">
-    <div class="p-6 flex-1">
+    <div class="p-4 flex-1">
         <!-- Logo and Name - Left Aligned -->
-        <div class="flex items-start justify-between mb-4">
+        <div class="flex items-start justify-between mb-3">
             <div class="flex items-start gap-3">
                 <img src="{% if organization.logo %}{{ organization.logo.url }}{% else %}{% static 'images/Default_League.png' %}{% endif %}"
                      alt="{{ organization.name }}"
-                     class="h-16 w-16 rounded-full object-contain">
+                     class="h-20 w-20 rounded-full object-contain">
                 <div>
                     <h3 class="text-xl font-semibold mb-1">
                         <a href="{{ organization.get_absolute_url }}" class="text-gray-900 hover:text-primary">
