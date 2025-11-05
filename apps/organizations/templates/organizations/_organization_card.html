@@ -44,8 +44,11 @@
 
     <!-- Sponsors Section -->
     {% if organization.sponsors.all %}
-    <div class="px-4 py-3 bg-gray-50 border-t border-gray-200">
-        <div class="flex flex-wrap gap-3">
+    <div class="px-4 bg-gray-50 border-t border-gray-200">
+        <div class="text-center mb-2">
+            <span class="text-xs text-gray-600 font-medium">Sponsors</span>
+        </div>
+        <div class="flex mb-2 flex-wrap gap-3 justify-center">
             {% for sponsor in organization.sponsors.all %}
             <a href="{% if sponsor.url %}{{ sponsor.url }}{% else %}{{ sponsor.get_absolute_url }}{% endif %}"
                class="tooltip tooltip-top hover:opacity-75 transition-opacity"
