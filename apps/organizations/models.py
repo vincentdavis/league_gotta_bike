@@ -337,7 +337,7 @@ class Organization(models.Model):
             member_chat, created = ChatRoom.objects.get_or_create(
                 slug=member_chat_slug,
                 defaults={
-                    'name': f"{self.name} - Member Chat",
+                    'name': 'Member Chat',  # Suffix only - display_name property adds org name
                     'description': "General chat for all organization members",
                     'room_type': ChatRoom.ORGANIZATION,
                     'organization': self,
@@ -358,7 +358,7 @@ class Organization(models.Model):
             news_channel, created = ChatRoom.objects.get_or_create(
                 slug=news_slug,
                 defaults={
-                    'name': f"{self.name} - News & Announcements",
+                    'name': 'News & Announcements',  # Suffix only - display_name property adds org name
                     'description': "Official announcements and news (read-only for most members)",
                     'room_type': ChatRoom.ANNOUNCEMENT,
                     'organization': self,

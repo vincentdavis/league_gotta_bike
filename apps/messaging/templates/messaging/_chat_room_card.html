@@ -5,19 +5,10 @@
 <a href="{{ room.get_absolute_url }}" class="bg-white shadow rounded-lg hover:shadow-lg transition-all duration-300 p-4 block border border-transparent hover:border-primary">
     <div class="flex items-start justify-between">
         <div class="flex-1 min-w-0">
-            <!-- Room name and organization -->
+            <!-- Room name (includes organization name for org rooms) -->
             <h3 class="text-lg font-semibold text-gray-900 truncate">
-                {{ room.name }}
+                {{ room.display_name }}
             </h3>
-
-            {% if room.organization %}
-            <p class="text-sm text-gray-500 mt-1">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-                {{ room.organization.name }}
-            </p>
-            {% endif %}
 
             <!-- Room type badge -->
             <div class="mt-2">

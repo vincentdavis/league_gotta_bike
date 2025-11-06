@@ -85,10 +85,19 @@ class ChatRoom(models.Model):
             models.Index(fields=['slug']),
         ]
 
-    def __str__(self):
+    @property
+    def display_name(self):
+        """
+        Get the display name for this chat room.
+        For organization rooms, combines organization name with the room suffix.
+        For other rooms, returns the name as-is.
+        """
         if self.room_type == self.ORGANIZATION and self.organization:
             return f"{self.organization.name} - {self.name}"
         return self.name
+
+    def __str__(self):
+        return self.display_name
 
     def save(self, *args, **kwargs):
         """Auto-generate slug if not provided."""
