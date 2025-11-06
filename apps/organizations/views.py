@@ -408,10 +408,11 @@ class LeagueListView(ListView):
     template_name = 'organizations/league_list.html'
     context_object_name = 'organizations'
     paginate_by = 12
+    redirect_authenticated = True  # Set to False to skip redirect
 
     def dispatch(self, request, *args, **kwargs):
-        """Redirect logged-in users to their home page."""
-        if request.user.is_authenticated:
+        """Redirect logged-in users to their home page (unless browsing)."""
+        if request.user.is_authenticated and self.redirect_authenticated:
             return redirect('accounts:home')
         return super().dispatch(request, *args, **kwargs)
 

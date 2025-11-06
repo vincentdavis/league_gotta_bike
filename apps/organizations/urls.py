@@ -4,8 +4,11 @@ from . import views
 app_name = 'organizations'
 
 urlpatterns = [
-    # League list
+    # League list (redirects logged-in users to home)
     path('', views.LeagueListView.as_view(), name='league_list'),
+
+    # Browse organizations (no redirect for logged-in users)
+    path('browse/', views.LeagueListView.as_view(redirect_authenticated=False), name='browse_organizations'),
 
     # User's organizations
     path('my-organizations/', views.UserOrganizationsView.as_view(), name='user_organizations'),
