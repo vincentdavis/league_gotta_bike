@@ -163,6 +163,72 @@ class ChatRoom(models.Model):
         cutoff_time = timezone.now() - timedelta(hours=hours)
         return self.messages.filter(timestamp__gte=cutoff_time).count()
 
+    @classmethod
+    def get_user_chat_rooms(cls, user):
+        """
+        Get all chat rooms accessible to the user.
+        Returns queryset of ChatRoom objects the user can access,
+        annotated with unread count and last message time.
+        """
+        if not user or not user.is_authenticated:
+            return cls.objects.filter(room_type=cls.PUBLIC, is_active=True)
+
+        from apps.membership.models import Membership
+        from django.db.models import Q, OuterRef, Subquery, Count
+        from django.utils import timezone
+
+        # Get organizations user is a member of
+        user_org_ids = Membership.objects.filter(
+            user=user,
+            status=Membership.ACTIVE
+        ).values_list('organization_id', flat=True)
+
+        # Build query for accessible rooms
+        accessible_rooms = cls.objects.filter(
+            Q(room_type=cls.PUBLIC) |  # Public rooms
+            Q(room_type=cls.ORGANIZATION, organization_id__in=user_org_ids) |  # Org rooms
+            Q(participants=user)  # Direct/announcement rooms where user is participant
+        ).filter(is_active=True).distinct()
+
+        # Annotate with last message timestamp
+        last_message_subquery = Message.objects.filter(
+            chat_room=OuterRef('pk')
+        ).order_by('-timestamp').values('timestamp')[:1]
+
+        accessible_rooms = accessible_rooms.annotate(
+            last_message_time=Subquery(last_message_subquery)
+        ).order_by('-last_message_time')
+
+        return accessible_rooms
+
+    def get_unread_count(self, user):
+        """
+        Get number of unread messages for the user in this room.
+        Returns 0 if user hasn't joined or has no unread messages.
+        """
+        if not user or not user.is_authenticated:
+            return 0
+
+        try:
+            participant = ChatRoomParticipant.objects.get(
+                chat_room=self,
+                user=user,
+                is_active=True
+            )
+
+            # If user has never read messages, count all
+            if not participant.last_read:
+                return self.messages.count()
+
+            # Count messages after last_read timestamp
+            return self.messages.filter(
+                timestamp__gt=participant.last_read
+            ).count()
+
+        except ChatRoomParticipant.DoesNotExist:
+            # User not a participant - no unread count
+            return 0
+
 
 class ChatRoomParticipant(models.Model):
     """

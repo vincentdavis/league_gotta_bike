@@ -7,6 +7,7 @@ from . import sms_verify, views
 app_name = 'accounts'
 
 urlpatterns = [
+    path('home/', views.AccountHomeView.as_view(), name='home'),
     path('profile/', views.profile, name='profile'),
     # Phone verification endpoints
     path('verify-phone/send/', sms_verify.verify_phone, name='verify_phone_send'),

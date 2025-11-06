@@ -1,0 +1,194 @@
+{% extends "organizations/base.html" %}
+{% load static %}
+
+{% block title %}{{ event.title }} - League Gotta Bike{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-4xl mx-auto">
+        <!-- Back to Home Link -->
+        <div class="mb-4">
+            <a href="{% url 'accounts:home' %}" class="text-primary hover:underline text-sm flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back to Home
+            </a>
+        </div>
+
+        <!-- Event Header -->
+        <div class="bg-white shadow rounded-lg p-6 mb-6">
+            <div class="flex items-start justify-between mb-4">
+                <div class="flex-1">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ event.title }}</h1>
+
+                    <!-- Organization -->
+                    <a href="{{ event.organization.get_absolute_url }}" class="text-primary hover:underline inline-flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        {{ event.organization.name }}
+                    </a>
+                </div>
+
+                <!-- Event Type Badge -->
+                <span class="badge badge-lg {% if event.event_type == 'race' %}badge-error{% elif event.event_type == 'practice' %}badge-info{% elif event.event_type == 'social' %}badge-success{% else %}badge-ghost{% endif %}">
+                    {{ event.get_event_type_display }}
+                </span>
+            </div>
+
+            <!-- Date, Time, Location -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                <!-- Date -->
+                <div class="flex items-start gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <div>
+                        <p class="text-sm text-gray-500">Date</p>
+                        <p class="font-semibold">{{ event.start_datetime|date:"l, F j, Y" }}</p>
+                    </div>
+                </div>
+
+                <!-- Time -->
+                <div class="flex items-start gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                        <p class="text-sm text-gray-500">Time</p>
+                        <p class="font-semibold">{{ event.start_datetime|date:"g:i A" }} - {{ event.end_datetime|date:"g:i A" }}</p>
+                    </div>
+                </div>
+
+                <!-- Location -->
+                {% if event.location %}
+                <div class="flex items-start gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <div>
+                        <p class="text-sm text-gray-500">Location</p>
+                        <p class="font-semibold">{{ event.location }}</p>
+                        {% if event.location_url %}
+                        <a href="{{ event.location_url }}" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline text-sm">
+                            View Map →
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Description -->
+            {% if event.description %}
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <h3 class="font-semibold text-lg mb-2">Description</h3>
+                <p class="text-gray-700 whitespace-pre-line">{{ event.description }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Additional Details -->
+            <div class="mt-6 pt-6 border-t border-gray-200 grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% if event.equipment_needed %}
+                <div>
+                    <h4 class="font-semibold mb-1">Equipment Needed</h4>
+                    <p class="text-gray-700 text-sm whitespace-pre-line">{{ event.equipment_needed }}</p>
+                </div>
+                {% endif %}
+
+                {% if event.cost %}
+                <div>
+                    <h4 class="font-semibold mb-1">Cost</h4>
+                    <p class="text-gray-700 text-sm">${{ event.cost }}</p>
+                </div>
+                {% endif %}
+
+                {% if event.max_attendees %}
+                <div>
+                    <h4 class="font-semibold mb-1">Capacity</h4>
+                    <p class="text-gray-700 text-sm">{{ attending_count }} / {{ event.max_attendees }} attendees</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- RSVP Section -->
+        <div class="bg-white shadow rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Your RSVP</h2>
+
+            <!-- Current Status -->
+            <div class="mb-4">
+                <p class="text-sm text-gray-600 mb-2">Current status:</p>
+                <span class="badge badge-lg {% if user_rsvp_status == 'attending' %}badge-success{% elif user_rsvp_status == 'maybe' %}badge-warning{% elif user_rsvp_status == 'not_attending' %}badge-error{% else %}badge-ghost{% endif %}">
+                    {% if user_rsvp_status == 'attending' %}Attending
+                    {% elif user_rsvp_status == 'maybe' %}Maybe
+                    {% elif user_rsvp_status == 'not_attending' %}Not Attending
+                    {% else %}No Response{% endif %}
+                </span>
+            </div>
+
+            <!-- RSVP Buttons -->
+            <form method="post" action="{% url 'events:event_rsvp' pk=event.pk %}" class="flex gap-3">
+                {% csrf_token %}
+                <button type="submit" name="status" value="attending" class="btn flex-1 {% if user_rsvp_status == 'attending' %}btn-success{% else %}btn-outline btn-success{% endif %}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Attending
+                </button>
+                <button type="submit" name="status" value="maybe" class="btn flex-1 {% if user_rsvp_status == 'maybe' %}btn-warning{% else %}btn-outline btn-warning{% endif %}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Maybe
+                </button>
+                <button type="submit" name="status" value="not_attending" class="btn flex-1 {% if user_rsvp_status == 'not_attending' %}btn-error{% else %}btn-outline btn-error{% endif %}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Not Attending
+                </button>
+            </form>
+        </div>
+
+        <!-- Attendees List -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-xl font-semibold mb-4">Attendees</h2>
+
+            <!-- Stats -->
+            <div class="flex gap-4 mb-6">
+                <div class="flex items-center gap-2">
+                    <span class="badge badge-success">{{ attending_count }}</span>
+                    <span class="text-sm text-gray-600">Attending</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="badge badge-warning">{{ maybe_count }}</span>
+                    <span class="text-sm text-gray-600">Maybe</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="badge badge-error">{{ not_attending_count }}</span>
+                    <span class="text-sm text-gray-600">Not Attending</span>
+                </div>
+            </div>
+
+            <!-- Attendee List -->
+            {% if attendees %}
+            <div class="space-y-2">
+                {% for attendee in attendees %}
+                <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                    <span class="font-medium">{{ attendee.user.get_full_name|default:attendee.user.username }}</span>
+                    <span class="badge badge-sm {% if attendee.status == 'attending' %}badge-success{% elif attendee.status == 'maybe' %}badge-warning{% elif attendee.status == 'not_attending' %}badge-error{% else %}badge-ghost{% endif %}">
+                        {{ attendee.get_status_display }}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-gray-500 text-center py-8">No RSVPs yet. Be the first to respond!</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

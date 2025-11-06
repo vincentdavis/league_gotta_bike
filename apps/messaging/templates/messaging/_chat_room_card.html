@@ -1,0 +1,49 @@
+{% load static %}
+{# Chat room card component for home page #}
+{# Parameters: room (required) #}
+
+<a href="{{ room.get_absolute_url }}" class="bg-white shadow rounded-lg hover:shadow-lg transition-all duration-300 p-4 block border border-transparent hover:border-primary">
+    <div class="flex items-start justify-between">
+        <div class="flex-1 min-w-0">
+            <!-- Room name and organization -->
+            <h3 class="text-lg font-semibold text-gray-900 truncate">
+                {{ room.name }}
+            </h3>
+
+            {% if room.organization %}
+            <p class="text-sm text-gray-500 mt-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+                {{ room.organization.name }}
+            </p>
+            {% endif %}
+
+            <!-- Room type badge -->
+            <div class="mt-2">
+                <span class="badge badge-sm {% if room.room_type == 'public' %}badge-primary{% elif room.room_type == 'announcement' %}badge-warning{% else %}badge-ghost{% endif %}">
+                    {{ room.get_room_type_display }}
+                </span>
+            </div>
+
+            <!-- Last message time -->
+            {% if room.last_message_time %}
+            <p class="text-xs text-gray-400 mt-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {{ room.last_message_time|timesince }} ago
+            </p>
+            {% endif %}
+        </div>
+
+        <!-- Unread count badge -->
+        {% if room.unread_count > 0 %}
+        <div class="ml-3">
+            <span class="badge badge-error badge-sm">
+                {{ room.unread_count }}
+            </span>
+        </div>
+        {% endif %}
+    </div>
+</a>

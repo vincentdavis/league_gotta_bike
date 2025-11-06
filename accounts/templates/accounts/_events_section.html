@@ -1,0 +1,28 @@
+{% load static %}
+{# Events section for home page #}
+
+<div class="mb-6">
+    <h2 class="text-2xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        Events
+    </h2>
+
+    {% if upcoming_events %}
+        <div class="space-y-4">
+            {% for event in upcoming_events %}
+                {% include "events/_event_card.html" with event=event %}
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- Empty State -->
+        <div class="bg-gray-50 rounded-lg p-8 text-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <p class="text-gray-600 mb-3">No upcoming events.</p>
+            <p class="text-gray-500 text-sm">Check back later or join an organization to see events.</p>
+        </div>
+    {% endif %}
+</div>

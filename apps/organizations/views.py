@@ -409,6 +409,12 @@ class LeagueListView(ListView):
     context_object_name = 'organizations'
     paginate_by = 12
 
+    def dispatch(self, request, *args, **kwargs):
+        """Redirect logged-in users to their home page."""
+        if request.user.is_authenticated:
+            return redirect('accounts:home')
+        return super().dispatch(request, *args, **kwargs)
+
     def get_queryset(self):
         # Get search query from GET parameters
         search_query = self.request.GET.get('q', '').strip()

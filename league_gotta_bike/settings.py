@@ -343,7 +343,7 @@ MFA_TOTP_DIGITS = 6  # Number of digits in TOTP code
 MFA_RECOVERY_CODE_COUNT = 10  # Number of recovery codes to generate
 
 # Redirect URLs
-LOGIN_REDIRECT_URL = "/"  # Redirect after successful login
+LOGIN_REDIRECT_URL = "/accounts/home/"  # Redirect after successful login
 ACCOUNT_LOGOUT_REDIRECT_URL = "/"  # Redirect after logout
 
 # Django Phone Number Field Configuration

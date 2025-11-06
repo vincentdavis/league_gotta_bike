@@ -196,6 +196,11 @@ class Event(models.Model):
             return False
         return self.get_attendee_count() >= self.max_attendees
 
+    def get_absolute_url(self):
+        """Get URL for event detail page."""
+        from django.urls import reverse
+        return reverse('events:event_detail', kwargs={'pk': self.pk})
+
 
 class EventAttendee(models.Model):
     """Track event attendance and RSVPs."""

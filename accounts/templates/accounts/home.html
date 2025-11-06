@@ -1,0 +1,48 @@
+{% extends "organizations/base.html" %}
+{% load static %}
+
+{% block title %}Home - League Gotta Bike{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Mobile: Tabs Layout -->
+        <div class="lg:hidden">
+            <div role="tablist" class="tabs tabs-boxed mb-4">
+                <input type="radio" name="mobile_tabs" role="tab" class="tab" aria-label="Organizations" checked />
+                <div role="tabpanel" class="tab-content p-4">
+                    {% include "accounts/_organizations_section.html" %}
+                </div>
+
+                <input type="radio" name="mobile_tabs" role="tab" class="tab" aria-label="Chats" />
+                <div role="tabpanel" class="tab-content p-4">
+                    {% include "accounts/_chat_rooms_section.html" %}
+                </div>
+
+                <input type="radio" name="mobile_tabs" role="tab" class="tab" aria-label="Events" />
+                <div role="tabpanel" class="tab-content p-4">
+                    {% include "accounts/_events_section.html" %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Desktop: 3-Column Grid Layout -->
+        <div class="hidden lg:grid lg:grid-cols-3 lg:gap-6">
+            <!-- Organizations Column -->
+            <div>
+                {% include "accounts/_organizations_section.html" %}
+            </div>
+
+            <!-- Chat Rooms Column -->
+            <div>
+                {% include "accounts/_chat_rooms_section.html" %}
+            </div>
+
+            <!-- Events Column -->
+            <div>
+                {% include "accounts/_events_section.html" %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
