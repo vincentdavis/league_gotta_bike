@@ -810,16 +810,17 @@ class OrganizationEditView(OrgAdminRequiredMixin, UpdateView):
                     instance=getattr(self.object, 'squad_profile', None)
                 )
 
-        # Add social media accounts formset
-        if self.request.POST:
-            context['social_formset'] = SocialMediaAccountFormSet(
-                self.request.POST,
-                instance=self.object
-            )
-        else:
-            context['social_formset'] = SocialMediaAccountFormSet(
-                instance=self.object
-            )
+        # Add social media accounts formset (only for leagues and teams)
+        if self.object.type in [Organization.LEAGUE, Organization.TEAM]:
+            if self.request.POST:
+                context['social_formset'] = SocialMediaAccountFormSet(
+                    self.request.POST,
+                    instance=self.object
+                )
+            else:
+                context['social_formset'] = SocialMediaAccountFormSet(
+                    instance=self.object
+                )
 
         return context
 

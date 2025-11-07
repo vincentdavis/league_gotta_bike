@@ -281,7 +281,8 @@
                 </div>
                 {% endif %}
 
-                <!-- Social Media Accounts -->
+                <!-- Social Media Accounts (only for Leagues and Teams) -->
+                {% if social_formset %}
                 <div class="divider"></div>
                 <div class="mb-6">
                     <h2 class="text-xl font-semibold text-gray-900 mb-4">Social Media Accounts</h2>
@@ -370,6 +371,7 @@
                     </div>
                     {% endif %}
                 </div>
+                {% endif %}
 
                 <!-- Form Actions -->
                 <div class="divider"></div>
