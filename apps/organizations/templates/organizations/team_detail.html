@@ -152,7 +152,34 @@
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <!-- Members -->
         <div class="bg-white shadow rounded-lg p-6">
-            <h2 class="text-2xl font-bold text-gray-900 mb-4">Team Members</h2>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-2xl font-bold text-gray-900">Team Members</h2>
+
+                {% if can_edit %}
+                <div class="flex gap-2">
+                    <!-- Export CSV -->
+                    <a href="{% url 'organizations:export_members_csv' slug=team.slug %}"
+                       class="btn btn-sm btn-outline gap-1"
+                       title="Export members to CSV">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Export
+                    </a>
+
+                    <!-- Import CSV -->
+                    <button type="button"
+                            onclick="document.getElementById('import-modal').showModal()"
+                            class="btn btn-sm btn-primary gap-1"
+                            title="Import members from CSV">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                        Import
+                    </button>
+                </div>
+                {% endif %}
+            </div>
 
             {% if members %}
             <div class="space-y-3">
@@ -386,4 +413,57 @@
         {% endif %}
     </div>
 </div>
+
+<!-- Import CSV Modal -->
+{% if can_edit %}
+<dialog id="import-modal" class="modal">
+    <div class="modal-box max-w-2xl">
+        <h3 class="font-bold text-lg mb-4">Import Members from CSV</h3>
+
+        <form method="post" action="{% url 'organizations:import_members_csv' slug=team.slug %}" enctype="multipart/form-data" id="import-form">
+            {% csrf_token %}
+
+            <!-- File Upload -->
+            <div class="form-control w-full mb-4">
+                <label class="label">
+                    <span class="label-text font-medium">CSV File</span>
+                </label>
+                <input type="file" name="csv_file" accept=".csv" required
+                       class="file-input file-input-bordered w-full" />
+                <label class="label">
+                    <span class="label-text-alt text-gray-500">Select a CSV file with member data</span>
+                </label>
+            </div>
+
+            <!-- CSV Format Info -->
+            <div class="alert alert-info mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <div>
+                    <h4 class="font-bold">Required CSV format:</h4>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li><strong>email</strong> (required) - User email address</li>
+                        <li><strong>first_name</strong> (optional) - User's first name</li>
+                        <li><strong>last_name</strong> (optional) - User's last name</li>
+                        <li><strong>permission_level</strong> (optional) - owner, admin, manager, or member (default: member)</li>
+                        <li><strong>status</strong> (optional) - active, inactive, or prospect (default: active)</li>
+                    </ul>
+                    <p class="text-sm mt-2">
+                        <a href="{% url 'organizations:download_csv_template' %}" class="link link-primary">Download CSV template</a>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="modal-action">
+                <button type="button" class="btn" onclick="document.getElementById('import-modal').close()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Import Members</button>
+            </div>
+        </form>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+        <button>close</button>
+    </form>
+</dialog>
+{% endif %}
+
 {% endblock %}

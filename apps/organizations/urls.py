@@ -26,6 +26,11 @@ urlpatterns = [
     path('<slug:slug>/settings/', views.OrganizationSettingsView.as_view(), name='org_settings'),
     path('<slug:slug>/delete/', views.OrganizationDeleteView.as_view(), name='org_delete'),
 
+    # Member CSV import/export
+    path('<slug:slug>/members/export/', views.export_members_csv, name='export_members_csv'),
+    path('<slug:slug>/members/import/', views.import_members_csv, name='import_members_csv'),
+    path('csv-template/', views.download_csv_template, name='download_csv_template'),
+
     # Season management (for leagues and teams only)
     path('<slug:slug>/seasons/', views.SeasonListView.as_view(), name='season_list'),
     path('<slug:slug>/seasons/create/', views.SeasonCreateView.as_view(), name='season_create'),

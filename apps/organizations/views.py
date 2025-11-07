@@ -1,4 +1,6 @@
+import csv
 import random
+from io import StringIO
 
 import logfire
 from django.contrib import messages
@@ -6,11 +8,13 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction, models
 from django.db.models import Q
+from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import DetailView, ListView, CreateView, UpdateView, DeleteView, TemplateView
 from django.views import View
 
+from accounts.models import User
 from apps.membership.models import Membership, Season
 from apps.events.models import Event
 from apps.sponsors.models import Sponsor
@@ -1070,5 +1074,203 @@ class SeasonDeleteView(OrgOwnerRequiredMixin, DeleteView):
         context['organization'] = self.organization
         context['member_count'] = self.object.get_registered_count()
         return context
+
+
+# CSV Import/Export Views
+
+@login_required
+def export_members_csv(request, slug):
+    """Export organization members to CSV file"""
+    organization = get_object_or_404(Organization, slug=slug)
+
+    # Check permissions (owner, admin, or manager)
+    user_membership = get_user_membership(request.user, organization)
+    if not user_membership or user_membership.permission_level not in [Membership.OWNER, Membership.ADMIN, Membership.MANAGER]:
+        messages.error(request, "You don't have permission to export members.")
+        return redirect(organization.get_absolute_url())
+
+    # Create CSV response
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{organization.slug}_members.csv"'
+
+    writer = csv.writer(response)
+    # Write header
+    writer.writerow(['email', 'first_name', 'last_name', 'username', 'permission_level', 'status', 'join_date', 'roles'])
+
+    # Write member data
+    members = Membership.objects.filter(organization=organization).select_related('user').prefetch_related('member_roles')
+    for membership in members:
+        roles = membership.get_roles_display() if membership.member_roles.exists() else ''
+        writer.writerow([
+            membership.user.email,
+            membership.user.first_name,
+            membership.user.last_name,
+            membership.user.username,
+            membership.permission_level,
+            membership.status,
+            membership.join_date.strftime('%Y-%m-%d') if membership.join_date else '',
+            roles
+        ])
+
+    logfire.info(
+        "Members exported to CSV",
+        organization_id=organization.id,
+        organization_name=organization.name,
+        user_id=request.user.id,
+        member_count=members.count()
+    )
+
+    return response
+
+
+@login_required
+@transaction.atomic
+def import_members_csv(request, slug):
+    """Import organization members from CSV file"""
+    organization = get_object_or_404(Organization, slug=slug)
+
+    # Check permissions (owner, admin, or manager)
+    user_membership = get_user_membership(request.user, organization)
+    if not user_membership or user_membership.permission_level not in [Membership.OWNER, Membership.ADMIN, Membership.MANAGER]:
+        messages.error(request, "You don't have permission to import members.")
+        return redirect(organization.get_absolute_url())
+
+    if request.method != 'POST':
+        return redirect(organization.get_absolute_url())
+
+    csv_file = request.FILES.get('csv_file')
+    if not csv_file:
+        messages.error(request, "No file uploaded.")
+        return redirect(organization.get_absolute_url())
+
+    if not csv_file.name.endswith('.csv'):
+        messages.error(request, "File must be a CSV.")
+        return redirect(organization.get_absolute_url())
+
+    try:
+        # Read CSV file
+        decoded_file = csv_file.read().decode('utf-8')
+        io_string = StringIO(decoded_file)
+        reader = csv.DictReader(io_string)
+
+        added_count = 0
+        updated_count = 0
+        error_count = 0
+        errors = []
+
+        for row_num, row in enumerate(reader, start=2):  # Start at 2 (accounting for header)
+            try:
+                email = row.get('email', '').strip()
+                if not email:
+                    errors.append(f"Row {row_num}: Email is required")
+                    error_count += 1
+                    continue
+
+                # Get or create user
+                user, user_created = User.objects.get_or_create(
+                    email=email,
+                    defaults={
+                        'username': email.split('@')[0],  # Use email prefix as username
+                        'first_name': row.get('first_name', '').strip(),
+                        'last_name': row.get('last_name', '').strip(),
+                    }
+                )
+
+                # Update user info if provided and user already exists
+                if not user_created:
+                    if row.get('first_name'):
+                        user.first_name = row.get('first_name', '').strip()
+                    if row.get('last_name'):
+                        user.last_name = row.get('last_name', '').strip()
+                    user.save()
+
+                # Get permission level (default: member)
+                permission_level = row.get('permission_level', 'member').lower().strip()
+                permission_map = {
+                    'owner': Membership.OWNER,
+                    'admin': Membership.ADMIN,
+                    'manager': Membership.MANAGER,
+                    'member': Membership.MEMBER,
+                }
+                permission_level = permission_map.get(permission_level, Membership.MEMBER)
+
+                # Get status (default: active)
+                status = row.get('status', 'active').lower().strip()
+                status_map = {
+                    'active': Membership.ACTIVE,
+                    'inactive': Membership.INACTIVE,
+                    'prospect': Membership.PROSPECT,
+                }
+                status = status_map.get(status, Membership.ACTIVE)
+
+                # Create or update membership
+                membership, created = Membership.objects.update_or_create(
+                    user=user,
+                    organization=organization,
+                    defaults={
+                        'permission_level': permission_level,
+                        'status': status,
+                    }
+                )
+
+                if created:
+                    added_count += 1
+                else:
+                    updated_count += 1
+
+            except Exception as e:
+                errors.append(f"Row {row_num}: {str(e)}")
+                error_count += 1
+
+        # Show success/error messages
+        if added_count > 0:
+            messages.success(request, f"Successfully added {added_count} new member(s).")
+        if updated_count > 0:
+            messages.success(request, f"Successfully updated {updated_count} existing member(s).")
+        if error_count > 0:
+            messages.warning(request, f"Failed to import {error_count} row(s). See details below.")
+            for error in errors[:10]:  # Show first 10 errors
+                messages.error(request, error)
+            if len(errors) > 10:
+                messages.error(request, f"...and {len(errors) - 10} more errors.")
+
+        logfire.info(
+            "Members imported from CSV",
+            organization_id=organization.id,
+            organization_name=organization.name,
+            user_id=request.user.id,
+            added=added_count,
+            updated=updated_count,
+            errors=error_count
+        )
+
+    except Exception as e:
+        messages.error(request, f"Error processing CSV file: {str(e)}")
+        logfire.error(
+            "CSV import failed",
+            organization_id=organization.id,
+            error=str(e),
+            exc_info=True
+        )
+
+    return redirect(organization.get_absolute_url())
+
+
+@login_required
+def download_csv_template(request):
+    """Download a CSV template for importing members"""
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="member_import_template.csv"'
+
+    writer = csv.writer(response)
+    # Write header
+    writer.writerow(['email', 'first_name', 'last_name', 'permission_level', 'status'])
+
+    # Write example rows
+    writer.writerow(['john.doe@example.com', 'John', 'Doe', 'member', 'active'])
+    writer.writerow(['jane.smith@example.com', 'Jane', 'Smith', 'manager', 'active'])
+    writer.writerow(['coach@example.com', 'Coach', 'Example', 'admin', 'active'])
+
+    return response
 
 
