@@ -296,12 +296,10 @@ else:
 
 DEFAULT_FROM_EMAIL = env_settings.DEFAULT_FROM_EMAIL
 
-# Sinch SMS Verification Configuration
-# https://developers.sinch.com/docs/sms/api-reference/
-SINCH_SMS_AUTH_TOKEN = env_settings.SINCH_SMS_AUTH_TOKEN
-SINCH_PLAN_ID = env_settings.SINCH_PLAN_ID
-SINCH_URL = env_settings.SINCH_URL
-SINCH_FROM_NUMBER = env_settings.SINCH_FROM_NUMBER
+# Sinch Verification API Configuration (using Sinch Python SDK)
+# https://developers.sinch.com/docs/verification/
+SINCH_APPLICATION_KEY = env_settings.SINCH_APPLICATION_KEY
+SINCH_APPLICATION_SECRET = env_settings.SINCH_APPLICATION_SECRET
 
 # Django-allauth Configuration
 # https://docs.allauth.org/

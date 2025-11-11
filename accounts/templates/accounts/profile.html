@@ -297,13 +297,13 @@
 
         <!-- Step 2: Enter Code -->
         <div id="enterCodeStep" style="display: none;">
-            <p class="py-2 text-sm text-gray-600">Enter the 6-digit code sent to {{ user.phone_number }}</p>
+            <p class="py-2 text-sm text-gray-600">Enter the 4-digit code sent to {{ user.phone_number }}</p>
             <form id="verifyCodeForm" method="post" action="{% url 'accounts:verify_phone_confirm' %}">
                 {% csrf_token %}
                 <div class="form-control">
-                    <input type="text" name="code" id="verificationCode" maxlength="6" pattern="[0-9]{6}"
+                    <input type="text" name="code" id="verificationCode" maxlength="4" pattern="[0-9]{4}"
                            class="input input-bordered text-center text-2xl tracking-widest font-mono"
-                           placeholder="000000" required autofocus>
+                           placeholder="0000" required autofocus>
                     <label class="label">
                         <span class="label-text-alt" id="errorMessage"></span>
                     </label>

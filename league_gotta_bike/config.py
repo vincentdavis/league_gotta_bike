@@ -46,11 +46,9 @@ class Settings(BaseSettings):
     TEST_TO_EMAIL: str = ""
     TEST_TO_PHONE_NUMBER: str = ""  # Phone number for SMS testing (E.164 format, e.g., +15555555555)
 
-    # Sinch SMS Verification
-    SINCH_SMS_AUTH_TOKEN: str = ""
-    SINCH_PLAN_ID: str = ""
-    SINCH_URL: str = "https://sms.api.sinch.com/xms/v1/"
-    SINCH_FROM_NUMBER: str = ""  # Your Sinch phone number
+    # Sinch Verification API (using Sinch Python SDK)
+    SINCH_APPLICATION_KEY: str = ""  # Application key for Sinch Verification API
+    SINCH_APPLICATION_SECRET: str = ""  # Application secret for Sinch Verification API
 
     # Superuser Credentials (for automatic superuser creation)
     DJANGO_SUPERUSER_USERNAME: str = ""
