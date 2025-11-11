@@ -22,6 +22,7 @@ urlpatterns = [
     path('create/practice-group/', views.PracticeGroupCreateView.as_view(), name='practice_group_create'),
 
     # Organization management (by slug - works for all types)
+    path('<slug:slug>/manage/', views.OrganizationManageView.as_view(), name='org_manage'),
     path('<slug:slug>/edit/', views.OrganizationEditView.as_view(), name='org_edit'),
     path('<slug:slug>/settings/', views.OrganizationSettingsView.as_view(), name='org_settings'),
     path('<slug:slug>/delete/', views.OrganizationDeleteView.as_view(), name='org_delete'),

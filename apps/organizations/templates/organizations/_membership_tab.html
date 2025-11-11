@@ -1,0 +1,194 @@
+<!-- Membership Tab Content -->
+<div id="membership-content">
+    <!-- Summary Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div class="stat bg-base-200 rounded-lg">
+            <div class="stat-title">Total Members</div>
+            <div class="stat-value text-primary">{{ total_members }}</div>
+            <div class="stat-desc">All members across all statuses</div>
+        </div>
+        <div class="stat bg-base-200 rounded-lg">
+            <div class="stat-title">Active Members</div>
+            <div class="stat-value text-success">{{ active_members }}</div>
+            <div class="stat-desc">Currently active members</div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="mb-6">
+        <h3 class="text-lg font-semibold mb-3">Filters</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Permission Level Filter -->
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text font-medium">Permission Level</span>
+                </label>
+                <select id="filter-permission" class="select select-bordered w-full">
+                    <option value="">All Permission Levels</option>
+                    {% for value, label in permission_levels %}
+                    <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Role Filter -->
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text font-medium">Role</span>
+                </label>
+                <select id="filter-role" class="select select-bordered w-full">
+                    <option value="">All Roles</option>
+                    {% for value, label in available_roles %}
+                    <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Status Filter -->
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text font-medium">Status</span>
+                </label>
+                <select id="filter-status" class="select select-bordered w-full">
+                    <option value="">All Statuses</option>
+                    {% for value, label in member_statuses %}
+                    <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <!-- Search -->
+        <div class="form-control mt-4">
+            <label class="label">
+                <span class="label-text font-medium">Search by Name or Email</span>
+            </label>
+            <input type="text" id="filter-search" placeholder="Type to search..." class="input input-bordered w-full" />
+        </div>
+    </div>
+
+    <!-- Members Table -->
+    <div class="overflow-x-auto">
+        <table class="table table-zebra w-full" id="members-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Permission</th>
+                    <th>Roles</th>
+                    <th>Status</th>
+                    <th>Join Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for membership in memberships %}
+                <tr class="member-row"
+                    data-permission="{{ membership.permission_level }}"
+                    data-status="{{ membership.status }}"
+                    data-roles="{% for role in membership.member_roles.all %}{{ role.role_type }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                    data-search="{{ membership.user.get_full_name|lower }} {{ membership.user.email|lower }}">
+                    <td>
+                        <div class="flex items-center gap-3">
+                            <div class="avatar placeholder">
+                                <div class="bg-neutral text-neutral-content rounded-full w-12">
+                                    <span class="text-xl">{{ membership.user.first_name|first }}{{ membership.user.last_name|first }}</span>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="font-bold">{{ membership.user.get_full_name }}</div>
+                                <div class="text-sm opacity-50">@{{ membership.user.username }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>{{ membership.user.email }}</td>
+                    <td>
+                        <span class="badge
+                            {% if membership.permission_level == 'owner' %}badge-error
+                            {% elif membership.permission_level == 'admin' %}badge-warning
+                            {% elif membership.permission_level == 'manager' %}badge-info
+                            {% else %}badge-ghost{% endif %}">
+                            {{ membership.get_permission_level_display }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if membership.member_roles.exists %}
+                            <div class="flex flex-wrap gap-1">
+                                {% for role in membership.member_roles.all %}
+                                <span class="badge badge-sm badge-outline">{{ role.get_role_type_display }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <span class="text-gray-400 text-sm">No roles</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge
+                            {% if membership.status == 'active' %}badge-success
+                            {% elif membership.status == 'inactive' %}badge-ghost
+                            {% else %}badge-warning{% endif %}">
+                            {{ membership.get_status_display }}
+                        </span>
+                    </td>
+                    <td>{{ membership.join_date|date:"M d, Y" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center text-gray-500 py-8">No members found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- CSV Import/Export Actions -->
+    <div class="mt-6 flex gap-2 justify-end">
+        <a href="{% url 'organizations:export_members_csv' slug=object.slug %}"
+           class="btn btn-outline btn-sm gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Export CSV
+        </a>
+    </div>
+</div>
+
+<!-- Client-side filtering script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const permissionFilter = document.getElementById('filter-permission');
+    const roleFilter = document.getElementById('filter-role');
+    const statusFilter = document.getElementById('filter-status');
+    const searchFilter = document.getElementById('filter-search');
+    const rows = document.querySelectorAll('.member-row');
+
+    function filterTable() {
+        const permissionValue = permissionFilter.value.toLowerCase();
+        const roleValue = roleFilter.value.toLowerCase();
+        const statusValue = statusFilter.value.toLowerCase();
+        const searchValue = searchFilter.value.toLowerCase();
+
+        rows.forEach(row => {
+            const permission = row.dataset.permission.toLowerCase();
+            const roles = row.dataset.roles.toLowerCase();
+            const status = row.dataset.status.toLowerCase();
+            const search = row.dataset.search.toLowerCase();
+
+            const permissionMatch = !permissionValue || permission === permissionValue;
+            const roleMatch = !roleValue || roles.includes(roleValue);
+            const statusMatch = !statusValue || status === statusValue;
+            const searchMatch = !searchValue || search.includes(searchValue);
+
+            if (permissionMatch && roleMatch && statusMatch && searchMatch) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    permissionFilter.addEventListener('change', filterTable);
+    roleFilter.addEventListener('change', filterTable);
+    statusFilter.addEventListener('change', filterTable);
+    searchFilter.addEventListener('input', filterTable);
+});
+</script>

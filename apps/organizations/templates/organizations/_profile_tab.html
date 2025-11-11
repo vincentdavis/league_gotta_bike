@@ -1,0 +1,376 @@
+<!-- Profile Tab Content -->
+<div id="profile-content">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {% if form.non_field_errors or profile_form.non_field_errors %}
+        <div class="alert alert-error mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+                {% for error in form.non_field_errors %}
+                    <span>{{ error }}</span>
+                {% endfor %}
+                {% if profile_form %}
+                    {% for error in profile_form.non_field_errors %}
+                        <span>{{ error }}</span>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Basic Information Section -->
+        <div class="mb-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Basic Information</h2>
+            <div class="space-y-4">
+                <!-- Organization Name -->
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text font-medium">{{ form.name.label }} *</span>
+                    </label>
+                    {{ form.name }}
+                    {% if form.name.help_text %}
+                    <label class="label">
+                        <span class="label-text-alt text-gray-500">{{ form.name.help_text }}</span>
+                    </label>
+                    {% endif %}
+                    {% if form.name.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ form.name.errors.0 }}</span>
+                    </label>
+                    {% endif %}
+                </div>
+
+                <!-- Description -->
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text font-medium">{{ form.description.label }}</span>
+                    </label>
+                    {{ form.description }}
+                    {% if form.description.help_text %}
+                    <label class="label">
+                        <span class="label-text-alt text-gray-500">{{ form.description.help_text }}</span>
+                    </label>
+                    {% endif %}
+                    {% if form.description.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ form.description.errors.0 }}</span>
+                    </label>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="divider"></div>
+        <div class="mb-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Contact Information</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Contact Email -->
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text font-medium">{{ form.contact_email.label }}</span>
+                    </label>
+                    {{ form.contact_email }}
+                    {% if form.contact_email.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ form.contact_email.errors.0 }}</span>
+                    </label>
+                    {% endif %}
+                </div>
+
+                <!-- Contact Phone -->
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text font-medium">{{ form.contact_phone.label }}</span>
+                    </label>
+                    {{ form.contact_phone }}
+                    {% if form.contact_phone.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ form.contact_phone.errors.0 }}</span>
+                    </label>
+                    {% endif %}
+                </div>
+
+                <!-- Website URL -->
+                <div class="form-control md:col-span-2">
+                    <label class="label">
+                        <span class="label-text font-medium">{{ form.website_url.label }}</span>
+                    </label>
+                    {{ form.website_url }}
+                    {% if form.website_url.help_text %}
+                    <label class="label">
+                        <span class="label-text-alt text-gray-500">{{ form.website_url.help_text }}</span>
+                    </label>
+                    {% endif %}
+                    {% if form.website_url.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ form.website_url.errors.0 }}</span>
+                    </label>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Logo -->
+        <div class="mb-6">
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text font-medium">{{ form.logo.label }}</span>
+                </label>
+                {% if object.logo %}
+                <div class="mb-2">
+                    <img src="{{ object.logo.url }}" alt="{{ object.name }} logo" class="h-20 w-20 object-contain rounded-lg">
+                    <p class="text-sm text-gray-500 mt-1">Current logo (upload new to replace)</p>
+                </div>
+                {% endif %}
+                {{ form.logo }}
+                {% if form.logo.help_text %}
+                <label class="label">
+                    <span class="label-text-alt text-gray-500">{{ form.logo.help_text }}</span>
+                </label>
+                {% endif %}
+                {% if form.logo.errors %}
+                <label class="label">
+                    <span class="label-text-alt text-error">{{ form.logo.errors.0 }}</span>
+                </label>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Chat Room Settings -->
+        <div class="divider"></div>
+        <div class="mb-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Chat Room Settings</h2>
+            <div class="space-y-3">
+                <!-- Enable Member Chat -->
+                <div class="form-control">
+                    <label class="label cursor-pointer justify-start gap-3">
+                        {{ form.enable_member_chat }}
+                        <div>
+                            <span class="label-text font-medium">{{ form.enable_member_chat.label }}</span>
+                            {% if form.enable_member_chat.help_text %}
+                            <p class="text-sm text-gray-500">{{ form.enable_member_chat.help_text }}</p>
+                            {% endif %}
+                        </div>
+                    </label>
+                    {% if form.enable_member_chat.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ form.enable_member_chat.errors.0 }}</span>
+                    </label>
+                    {% endif %}
+                </div>
+
+                <!-- Enable News Channel -->
+                <div class="form-control">
+                    <label class="label cursor-pointer justify-start gap-3">
+                        {{ form.enable_news_channel }}
+                        <div>
+                            <span class="label-text font-medium">{{ form.enable_news_channel.label }}</span>
+                            {% if form.enable_news_channel.help_text %}
+                            <p class="text-sm text-gray-500">{{ form.enable_news_channel.help_text }}</p>
+                            {% endif %}
+                        </div>
+                    </label>
+                    {% if form.enable_news_channel.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ form.enable_news_channel.errors.0 }}</span>
+                    </label>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Membership Settings -->
+        <div class="divider"></div>
+        <div class="mb-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Membership Settings</h2>
+            <div class="space-y-3">
+                <!-- Membership Open -->
+                <div class="form-control">
+                    <label class="label cursor-pointer justify-start gap-3">
+                        {{ form.membership_open }}
+                        <div>
+                            <span class="label-text font-medium">{{ form.membership_open.label }}</span>
+                            {% if form.membership_open.help_text %}
+                            <p class="text-sm text-gray-500">{{ form.membership_open.help_text }}</p>
+                            {% endif %}
+                        </div>
+                    </label>
+                    {% if form.membership_open.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ form.membership_open.errors.0 }}</span>
+                    </label>
+                    {% endif %}
+                </div>
+
+                <!-- Is Active -->
+                <div class="form-control">
+                    <label class="label cursor-pointer justify-start gap-3">
+                        {{ form.is_active }}
+                        <div>
+                            <span class="label-text font-medium">{{ form.is_active.label }}</span>
+                            {% if form.is_active.help_text %}
+                            <p class="text-sm text-gray-500">{{ form.is_active.help_text }}</p>
+                            {% endif %}
+                        </div>
+                    </label>
+                    {% if form.is_active.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ form.is_active.errors.0 }}</span>
+                    </label>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Type-Specific Profile Fields -->
+        {% if profile_form %}
+        <div class="divider"></div>
+        <div class="mb-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ object.get_type_display }} Details</h2>
+            <div class="space-y-4">
+                {% for field in profile_form %}
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-medium">{{ field.label }}{% if field.field.required %} *{% endif %}</span>
+                        </label>
+
+                        {# Show current banner image preview if it exists #}
+                        {% if field.name == 'banner' %}
+                            {% if object.type == 'league' and object.league_profile.banner %}
+                            <div class="mb-2">
+                                <img src="{{ object.league_profile.banner.url }}" alt="Current banner" class="h-32 w-auto object-contain rounded-lg border border-gray-300">
+                                <p class="text-sm text-gray-500 mt-1">Current banner (upload new to replace)</p>
+                            </div>
+                            {% elif object.type == 'team' and object.team_profile.banner %}
+                            <div class="mb-2">
+                                <img src="{{ object.team_profile.banner.url }}" alt="Current banner" class="h-32 w-auto object-contain rounded-lg border border-gray-300">
+                                <p class="text-sm text-gray-500 mt-1">Current banner (upload new to replace)</p>
+                            </div>
+                            {% endif %}
+                        {% endif %}
+
+                        {{ field }}
+                        {% if field.help_text %}
+                        <label class="label">
+                            <span class="label-text-alt text-gray-500">{{ field.help_text }}</span>
+                        </label>
+                        {% endif %}
+                        {% if field.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ field.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Social Media Accounts (only for Leagues and Teams) -->
+        {% if social_formset %}
+        <div class="divider"></div>
+        <div class="mb-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Social Media Accounts</h2>
+            <p class="text-sm text-gray-600 mb-4">Add links to your organization's social media profiles. Leave blank to remove.</p>
+
+            {{ social_formset.management_form }}
+
+            <div class="space-y-3">
+                {% for form in social_formset %}
+                <div class="border border-gray-200 rounded-lg p-4 {% if form.instance.pk %}bg-white{% else %}bg-gray-50{% endif %}">
+                    <div class="grid grid-cols-12 gap-3 items-start">
+                        <!-- Platform -->
+                        <div class="col-span-12 sm:col-span-3">
+                            <label class="label">
+                                <span class="label-text text-xs">{{ form.platform.label }}</span>
+                            </label>
+                            {{ form.platform }}
+                            {% if form.platform.errors %}
+                            <label class="label">
+                                <span class="label-text-alt text-error">{{ form.platform.errors.0 }}</span>
+                            </label>
+                            {% endif %}
+                        </div>
+
+                        <!-- Username -->
+                        <div class="col-span-12 sm:col-span-3">
+                            <label class="label">
+                                <span class="label-text text-xs">{{ form.username.label }}</span>
+                            </label>
+                            {{ form.username }}
+                            {% if form.username.errors %}
+                            <label class="label">
+                                <span class="label-text-alt text-error">{{ form.username.errors.0 }}</span>
+                            </label>
+                            {% endif %}
+                        </div>
+
+                        <!-- Profile URL -->
+                        <div class="col-span-12 sm:col-span-4">
+                            <label class="label">
+                                <span class="label-text text-xs">{{ form.profile_url.label }}</span>
+                            </label>
+                            {{ form.profile_url }}
+                            {% if form.profile_url.errors %}
+                            <label class="label">
+                                <span class="label-text-alt text-error">{{ form.profile_url.errors.0 }}</span>
+                            </label>
+                            {% endif %}
+                        </div>
+
+                        <!-- Display Order & Active -->
+                        <div class="col-span-6 sm:col-span-1">
+                            <label class="label">
+                                <span class="label-text text-xs">{{ form.display_order.label }}</span>
+                            </label>
+                            {{ form.display_order }}
+                        </div>
+
+                        <div class="col-span-6 sm:col-span-1 flex items-end pb-2">
+                            <label class="label cursor-pointer">
+                                {{ form.is_active }}
+                                <span class="label-text text-xs ml-1">{{ form.is_active.label }}</span>
+                            </label>
+                        </div>
+
+                        <!-- Delete checkbox (for existing accounts) -->
+                        {% if form.instance.pk %}
+                        <div class="col-span-12 sm:col-span-12 flex items-center justify-end">
+                            <label class="label cursor-pointer">
+                                {{ form.DELETE }}
+                                <span class="label-text text-xs ml-2 text-error">Delete this account</span>
+                            </label>
+                        </div>
+                        {% endif %}
+
+                        <!-- Hidden fields -->
+                        {{ form.id }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% if social_formset.non_form_errors %}
+            <div class="alert alert-error mt-4">
+                {{ social_formset.non_form_errors }}
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Form Actions -->
+        <div class="divider"></div>
+        <div class="flex justify-end gap-2">
+            <button type="submit" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                Save Changes
+            </button>
+        </div>
+    </form>
+</div>

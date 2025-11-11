@@ -250,25 +250,49 @@ In development, emails are sent via the configured Resend API. To test without s
 ### Application Overview
 League Gotta Bike is a comprehensive sports team management platform focused on cycling teams, clubs, and leagues. The app streamlines team operations, event coordination, member management, and performance tracking.
 
-### Planned Django Apps
+### Django Apps Structure
+
+#### Implemented Apps
 ```
 league_gotta_bike/           # Main project
-├── accounts/                # User authentication & profiles (existing)
-├── organizations/           # Organization management (leagues, teams, squads, clubs)
-├── Calendar/                # Calendar for event, practice, ... scheduling & management.
-├── members/                 # Member profiles & roster management
-├── communications/          # Messaging & notifications
-├── performance/             # Stats & results tracking
-├── finances/                # Financial management
-└── theme/                   # Frontend styling (existing)
+├── accounts/                # ✅ User authentication & profiles
+├── organizations/           # ✅ Organization management (leagues, teams, squads, clubs, practice groups)
+├── membership/              # ✅ Member management, seasons, and season memberships
+├── messaging/               # ✅ Chat rooms, messages, and real-time communication
+├── events/                  # ✅ Event management, RSVP, and attendance tracking
+├── sponsors/                # ✅ Sponsor management and display
+├── mobile_api/              # ✅ REST API for mobile/PWA applications
+├── admin_api/               # ✅ Admin API for management operations
+└── theme/                   # ✅ Frontend styling (Tailwind CSS + DaisyUI)
 ```
 
-### Core Features to Implement
+#### Planned Apps (Future Development)
+```
+├── performance/             # 📋 Stats & results tracking
+├── finances/                # 📋 Financial management with Stripe Connect
+└── notifications/           # 📋 Advanced email/push notification system
+```
+
+### Core Features
+
+#### ✅ Implemented
+- **Organization Management**: Leagues, teams, squads, clubs, practice groups with hierarchical structure
+- **Membership System**: Permission levels, organizational roles, season-based memberships
 - **Team Management**: Team profiles, roster management, role-based permissions
-- **Event System**: Calendar, RSVP, recurring events, location mapping
-- **Communication Hub**: Team messaging, announcements, notifications
+- **Member Import/Export**: CSV bulk operations for member management
+- **Event System**: Event creation, RSVP tracking, attendance management
+- **Messaging**: Chat rooms with unread counts, organization-specific channels
+- **Sponsor Management**: Sponsor logos and links on organization pages
+- **Account Dashboard**: User home page with organizations, chats, and events
+- **Social Media Integration**: Social media accounts for leagues and teams
+- **Mobile & Admin APIs**: REST APIs for mobile apps and admin operations
+
+#### 📋 Planned
+- **Event Calendar View**: Calendar widget integration, recurring events
 - **Performance Tracking**: Race results, statistics, progress reports
-- **Financial Tools**: Expense tracking, dues management, budget reports
+- **Financial Tools**: Stripe Connect integration, dues management, expense tracking
+- **Advanced Notifications**: Email/push notifications for events and messages
+- **Real-time Chat**: WebSocket-based live messaging
 
 ### Permissions vs Roles Architecture
 
@@ -498,10 +522,12 @@ organization.get_guest_url()     # Returns /{slug}/guest/
 **Organization Hierarchy Rules**:
 1. **Leagues**: Top-level organizations (cannot have a parent)
 2. **Teams**: Can be top-level (standalone) OR optionally belong to a League
-3. **Squads, Clubs, Practice Groups**: ALWAYS sub-organizations of Teams (required parent)
+3. **Squads, Clubs, Practice Groups** (collectively called "subgroups"): ALWAYS sub-organizations of Teams (required parent)
+
+**Note on Terminology**: The terms "subgroups" and "sub-organizations" are used interchangeably to refer to Squads, Clubs, and Practice Groups.
 
 **Sub-Organization Creation Rules**:
-- Squads, clubs, and practice groups can ONLY be created by:
+- Subgroups (squads, clubs, and practice groups) can ONLY be created by:
   - Team owners
   - Team administrators
   - Team managers
@@ -553,29 +579,335 @@ if can_create_sub_organization(request.user, team):
 - Descriptive only - does NOT grant permissions
 - Examples: A user can be both "Coach" and "Parent" simultaneously
 
-#### events.Event
-- title, description, event_type
-- date/time, location, difficulty
-- recurring event patterns
-- equipment requirements
+#### membership.Season & membership.SeasonMembership
 
-#### events.EventResponse
+**Season-Based Membership Management**: Organizations can organize memberships by time periods (seasons).
+
+**Season Model** (`apps/membership/models.py`):
+- Links to Organization (league or team)
+- `name`: Season name (e.g., "Spring 2025", "Fall 2024")
+- `start_date` / `end_date`: Season duration
+- `registration_open_date` / `registration_close_date`: Registration window
+- `is_active`: Whether season is currently active
+- `auto_approve_registration`: Automatically approve new registrations
+- `registration_fee`: Optional fee for the season
+- `max_members`: Optional capacity limit
+
+**SeasonMembership Model**:
+- Links User to Organization for a specific Season
+- `registration_status`: pending, approved, rejected, waitlisted
+- `registration_date`: When user registered
+- `approved_date` / `approved_by`: Approval tracking
+- `payment_status`: pending, paid, waived, refunded
+- Inherits permission level and roles from base Membership
+
+**Key Features**:
+- Multiple concurrent seasons per organization
+- Automatic approval based on season settings
+- Season-specific member lists and reporting
+- Registration workflow with approval/rejection
+- Payment tracking per season
+- Waitlist support when at capacity
+
+**Usage**:
+```python
+# Create a season
+season = Season.objects.create(
+    organization=team,
+    name="Spring 2025",
+    start_date="2025-03-01",
+    end_date="2025-05-31",
+    auto_approve_registration=True,
+    is_active=True
+)
+
+# Register user for season
+season_membership = SeasonMembership.objects.create(
+    membership=membership,  # Base membership
+    season=season,
+    registration_status=SeasonMembership.APPROVED if season.auto_approve_registration else SeasonMembership.PENDING
+)
+```
+
+**Templates**:
+- `membership/_season_card.html` - Season display card
+- `membership/season_detail.html` - Season detail page with member list
+- `organizations/season_list.html` - List of all seasons for an organization
+- `organizations/season_form.html` - Create/edit season form
+
+#### events.Event & events.EventAttendee
+
+**Event Management with RSVP Tracking**: Organizations can create events and track member attendance.
+
+**Event Model** (`apps/events/models.py`):
+- Links to Organization (league, team, squad, club, or practice group)
+- `title`, `description`: Event details
+- `event_type`: practice, race, meeting, social, fundraiser, clinic, other
+- `start_date`, `end_date`: Event timing
+- `location`: Event location (text field)
+- `max_attendees`: Optional capacity limit
+- `is_public`: Whether non-members can view the event
+- `created_by`: User who created the event
+- Status tracking: draft, published, cancelled
+
+**EventAttendee Model**:
 - Links User to Event with RSVP status
-- Response time, comments
+- `status`: going, not_going, maybe, invited
+- `response_date`: When user responded
+- `notes`: Optional attendee notes
+- Tracks attendance and RSVPs
 
-#### performance.Result
+**Key Features**:
+- Event creation with permission checks (owner/admin/manager)
+- RSVP system with status tracking
+- Attendee list and count
+- Capacity management
+- Public/private event visibility
+- Event detail pages with RSVP buttons
+- Event cards for display in lists
+
+**Views** (`apps/events/views.py`):
+- `EventDetailView`: Shows event details with RSVP button
+- `EventRSVPView`: Handles RSVP submissions (POST only)
+- Permission checks ensure only members can RSVP
+
+**Templates**:
+- `events/event_detail.html` - Event detail page (pending creation)
+- `events/_event_card.html` - Event card component for lists
+- Used on account home page to show upcoming events
+
+**Usage**:
+```python
+# Create an event
+event = Event.objects.create(
+    organization=team,
+    title="Weekly Practice",
+    event_type=Event.PRACTICE,
+    start_date=timezone.now() + timedelta(days=7),
+    created_by=request.user
+)
+
+# RSVP to event
+EventAttendee.objects.create(
+    event=event,
+    user=request.user,
+    status=EventAttendee.GOING
+)
+```
+
+#### messaging.ChatRoom, messaging.ChatRoomParticipant, & messaging.Message
+
+**Real-Time Messaging System**: Organizations have chat rooms for member communication with read receipts and unread counts.
+
+**ChatRoom Model** (`apps/messaging/models.py`):
+- `room_type`: organization, direct_message, group_chat
+- `organization`: Optional link to Organization (for org chat rooms)
+- `name`: Chat room name/suffix (e.g., "Member Chat", "News & Announcements")
+- `description`: Optional room description
+- `is_active`: Whether chat room is active
+- **Computed `display_name` property**: Dynamically generates full name
+  - For organization rooms: `"{organization.name} - {name}"` (e.g., "Golden HS Cycling - Member Chat")
+  - For other rooms: Returns `name` as-is
+- `created_by`: User who created the room
+
+**Key Features**:
+- **Automatic chat room creation** for organizations (apps/organizations/models.py:332-380)
+  - "Member Chat" room created when organization enables member chat
+  - "News & Announcements" room created when organization enables news channel
+  - Rooms automatically activated/deactivated based on organization settings
+- **Dynamic naming**: Chat room names automatically reflect organization name changes
+- **No database sync needed**: Uses computed property instead of stored name
+
+**ChatRoomParticipant Model**:
+- Links User to ChatRoom
+- `joined_at`: When user joined the room
+- `last_read_at`: Last time user read messages (for unread counts)
+- `is_admin`: Whether user is room admin
+- Tracks user membership in chat rooms
+
+**Message Model**:
+- Links to ChatRoom and sender User
+- `content`: Message text
+- `sent_at`: Message timestamp
+- `is_read`: Read receipt tracking
+- `read_at`: When message was read
+
+**Class Methods** (ChatRoom model):
+- `get_user_chat_rooms(user)`: Returns all chat rooms user has access to
+- `get_unread_count(user)`: Returns number of unread messages for user
+
+**Templates**:
+- `messaging/_chat_room_card.html` - Chat room card with unread badge
+- Used on account home page
+
+**Usage**:
+```python
+# Get user's chat rooms with unread counts
+rooms = ChatRoom.get_user_chat_rooms(user)
+for room in rooms:
+    unread = room.get_unread_count(user)
+    print(f"{room.display_name}: {unread} unread")
+
+# Send a message
+Message.objects.create(
+    chat_room=room,
+    sender=user,
+    content="Hello team!"
+)
+```
+
+#### sponsors.Sponsor
+
+**Sponsor Management**: Organizations can add sponsor logos and links to their pages.
+
+**Sponsor Model** (`apps/sponsors/models.py`):
+- Links to Organization
+- `name`: Sponsor name
+- `logo`: Sponsor logo image
+- `website_url`: Optional sponsor website
+- `description`: Optional sponsor description
+- `display_order`: Order for display
+- `is_active`: Whether sponsor is currently active
+
+**Display Locations**:
+- Organization cards (`organizations/_organization_card.html`)
+- Shows sponsor logos in horizontal layout at bottom of card
+
+#### performance.Result (Planned)
 - Links User to Event with performance data
 - Time, placement, points scored
 - Personal notes, conditions
+- **Status**: Not yet implemented
 
-#### communications.Message
-- Team announcements, direct messages
-- Read status, priority levels
-
-#### finances.Transaction
+#### finances.Transaction (Planned)
 - Team expenses, member dues
 - Categories, payment methods
 - Approval workflow
+- **Status**: Not yet implemented - planned for Stripe Connect integration
+
+## Implemented Features
+
+### Account Home Page
+
+**User Dashboard**: Centralized home page showing user's organizations, chat rooms, and upcoming events.
+
+**Location**: `/accounts/home/`
+
+**View**: `AccountHomeView` (`accounts/views.py`)
+- Requires login
+- Shows user's active memberships
+- Displays chat rooms with unread counts
+- Shows upcoming events (next 30 days)
+
+**Template**: `accounts/home.html`
+- Three-column/tab responsive layout
+- **Organizations tab**: Shows all user's organizations with permission level badges
+- **Chats tab**: Shows chat rooms with unread message counts
+- **Events tab**: Shows upcoming events with RSVP buttons
+- Mobile-responsive: Tabs on small screens, columns on large screens
+
+**Redirect Behavior**:
+- `LOGIN_REDIRECT_URL = '/accounts/home/'` (settings.py)
+- LeagueListView redirects authenticated users to home page
+- Browse organizations available at `/browse/`
+
+**Component Templates**:
+- Uses `organizations/_organization_card.html` for organization display
+- Uses `messaging/_chat_room_card.html` for chat room display
+- Uses `events/_event_card.html` for event display
+
+### CSV Import/Export for Members
+
+**Member Bulk Operations**: Export and import organization members via CSV files.
+
+**Permission**: Only available to owners, admins, and managers of an organization
+
+**Views** (`apps/organizations/views.py:1081-1274`):
+1. **`export_members_csv(request, slug)`**:
+   - Downloads all members as CSV with user details
+   - Includes: email, first_name, last_name, username, permission_level, status, join_date, roles
+   - Filename: `{organization_slug}_members.csv`
+
+2. **`import_members_csv(request, slug)`**:
+   - Imports members from uploaded CSV file
+   - **Creates new users** if email doesn't exist
+   - **Updates existing users** if email matches
+   - Creates or updates memberships
+   - Transactional (all-or-nothing import)
+   - Detailed error reporting (shows first 10 errors)
+   - Logs import statistics with Logfire
+
+3. **`download_csv_template(request)`**:
+   - Downloads CSV template with example data
+   - Shows correct format and field options
+
+**URL Routes** (`apps/organizations/urls.py:29-32`):
+- `/<slug>/members/export/` - Export members to CSV
+- `/<slug>/members/import/` - Import members from CSV
+- `/csv-template/` - Download CSV template
+
+**Template Integration**:
+- Import/Export buttons shown on team detail page (`organizations/team_detail.html`)
+- Modal dialog for CSV import with format instructions
+- Only visible when `can_edit` permission is true
+
+**CSV Format**:
+```csv
+email,first_name,last_name,username,permission_level,status,join_date,roles
+user@example.com,John,Doe,johndoe,member,active,2025-01-01,athlete
+```
+
+**Supported Fields**:
+- `email` (required): User email
+- `first_name`, `last_name`, `username`: User details
+- `permission_level`: owner, admin, manager, member
+- `status`: active, inactive, prospect
+- `join_date`: YYYY-MM-DD format
+- `roles`: Comma-separated role types
+
+### Social Media Accounts
+
+**Organization Social Profiles**: Organizations can add social media links to their profiles.
+
+**Model**: `SocialMediaAccount` (linked to Organization)
+- `platform`: facebook, twitter, instagram, linkedin, youtube, tiktok, strava, etc.
+- `username`: Social media username/handle
+- `profile_url`: Full URL to profile
+- `display_order`: Order for display
+- `is_active`: Whether link is currently active
+
+**Availability**:
+- **Only for Leagues and Teams** (not for Clubs, Squads, Practice Groups)
+- View logic (`apps/organizations/views.py:813-823`) conditionally adds formset
+- Template (`organizations/organization_edit.html:285-374`) conditionally shows section
+
+**Form**:
+- Inline formset on organization edit page
+- Add/edit/delete multiple social accounts
+- Auto-sorts by display_order
+
+**Display**:
+- Shows on organization detail pages
+- Links to social profiles
+
+### Mobile & Admin APIs
+
+**RESTful APIs**: JSON APIs for mobile applications and admin operations.
+
+**Mobile API** (`apps/mobile_api/`):
+- REST API endpoints for Progressive Web App (PWA)
+- User authentication and profile management
+- Organization and member data access
+- Event listing and RSVP
+- Messaging integration
+- Optimized for mobile/offline usage
+
+**Admin API** (`apps/admin_api/`):
+- Management and administrative operations
+- Bulk data operations
+- Advanced querying and filtering
+- Monitoring and analytics
+- Requires admin authentication
 
 ### Implementation Roadmap
 

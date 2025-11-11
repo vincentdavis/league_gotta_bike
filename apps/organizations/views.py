@@ -15,7 +15,7 @@ from django.views.generic import DetailView, ListView, CreateView, UpdateView, D
 from django.views import View
 
 from accounts.models import User
-from apps.membership.models import Membership, Season
+from apps.membership.models import Membership, Season, MemberRole
 from apps.events.models import Event
 from apps.sponsors.models import Sponsor
 
@@ -1273,5 +1273,141 @@ def download_csv_template(request):
     writer.writerow(['coach@example.com', 'Coach', 'Example', 'admin', 'active'])
 
     return response
+
+
+class OrganizationManageView(OrgAdminRequiredMixin, UpdateView):
+    """
+    Unified management page for Leagues and Teams with three tabs:
+    - Membership: List members with filters for permissions, roles, and status
+    - Seasons: List and manage seasons
+    - Profile: Edit organization profile
+
+    Only available for LEAGUE and TEAM organization types.
+    """
+    model = Organization
+    form_class = OrganizationEditForm
+    template_name = 'organizations/organization_manage.html'
+    slug_url_kwarg = 'slug'
+
+    def dispatch(self, request, *args, **kwargs):
+        """Ensure organization is a League or Team only."""
+        self.object = self.get_object()
+        if self.object.type not in [Organization.LEAGUE, Organization.TEAM]:
+            messages.error(request, "Management page is only available for Leagues and Teams.")
+            return redirect(self.object.get_absolute_url())
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Add active tab from query parameter (default to 'membership')
+        context['active_tab'] = self.request.GET.get('tab', 'membership')
+
+        # Membership Tab Data
+        memberships = Membership.objects.filter(
+            organization=self.object
+        ).select_related('user').prefetch_related('member_roles').order_by('-join_date')
+
+        context['memberships'] = memberships
+        context['total_members'] = memberships.count()
+        context['active_members'] = memberships.filter(status=Membership.ACTIVE).count()
+
+        # Filters for membership tab
+        context['permission_levels'] = Membership.PERMISSION_LEVEL_CHOICES
+        context['member_statuses'] = Membership.STATUS_CHOICES
+        context['available_roles'] = MemberRole.ROLE_TYPE_CHOICES
+
+        # Seasons Tab Data
+        seasons = Season.objects.filter(
+            organization=self.object
+        ).order_by('-start_date')
+
+        context['seasons'] = seasons
+        context['active_seasons'] = seasons.filter(is_active=True)
+
+        # Profile Tab Data - Add profile form based on organization type
+        if self.request.POST:
+            if self.object.type == Organization.LEAGUE:
+                context['profile_form'] = LeagueProfileForm(
+                    self.request.POST,
+                    self.request.FILES,
+                    instance=getattr(self.object, 'league_profile', None)
+                )
+            elif self.object.type == Organization.TEAM:
+                context['profile_form'] = TeamProfileForm(
+                    self.request.POST,
+                    self.request.FILES,
+                    instance=getattr(self.object, 'team_profile', None)
+                )
+        else:
+            if self.object.type == Organization.LEAGUE:
+                context['profile_form'] = LeagueProfileForm(
+                    instance=getattr(self.object, 'league_profile', None)
+                )
+            elif self.object.type == Organization.TEAM:
+                context['profile_form'] = TeamProfileForm(
+                    instance=getattr(self.object, 'team_profile', None)
+                )
+
+        # Add social media accounts formset (only for leagues and teams)
+        if self.object.type in [Organization.LEAGUE, Organization.TEAM]:
+            if self.request.POST:
+                context['social_formset'] = SocialMediaAccountFormSet(
+                    self.request.POST,
+                    instance=self.object
+                )
+            else:
+                context['social_formset'] = SocialMediaAccountFormSet(
+                    instance=self.object
+                )
+
+        return context
+
+    def form_valid(self, form):
+        """Handle form submission for profile tab."""
+        context = self.get_context_data()
+        profile_form = context.get('profile_form')
+        social_formset = context.get('social_formset')
+
+        # Validate profile form
+        if profile_form and not profile_form.is_valid():
+            return self.form_invalid(form)
+
+        # Validate social media formset
+        if social_formset and not social_formset.is_valid():
+            return self.form_invalid(form)
+
+        # Save organization
+        self.object = form.save()
+
+        # Save profile
+        if profile_form:
+            profile = profile_form.save(commit=False)
+            if self.object.type == Organization.LEAGUE:
+                profile.league = self.object
+            elif self.object.type == Organization.TEAM:
+                profile.team = self.object
+            profile.save()
+
+        # Save social media accounts
+        if social_formset:
+            social_formset.instance = self.object
+            social_formset.save()
+
+        messages.success(self.request, f"{self.object.get_type_display()} profile updated successfully.")
+
+        logfire.info(
+            "Organization profile updated",
+            organization_id=self.object.id,
+            organization_name=self.object.name,
+            user_id=self.request.user.id
+        )
+
+        # Redirect back to manage page with profile tab active
+        return redirect(f"{self.object.get_absolute_url()}manage/?tab=profile")
+
+    def get_success_url(self):
+        """Return to manage page with profile tab active."""
+        return f"{self.object.get_absolute_url()}manage/?tab=profile"
 
 
