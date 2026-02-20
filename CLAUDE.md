@@ -5,8 +5,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Development Commands
 
 ### Django Application
-- `honcho -f Procfile.tailwind start` - Start all services (Django, Tailwind, and task worker)
-- `python manage.py runserver 8002` - Start the Django development server only (port configured via DJANGO_PORT in .env)
+- `honcho -f Procfile.tailwind start` - Start all services (Daphne ASGI server on port 8003, Tailwind watcher, and task worker)
+- `uv run daphne -b 127.0.0.1 -p 8003 league_gotta_bike.asgi:application` - Start the Daphne ASGI server only
+- `python manage.py runserver 8002` - Start the Django development server only (WSGI, port configured via DJANGO_PORT in .env)
 - `python manage.py db_worker` - Start the background task worker
 - `python manage.py migrate` - Apply database migrations
 - `python manage.py makemigrations` - Create new database migrations
@@ -28,18 +29,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `tests/membership/` - Tests for membership app
 - etc.
 
-**Structure**:
+**Current structure**:
 ```
 tests/
 ├── __init__.py
 ├── accounts/
 │   ├── __init__.py
 │   ├── test_email.py
-│   ├── test_auth.py
-│   └── README.md
-├── organizations/
-│   ├── __init__.py
-│   └── test_models.py
+│   └── test_sms.py
 └── ...
 ```
 
@@ -65,21 +62,40 @@ tests/
 - Sends actual emails via Resend to the configured test address
 - See `tests/accounts/README.md` for detailed testing instructions
 
+#### SMS Testing
+**Test phone verification via Sinch:**
+- `python manage.py test tests.accounts.test_sms` - Run SMS verification tests
+- Requires `SINCH_APPLICATION_KEY`, `SINCH_APPLICATION_SECRET`, and `TEST_TO_PHONE_NUMBER` in `.env`
+- Phone number must be in E.164 format (e.g., +15555555555)
+
 ## Project Architecture
 
 ### Django Project Structure
-- **league_gotta_bike/**: Main Django project directory containing settings, URLs, and WSGI/ASGI configuration
-- **accounts/**: Custom user accounts app for authentication and user management
+- **league_gotta_bike/**: Main Django project directory containing settings, URLs, ASGI/WSGI configuration, and pydantic-settings config
+- **accounts/**: Custom user accounts app for authentication, profiles, and phone verification
+- **apps/organizations/**: Organization management (leagues, teams, squads, clubs, practice groups)
+- **apps/membership/**: Member management, roles, seasons, and season memberships
+- **apps/events/**: Event management, RSVP tracking, and attendance
+- **apps/messaging/**: Chat rooms, messages, and announcement channels
+- **apps/sponsors/**: Sponsor management and display
+- **apps/mobile_api/**: REST API using django-ninja for mobile/PWA applications
 - **theme/**: Tailwind CSS theme app for frontend styling
 
 ### Key Configuration
-- Uses **pydantic-settings** for environment variable management (see `.env` file)
+- Uses **pydantic-settings** for environment variable management (see `league_gotta_bike/config.py` and `.env` file)
 - Environment variables loaded from `.env` file using type-safe validation
-- Uses **SQLite** database for development (configured in settings.py)
+- Uses **SQLite** database for development, **PostgreSQL** for production (via `dj-database-url`)
+- **Daphne** ASGI server with **Django Channels** for WebSocket support
+- **HTMX** via `django-htmx` middleware for dynamic partial page updates
 - **Django Debug Toolbar** and **django-browser-reload** enabled only when `DEBUG=True`
 - **Django Tasks** configured with DatabaseBackend for background task processing
 - **Tailwind CSS v4** with **DaisyUI** component library for styling
 - **PostCSS** build pipeline for CSS processing
+- **WhiteNoise** for static file serving in production
+- **Cloudflare R2** (S3-compatible) for media file storage in production (optional, set `USE_S3=True`)
+- **django-push-notifications** for web push notifications
+- **Sinch** for SMS phone verification
+- **django-ninja** for mobile REST API with auto-generated OpenAPI docs
 - **Logfire** for logging, observability, and application monitoring
 
 ### Logging and Observability
@@ -129,13 +145,41 @@ with logfire.span("expensive_operation"):
 - Avoid logging sensitive data (passwords, tokens, personal info)
 
 ### Environment Variables
-Configuration is managed via `.env` file (see `.env.example` for template):
+Configuration is managed via `.env` file (see `.env.example` for template). All settings defined in `league_gotta_bike/config.py`:
+
+**Core:**
 - `DEBUG`: Enable/disable debug mode (default: False)
 - `SECRET_KEY`: Django secret key for cryptographic signing
 - `ALLOWED_HOSTS`: Comma-separated list of allowed hosts
+- `CSRF_TRUSTED_ORIGINS`: Comma-separated list of trusted origins for CSRF
 - `INTERNAL_IPS`: Comma-separated list of IPs for debug toolbar (default: 127.0.0.1)
 - `DJANGO_PORT`: Development server port (default: 8002)
-- `DATABASE_URL`: Database connection string (default: SQLite)
+- `DATABASE_URL`: Database connection string (default: `sqlite:///db.sqlite3`)
+
+**Email:**
+- `RESEND_API_KEY`: Resend API key for email delivery
+- `DEFAULT_FROM_EMAIL`: Default sender email address (default: `noreply@signup.gotta.bike`)
+
+**SMS Verification:**
+- `SINCH_APPLICATION_KEY`: Sinch Verification API application key
+- `SINCH_APPLICATION_SECRET`: Sinch Verification API application secret
+
+**Media Storage (Cloudflare R2):**
+- `USE_S3`: Enable R2 storage for media files (default: False)
+- `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`: R2 credentials
+- `AWS_STORAGE_BUCKET_NAME`: R2 bucket name
+- `AWS_S3_ENDPOINT_URL`: R2 endpoint URL
+- `AWS_S3_REGION_NAME`: Region (default: `auto`)
+- `AWS_S3_CUSTOM_DOMAIN`: Optional CDN domain for media delivery
+
+**Observability:**
+- `LOGFIRE_TOKEN`: Logfire API token (optional for local development)
+
+**Testing:**
+- `TEST_TO_EMAIL`: Email address for email delivery tests
+- `TEST_TO_PHONE_NUMBER`: Phone number for SMS tests (E.164 format)
+
+**Superuser:**
 - `DJANGO_SUPERUSER_USERNAME`: Username for auto-created superuser (optional)
 - `DJANGO_SUPERUSER_EMAIL`: Email for auto-created superuser (optional)
 - `DJANGO_SUPERUSER_PASSWORD`: Password for auto-created superuser (optional)
@@ -147,8 +191,11 @@ Configuration is managed via `.env` file (see `.env.example` for template):
 ### App Configuration
 The project uses a structured approach to Django apps:
 - `DEFAULT_APPS`: Standard Django contrib apps
-- `LOCAL_APPS`: Custom project-specific apps (`accounts`)
-- `ADDON_APPS`: Third-party apps (`tailwind`, `theme`, `debug_toolbar`)
+- `LOCAL_APPS`: Custom project-specific apps (`accounts`, `apps.organizations`, `apps.membership`, `apps.events`, `apps.messaging`, `apps.sponsors`, `apps.mobile_api`)
+- `ADDON_APPS`: Third-party apps (`tailwind`, `theme`, `push_notifications`, `django_tasks`, `channels`, `allauth`, `anymail`, `phonenumber_field`, `django_htmx`)
+- Debug-only: `debug_toolbar`, `django_browser_reload`, `reset_migrations`
+- Optional: `storages` (when `USE_S3=True`)
+- `daphne` is prepended before all apps for ASGI support
 
 ### Frontend Setup
 - Tailwind CSS files are in `theme/static_src/`
@@ -164,11 +211,17 @@ Key development tools included via pyproject.toml:
 - `django-stubs` for type checking
 - `pytest` for testing
 - `ruff` for linting and formatting
+- `honcho` for process management (Procfile.tailwind)
+- `logfire-mcp` for Logfire MCP integration
+- `ty` for type analysis
 
 ### Static Files
-- Template directory: `BASE_DIR / 'templates'`
-- Static files are managed through Django's standard static files system
+- Template directory: `BASE_DIR / 'templates'` (global allauth/MFA templates)
+- App-level templates in `apps/*/templates/` (organization detail pages, forms, etc.)
+- Account templates in `accounts/templates/accounts/` (home, profile)
+- Static files served via **WhiteNoise** (`CompressedManifestStaticFilesStorage`)
 - Tailwind CSS output is served as static files
+- Media files stored locally or on Cloudflare R2 (configurable via `USE_S3`)
 
 ## Authentication & Email
 
@@ -183,7 +236,15 @@ The project uses **django-allauth** for comprehensive user authentication with M
 #### User Model
 Custom User model (`accounts.User`) extends Django's `AbstractUser`:
 - **Required Fields**: `username`, `email`, `first_name`, `last_name`
-- **Additional Field**: `phone_number` for contact information
+- **Additional Fields**:
+  - `phone_number`: PhoneNumberField for contact information (international format)
+  - `phone_verified`: Boolean tracking SMS verification status
+  - `dob`: Date of birth with age validation (12-110 years)
+  - `avatar`: ImageField for profile photos (uploaded to `avatars/%Y/%m/`)
+- **Methods**:
+  - `racing_age()`: Calculates cycling racing age (age by Dec 31 of current year)
+  - `UNDER18()` / `UNDER16()`: Age check helpers for youth athletes
+- **Signals**: Phone number changes automatically reset `phone_verified` to False
 - **Email Verification**: Email must be verified before account activation
 - **Login Method**: Username-based authentication
 
@@ -205,16 +266,23 @@ MFA_PASSKEY_SIGNUP_ENABLED = True
 ```
 
 #### URLs
+- `/accounts/home/` - User dashboard (organizations, chats, events)
+- `/accounts/profile/` - User profile display and edit
 - `/accounts/signup/` - User registration
 - `/accounts/login/` - User login
 - `/accounts/logout/` - User logout
 - `/accounts/password/reset/` - Password reset
 - `/accounts/email/` - Email address management
 - `/accounts/password/change/` - Change password
+- `/accounts/confirm-email/` - Email verification code entry (custom with resend)
 - `/accounts/mfa/` - Two-factor authentication management
+- `/accounts/verify-phone/send/` - Send SMS verification code
+- `/accounts/verify-phone/confirm/` - Confirm SMS verification code
 
 #### Custom Templates Location
-All allauth templates are customized in `templates/account/` and `templates/mfa/` directories using Tailwind CSS and DaisyUI styling.
+- `templates/account/` - django-allauth account templates (login, signup, password reset, etc.)
+- `templates/mfa/` - django-allauth MFA templates (TOTP, WebAuthn, recovery codes)
+- `accounts/templates/accounts/` - Custom account views (home.html, profile.html, section partials)
 
 ### Django-anymail with Resend
 Email delivery is handled by **django-anymail** using the **Resend** API.
@@ -231,19 +299,45 @@ Set the following environment variables in `.env`:
 
 #### Backend
 ```python
+# Development (DEBUG=True): emails printed to console
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Production (DEBUG=False): emails sent via Resend
 EMAIL_BACKEND = 'anymail.backends.resend.EmailBackend'
 ```
 
 #### Testing Emails Locally
-In development, emails are sent via the configured Resend API. To test without sending real emails, you can:
-1. Use Django's console email backend for development: `EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'`
-2. Configure a development domain in Resend for testing
+In development with `DEBUG=True`, emails are automatically sent to the console (no real emails sent). The Resend backend is only used in production.
 
 #### Resend Setup
 1. Create an account at https://resend.com
 2. Verify your sending domain
 3. Generate an API key with "sending access" permission
 4. Add the API key to your `.env` file as `RESEND_API_KEY`
+
+### Phone Verification (Sinch SMS)
+
+Phone verification is handled by the **Sinch Verification API** using the official Python SDK.
+
+#### Implementation
+- `accounts/sms_verify.py` - SMS verification logic
+- Uses Sinch's managed verification flow (4-digit codes, 10-minute expiry)
+- Rate limiting: 60-second cooldown between requests
+- Phone verification status tracked on User model (`phone_verified` field)
+
+#### Configuration
+Set the following environment variables in `.env`:
+- `SINCH_APPLICATION_KEY`: Application key from Sinch dashboard
+- `SINCH_APPLICATION_SECRET`: Application secret from Sinch dashboard
+
+#### URLs
+- `POST /accounts/verify-phone/send/` - Initiate SMS verification
+- `POST /accounts/verify-phone/confirm/` - Confirm verification code
+
+#### Key Behavior
+- Phone number changes automatically reset `phone_verified` to False (via signal)
+- Verification requires authenticated user with a phone number set
+- Uses Django cache for rate limiting
 
 ## Project Purpose & Roadmap
 
@@ -255,19 +349,19 @@ League Gotta Bike is a comprehensive sports team management platform focused on 
 #### Implemented Apps
 ```
 league_gotta_bike/           # Main project
-├── accounts/                # ✅ User authentication & profiles
-├── organizations/           # ✅ Organization management (leagues, teams, squads, clubs, practice groups)
-├── membership/              # ✅ Member management, seasons, and season memberships
-├── messaging/               # ✅ Chat rooms, messages, and real-time communication
-├── events/                  # ✅ Event management, RSVP, and attendance tracking
-├── sponsors/                # ✅ Sponsor management and display
-├── mobile_api/              # ✅ REST API for mobile/PWA applications
-├── admin_api/               # ✅ Admin API for management operations
-└── theme/                   # ✅ Frontend styling (Tailwind CSS + DaisyUI)
+├── accounts/                # ✅ User authentication, profiles, phone verification
+├── apps/organizations/      # ✅ Organization management (leagues, teams, squads, clubs, practice groups)
+├── apps/membership/         # ✅ Member management, roles, seasons, and season memberships
+├── apps/messaging/          # ✅ Chat rooms, messages, announcements
+├── apps/events/             # ✅ Event management, RSVP, recurrence, and attendance tracking
+├── apps/sponsors/           # ✅ Sponsor management and display
+├── apps/mobile_api/         # ✅ REST API (django-ninja) for mobile/PWA applications
+└── theme/                   # ✅ Frontend styling (Tailwind CSS + DaisyUI + HTMX)
 ```
 
 #### Planned Apps (Future Development)
 ```
+├── admin_api/               # 📋 Admin API for management operations
 ├── performance/             # 📋 Stats & results tracking
 ├── finances/                # 📋 Financial management with Stripe Connect
 └── notifications/           # 📋 Advanced email/push notification system
@@ -280,19 +374,23 @@ league_gotta_bike/           # Main project
 - **Membership System**: Permission levels, organizational roles, season-based memberships
 - **Team Management**: Team profiles, roster management, role-based permissions
 - **Member Import/Export**: CSV bulk operations for member management
-- **Event System**: Event creation, RSVP tracking, attendance management
-- **Messaging**: Chat rooms with unread counts, organization-specific channels
+- **Event System**: Event creation with recurrence, RSVP tracking, attendance/check-in management
+- **Messaging**: Chat rooms with unread counts, organization-specific channels, announcements
 - **Sponsor Management**: Sponsor logos and links on organization pages
 - **Account Dashboard**: User home page with organizations, chats, and events
 - **Social Media Integration**: Social media accounts for leagues and teams
-- **Mobile & Admin APIs**: REST APIs for mobile apps and admin operations
+- **Phone Verification**: SMS verification via Sinch API with rate limiting
+- **Mobile API**: REST API (django-ninja) with auth, organizations, chat, and events endpoints
+- **HTMX Integration**: Dynamic partial page updates for interactive UI
+- **Cloud Media Storage**: Cloudflare R2 (S3-compatible) for production file uploads
 
 #### 📋 Planned
-- **Event Calendar View**: Calendar widget integration, recurring events
+- **Admin API**: Management and administrative operations API
+- **Event Calendar View**: Calendar widget integration
 - **Performance Tracking**: Race results, statistics, progress reports
 - **Financial Tools**: Stripe Connect integration, dues management, expense tracking
 - **Advanced Notifications**: Email/push notifications for events and messages
-- **Real-time Chat**: WebSocket-based live messaging
+- **Real-time Chat**: WebSocket-based live messaging (Channels infrastructure in place)
 
 ### Permissions vs Roles Architecture
 
@@ -509,8 +607,11 @@ organization.get_guest_url()     # Returns /{slug}/guest/
 - Supports both logged-in and logged-out users
 
 #### accounts.User (Extended)
-- Custom user model with role-based permissions
-- Profile fields: emergency contact, skill level, bike info
+- Custom user model extending `AbstractUser`
+- Required: `username`, `email`, `first_name`, `last_name`
+- Additional: `phone_number` (PhoneNumberField), `phone_verified`, `dob` (with age validation), `avatar` (ImageField)
+- Methods: `racing_age()`, `UNDER18()`, `UNDER16()`, `get_full_name()`
+- Signal: `unverify_on_phone_change` resets `phone_verified` when number changes
 
 #### organizations.Organization
 - type (league, team, squad, club, etc.)
@@ -569,7 +670,7 @@ if can_create_sub_organization(request.user, team):
 **Membership Model**:
 - Links User to Organization
 - `permission_level`: Determines authorization (owner, admin, manager, member)
-- `status`: Membership status (active, inactive, prospect)
+- `status`: Membership status (active, inactive, prospect, expired, pending_renewal)
 - Join date, membership fees
 - Works across all organization types
 
@@ -642,26 +743,30 @@ season_membership = SeasonMembership.objects.create(
 **Event Model** (`apps/events/models.py`):
 - Links to Organization (league, team, squad, club, or practice group)
 - `title`, `description`: Event details
-- `event_type`: practice, race, meeting, social, fundraiser, clinic, other
-- `start_date`, `end_date`: Event timing
+- `event_type`: practice, race, meeting, social, fundraiser, training, other
+- `start_datetime`, `end_datetime`: Event timing
 - `location`: Event location (text field)
 - `max_attendees`: Optional capacity limit
-- `is_public`: Whether non-members can view the event
+- `recurrence`: Recurring event support (none, daily, weekly, monthly)
+- `view_permissions`: Controls who can see the event (members-only or public)
+- `registration_deadline`: Optional deadline for RSVPs
 - `created_by`: User who created the event
 - Status tracking: draft, published, cancelled
 
 **EventAttendee Model**:
 - Links User to Event with RSVP status
-- `status`: going, not_going, maybe, invited
-- `response_date`: When user responded
-- `notes`: Optional attendee notes
-- Tracks attendance and RSVPs
+- `status`: attending, not_attending, maybe, no_response
+- `checked_in`: Boolean for attendance tracking
+- `checked_in_at`: Timestamp for check-in
 
 **Key Features**:
 - Event creation with permission checks (owner/admin/manager)
 - RSVP system with status tracking
 - Attendee list and count
 - Capacity management
+- Recurring event support (daily, weekly, monthly)
+- Registration deadlines
+- Check-in/attendance tracking
 - Public/private event visibility
 - Event detail pages with RSVP buttons
 - Event cards for display in lists
@@ -700,7 +805,7 @@ EventAttendee.objects.create(
 **Real-Time Messaging System**: Organizations have chat rooms for member communication with read receipts and unread counts.
 
 **ChatRoom Model** (`apps/messaging/models.py`):
-- `room_type`: organization, direct_message, group_chat
+- `room_type`: public, organization, direct, announcement
 - `organization`: Optional link to Organization (for org chat rooms)
 - `name`: Chat room name/suffix (e.g., "Member Chat", "News & Announcements")
 - `description`: Optional room description
@@ -890,24 +995,20 @@ user@example.com,John,Doe,johndoe,member,active,2025-01-01,athlete
 - Shows on organization detail pages
 - Links to social profiles
 
-### Mobile & Admin APIs
+### Mobile API
 
-**RESTful APIs**: JSON APIs for mobile applications and admin operations.
+**RESTful API**: JSON API for mobile and PWA applications using **django-ninja**.
 
 **Mobile API** (`apps/mobile_api/`):
-- REST API endpoints for Progressive Web App (PWA)
-- User authentication and profile management
-- Organization and member data access
-- Event listing and RSVP
-- Messaging integration
-- Optimized for mobile/offline usage
-
-**Admin API** (`apps/admin_api/`):
-- Management and administrative operations
-- Bulk data operations
-- Advanced querying and filtering
-- Monitoring and analytics
-- Requires admin authentication
+- Built with **django-ninja** (auto-generated OpenAPI/Swagger docs at `/api/mobile/docs`)
+- Main API instance in `apps/mobile_api/api.py`
+- **Routers** (`apps/mobile_api/routers/`):
+  - `auth_router.py` - Authentication (login, registration, token management)
+  - `organizations_router.py` - Organization and member data access
+  - `chat_router.py` - Chat room and messaging endpoints
+  - `events_router.py` - Event listing and RSVP
+- Health check endpoint: `GET /api/mobile/health`
+- All endpoints under `/api/mobile/` namespace
 
 ### Implementation Roadmap
 
@@ -980,12 +1081,21 @@ user@example.com,John,Doe,johndoe,member,active,2025-01-01,athlete
 
 ### Technology Stack
 
-- **Backend**: Django 5.2.6 (already configured)
-- **Frontend**: Tailwind CSS v4 + DaisyUI (already set up)
+- **Backend**: Django 6.0+ (Python 3.14+)
+- **ASGI Server**: Daphne (via Django Channels)
+- **Frontend**: Tailwind CSS v4 + DaisyUI + HTMX
+- **API**: django-ninja (OpenAPI/Swagger auto-docs)
 - **Database**: SQLite for development, PostgreSQL for production
-- **Real-time**: Django Channels for live notifications
-- **Testing**: pytest (already configured)
-- **Code Quality**: ruff for linting (already set up)
+- **Real-time**: Django Channels (infrastructure in place, in-memory channel layer for dev)
+- **Email**: django-anymail with Resend
+- **SMS**: Sinch Verification API
+- **Media Storage**: Cloudflare R2 (S3-compatible, optional) / local filesystem
+- **Static Files**: WhiteNoise
+- **Background Tasks**: Django Tasks (database backend)
+- **Push Notifications**: django-push-notifications
+- **Observability**: Logfire (Pydantic)
+- **Testing**: pytest
+- **Code Quality**: ruff for linting and formatting
 
 ### Desktop and Mobile Applications
 

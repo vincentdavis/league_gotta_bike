@@ -1,4 +1,4 @@
-FROM ghcr.io/astral-sh/uv:python3.13-alpine
+FROM ghcr.io/astral-sh/uv:python3.14-alpine
 
 # Install Node.js and npm for Tailwind CSS build
 RUN apk add --no-cache nodejs npm

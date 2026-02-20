@@ -18,27 +18,37 @@ Thank you for helping make League Gotta Bike better for everyone!
 - **Organization Management** - Hierarchical structure for leagues, teams, squads, clubs, and practice groups
 - **Membership System** - Permission levels (owner, admin, manager, member) and organizational roles
 - **Season-Based Memberships** - Manage registrations and memberships by season
-- **Event Management** - Create events, track RSVPs, and manage attendance
-- **Real-Time Messaging** - Chat rooms with unread counts and organization-specific channels
+- **Event Management** - Create events with recurrence, track RSVPs, and manage attendance
+- **Messaging** - Chat rooms with unread counts, organization-specific channels, and announcements
 - **Sponsor Management** - Display sponsor logos and links on organization pages
 - **Member Import/Export** - CSV bulk operations for member management
-- **Mobile & Admin APIs** - REST APIs for mobile apps and admin operations
+- **Mobile API** - REST API (django-ninja) for mobile/PWA applications
 - **Multi-Factor Authentication** - TOTP, WebAuthn/Passkeys, and recovery codes
+- **Phone Verification** - SMS verification via Sinch API
+- **HTMX Integration** - Dynamic partial page updates
+- **Cloud Media Storage** - Cloudflare R2 (S3-compatible) for production file uploads
 
 ## Tech Stack
 
-- **Backend**: Django 5.2.7
-- **Frontend**: Tailwind CSS v4 + DaisyUI
+- **Backend**: Django 6.0+ (Python 3.14+)
+- **ASGI Server**: Daphne (Django Channels)
+- **Frontend**: Tailwind CSS v4 + DaisyUI + HTMX
 - **Database**: SQLite (development) / PostgreSQL (production)
+- **API**: django-ninja (OpenAPI/Swagger auto-docs at `/api/mobile/docs`)
 - **Authentication**: django-allauth with MFA
 - **Email**: django-anymail with Resend
-- **Background Tasks**: Django Tasks
+- **SMS**: Sinch Verification API
+- **Media Storage**: Cloudflare R2 (S3-compatible, optional) / local filesystem
+- **Static Files**: WhiteNoise
+- **Background Tasks**: Django Tasks (database backend)
+- **Push Notifications**: django-push-notifications
+- **Observability**: Logfire (Pydantic)
 - **Testing**: pytest
 - **Code Quality**: ruff
 
 ## Prerequisites
 
-- Python 3.13+
+- Python 3.14+
 - Node.js (for Tailwind CSS)
 - PostgreSQL (for production)
 
@@ -96,7 +106,7 @@ honcho -f Procfile.tailwind start
 ```
 
 This starts:
-- Django development server (port 8002)
+- Daphne ASGI server (port 8003)
 - Tailwind CSS watcher
 - Background task worker
 
@@ -153,19 +163,18 @@ ruff check --fix
 
 ```
 league_gotta_bike/
-├── accounts/              # User authentication and profiles
+├── accounts/              # User authentication, profiles, phone verification
 ├── apps/
-│   ├── organizations/     # Leagues, teams, squads, clubs
-│   ├── membership/        # Member management and seasons
-│   ├── events/            # Event management and RSVP
-│   ├── messaging/         # Chat rooms and messages
-│   ├── sponsors/          # Sponsor management
-│   ├── mobile_api/        # REST API for mobile apps
-│   └── admin_api/         # Admin API
-├── theme/                 # Tailwind CSS theme
-├── templates/             # Django templates
-├── tests/                 # Test suite
-└── league_gotta_bike/     # Main project settings
+│   ├── organizations/     # Leagues, teams, squads, clubs, practice groups
+│   ├── membership/        # Member management, roles, and seasons
+│   ├── events/            # Event management, RSVP, and attendance
+│   ├── messaging/         # Chat rooms, messages, and announcements
+│   ├── sponsors/          # Sponsor management and display
+│   └── mobile_api/        # REST API (django-ninja) for mobile/PWA
+├── theme/                 # Tailwind CSS theme (static_src/)
+├── templates/             # Global templates (account/, mfa/)
+├── tests/                 # Test suite (organized by app)
+└── league_gotta_bike/     # Main project settings, config, ASGI/WSGI
 ```
 
 ## Key Concepts
@@ -185,14 +194,17 @@ Organizations can create seasons with registration windows, capacity limits, and
 
 ## Environment Variables
 
-Key variables in `.env`:
+Key variables in `.env` (see `.env.example` for full template):
 
 - `DEBUG` - Enable debug mode (default: False)
 - `SECRET_KEY` - Django secret key
-- `DATABASE_URL` - Database connection string
+- `DATABASE_URL` - Database connection string (default: SQLite)
 - `RESEND_API_KEY` - Resend API key for emails
 - `DEFAULT_FROM_EMAIL` - Default sender email
+- `SINCH_APPLICATION_KEY` / `SINCH_APPLICATION_SECRET` - Sinch SMS verification
 - `LOGFIRE_TOKEN` - Logfire API token for monitoring
+- `USE_S3` - Enable Cloudflare R2 storage (default: False)
+- `AWS_*` - R2 storage credentials (when USE_S3=True)
 - `DJANGO_PORT` - Development server port (default: 8002)
 
 ## Contributing

@@ -75,7 +75,7 @@ ADDON_APPS = [
     "theme",
     "push_notifications",
     "django_tasks",
-    "django_tasks.backends.database",
+    "django_tasks_db",
     "channels",
     "allauth",
     "allauth.account",
@@ -277,7 +277,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 TASKS = {
     "default": {
-        "BACKEND": "django_tasks.backends.database.DatabaseBackend",
+        "BACKEND": "django_tasks_db.DatabaseBackend",
         "QUEUES": ["default", "high_priority", "low_priority"],
     }
 }
