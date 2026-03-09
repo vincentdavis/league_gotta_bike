@@ -26,10 +26,13 @@ class AccountAdapter(DefaultAccountAdapter):
                 logfire.info("Email contains verification key", key=context['key'])
 
             # Call the parent method to actually send the email
-            result = super().send_mail(template_prefix, email, context)
-
-            logfire.info("Email sent successfully", email=email)
-            return result
+            try:
+                result = super().send_mail(template_prefix, email, context)
+                logfire.info("Email sent successfully", email=email)
+                return result
+            except Exception as e:
+                logfire.error("Email sending failed", email=email, error=str(e))
+                return None
 
     def send_confirmation_mail(self, request, emailconfirmation, signup):
         """Override to add specific logging for confirmation emails."""
@@ -46,7 +49,10 @@ class AccountAdapter(DefaultAccountAdapter):
             )
 
             # Call the parent method
-            result = super().send_confirmation_mail(request, emailconfirmation, signup)
-
-            logfire.info("Confirmation email sent successfully")
-            return result
+            try:
+                result = super().send_confirmation_mail(request, emailconfirmation, signup)
+                logfire.info("Confirmation email sent successfully")
+                return result
+            except Exception as e:
+                logfire.error("Confirmation email sending failed", error=str(e))
+                return None

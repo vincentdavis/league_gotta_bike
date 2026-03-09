@@ -73,6 +73,8 @@ LOCAL_APPS = ["accounts", "apps.organizations", "apps.membership", "apps.events"
 ADDON_APPS = [
     "tailwind",
     "theme",
+    "constance",
+    "constance.backends.database",
     "push_notifications",
     "django_tasks",
     "django_tasks_db",
@@ -138,6 +140,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "league_gotta_bike.context_processors.mfa_settings",
+                "league_gotta_bike.context_processors.site_settings",
             ],
         },
     },
@@ -280,6 +283,33 @@ TASKS = {
         "BACKEND": "django_tasks_db.DatabaseBackend",
         "QUEUES": ["default", "high_priority", "low_priority"],
     }
+}
+
+# Django Constance - Site Settings
+# https://django-constance.readthedocs.io/
+
+CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
+
+CONSTANCE_CONFIG = {
+    "SITE_NAME": ("League Gotta Bike", "The name of the site displayed in headers and emails", str),
+    "SITE_TAGLINE": ("Cycling team management made easy", "Short tagline displayed on the landing page", str),
+    "SITE_MESSAGE": ("", "Optional message displayed site-wide (e.g., announcements, alerts). Leave blank to hide.", str),
+    "SUPPORT_EMAIL": ("support@gotta.bike", "Email address for user support inquiries", str),
+    "ALLOW_NEW_REGISTRATIONS": (True, "Allow new users to register accounts", bool),
+    "ALLOW_NEW_ORGANIZATIONS": (True, "Allow users to create new organizations", bool),
+    "MAX_MEMBERS_PER_ORGANIZATION": (500, "Default maximum members per organization", int),
+    "REQUIRE_EMAIL_VERIFICATION": (True, "Require email verification for new accounts", bool),
+    "REQUIRE_PHONE_VERIFICATION": (False, "Require phone verification for new accounts", bool),
+    "DEFAULT_SEASON_AUTO_APPROVE": (False, "Auto-approve season registrations by default", bool),
+    "MAINTENANCE_MODE": (False, "Enable maintenance mode (only staff can access the site)", bool),
+    "MAINTENANCE_MESSAGE": ("We are currently performing scheduled maintenance. Please check back soon.", "Message displayed during maintenance mode", str),
+}
+
+CONSTANCE_CONFIG_FIELDSETS = {
+    "General": ("SITE_NAME", "SITE_TAGLINE", "SITE_MESSAGE", "SUPPORT_EMAIL"),
+    "Registration": ("ALLOW_NEW_REGISTRATIONS", "ALLOW_NEW_ORGANIZATIONS", "REQUIRE_EMAIL_VERIFICATION", "REQUIRE_PHONE_VERIFICATION"),
+    "Organizations": ("MAX_MEMBERS_PER_ORGANIZATION", "DEFAULT_SEASON_AUTO_APPROVE"),
+    "Maintenance": ("MAINTENANCE_MODE", "MAINTENANCE_MESSAGE"),
 }
 
 # Email Configuration (django-anymail with Resend)
