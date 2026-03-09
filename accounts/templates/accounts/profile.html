@@ -78,6 +78,14 @@
 
                             <div class="divider"></div>
 
+                            <!-- Username (read-only) -->
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text font-semibold">Username</span>
+                                </label>
+                                <input type="text" value="{{ user.username }}" class="input input-bordered" disabled>
+                            </div>
+
                             <!-- First Name -->
                             <div class="form-control">
                                 <label class="label" for="{{ form.first_name.id_for_label }}">
@@ -120,6 +128,30 @@
                                         <span class="label-text-alt">{{ form.email.help_text }}</span>
                                     </label>
                                 {% endif %}
+
+                                <!-- Email Verification Status -->
+                                <div class="mt-2">
+                                    {% if email_verified %}
+                                        <span class="badge badge-success gap-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            Verified
+                                        </span>
+                                    {% else %}
+                                        <div class="flex items-center gap-2">
+                                            <span class="badge badge-warning gap-2">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                                </svg>
+                                                Not Verified
+                                            </span>
+                                            <a href="{% url 'account_email' %}" class="btn btn-sm btn-primary">
+                                                Verify Email
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                </div>
                             </div>
 
                             <!-- Phone Number -->

@@ -69,19 +69,6 @@
                         </label>
                     </div>
 
-                    <div class="form-control">
-                        <label class="label cursor-pointer justify-start gap-3">
-                            <input
-                                type="checkbox"
-                                name="{{ form.remember.name }}"
-                                id="{{ form.remember.id_for_label }}"
-                                class="checkbox checkbox-primary"
-                                {% if form.remember.value %}checked{% endif %}
-                            >
-                            <span class="label-text">{{ form.remember.label }}</span>
-                        </label>
-                    </div>
-
                     <div class="form-control mt-6">
                         <button type="submit" class="btn btn-primary w-full">
                             Sign In

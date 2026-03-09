@@ -20,6 +20,8 @@ from apps.messaging.models import ChatRoom
 from apps.events.models import Event, EventAttendee
 from apps.organizations.models import Organization
 
+from allauth.account.models import EmailAddress
+
 from .forms import UserProfileForm
 
 
@@ -47,9 +49,14 @@ def profile(request):
         'organization__parent'
     ).order_by('-modified_date')
 
+    email_verified = EmailAddress.objects.filter(
+        user=request.user, email=request.user.email, verified=True
+    ).exists()
+
     context = {
         'form': form,
         'memberships': memberships,
+        'email_verified': email_verified,
     }
 
     return render(request, 'accounts/profile.html', context)
