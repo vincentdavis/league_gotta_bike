@@ -230,17 +230,10 @@ if env_settings.USE_S3:
     AWS_STORAGE_BUCKET_NAME = env_settings.AWS_STORAGE_BUCKET_NAME
     AWS_S3_ENDPOINT_URL = env_settings.AWS_S3_ENDPOINT_URL
     AWS_S3_REGION_NAME = env_settings.AWS_S3_REGION_NAME
-    AWS_S3_CUSTOM_DOMAIN = env_settings.AWS_S3_CUSTOM_DOMAIN
-
-    # File storage settings
-    AWS_DEFAULT_ACL = "public-read"  # Make uploaded files publicly accessible
-    AWS_S3_OBJECT_PARAMETERS = {
-        "CacheControl": "max-age=86400",  # Cache for 1 day
-    }
-    AWS_QUERYSTRING_AUTH = False  # Don't add auth query params to URLs
     AWS_S3_FILE_OVERWRITE = False  # Don't overwrite files with same name
+    AWS_DEFAULT_ACL = None  # Let the bucket policy control access
 
-    # Use R2 for media files
+    # Use S3 for media files
     STORAGES = {
         "default": {
             "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
@@ -249,12 +242,6 @@ if env_settings.USE_S3:
             "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
         },
     }
-
-    # Media URL - use custom domain if configured, otherwise use R2 endpoint
-    if AWS_S3_CUSTOM_DOMAIN:
-        MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
-    else:
-        MEDIA_URL = f"{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/"
 else:
     # Local filesystem storage for development
     STORAGES = {

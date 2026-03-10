@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}403 Forbidden{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-center min-h-[60vh]">
+    <div class="text-center px-4">
+        <h1 class="text-8xl font-bold text-warning mb-4">403</h1>
+        <h2 class="text-2xl font-semibold text-gray-900 mb-4">Access Denied</h2>
+        <p class="text-gray-600 mb-8 max-w-md mx-auto">
+            You don't have permission to access this page. If you think this is a mistake, please contact the site administrator.
+        </p>
+        <div class="flex gap-3 justify-center">
+            <a href="/" class="btn btn-primary">Go Home</a>
+            <button onclick="history.back()" class="btn btn-ghost">Go Back</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

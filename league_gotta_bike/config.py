@@ -62,7 +62,6 @@ class Settings(BaseSettings):
     AWS_STORAGE_BUCKET_NAME: str = ""
     AWS_S3_ENDPOINT_URL: str = ""
     AWS_S3_REGION_NAME: str = "auto"
-    AWS_S3_CUSTOM_DOMAIN: str = ""
 
     @field_validator("ALLOWED_HOSTS", mode="after")
     @classmethod
