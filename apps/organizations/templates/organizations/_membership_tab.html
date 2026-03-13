@@ -1,5 +1,60 @@
 <!-- Membership Tab Content -->
 <div id="membership-content">
+    <!-- Quick Actions -->
+    <div class="flex flex-wrap gap-2 mb-6">
+        <a href="{% url 'membership:invite_link_list' slug=object.slug %}" class="btn btn-outline btn-sm gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+            </svg>
+            Invite Links
+        </a>
+        <a href="{% url 'membership:invite' slug=object.slug %}" class="btn btn-outline btn-sm gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+            </svg>
+            Invite by Username
+        </a>
+        <a href="{% url 'membership:request_list' slug=object.slug %}" class="btn btn-outline btn-sm gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            Join Requests
+        </a>
+    </div>
+
+    <!-- Membership Settings -->
+    <div class="mb-6">
+        <h3 class="text-lg font-semibold mb-3">Membership Requirements</h3>
+        <form method="post" action="?tab=membership">
+            {% csrf_token %}
+            <input type="hidden" name="membership_settings" value="1">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <label class="flex items-center gap-3 cursor-pointer p-3 bg-base-200 rounded-lg">
+                    <input type="checkbox" name="require_verified_email"
+                           class="checkbox checkbox-primary"
+                           {% if object.require_verified_email %}checked{% endif %}>
+                    <div>
+                        <span class="font-medium">Require verified email</span>
+                        <p class="text-sm text-gray-500">Members must verify their email address before joining</p>
+                    </div>
+                </label>
+                <label class="flex items-center gap-3 p-3 bg-base-200 rounded-lg opacity-50 cursor-not-allowed" title="Phone verification coming soon">
+                    <input type="checkbox" name="require_verified_phone"
+                           class="checkbox checkbox-primary"
+                           disabled
+                           {% if object.require_verified_phone %}checked{% endif %}>
+                    <div>
+                        <span class="font-medium">Require verified phone</span>
+                        <p class="text-sm text-gray-500">Coming soon — members will need to verify their phone number</p>
+                    </div>
+                </label>
+            </div>
+            <div class="mt-3">
+                <button type="submit" class="btn btn-primary btn-sm">Save Requirements</button>
+            </div>
+        </form>
+    </div>
+
     <!-- Summary Stats -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div class="stat bg-base-200 rounded-lg">

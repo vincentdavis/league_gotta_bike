@@ -28,4 +28,13 @@ urlpatterns = [
 
     # Sub-organization member management
     path('<slug:slug>/manage-members/', views.SubOrgMemberManagementView.as_view(), name='sub_org_manage_members'),
+
+    # Invite links (management)
+    path('<slug:slug>/invite-links/', views.InviteLinkListView.as_view(), name='invite_link_list'),
+    path('<slug:slug>/invite-links/create/', views.InviteLinkCreateView.as_view(), name='invite_link_create'),
+    path('invite-link/<int:pk>/toggle/', views.InviteLinkToggleView.as_view(), name='invite_link_toggle'),
+    path('invite-link/<int:pk>/delete/', views.InviteLinkDeleteView.as_view(), name='invite_link_delete'),
+
+    # Invite link acceptance (public)
+    path('join/<str:token>/', views.InviteAcceptView.as_view(), name='invite_accept'),
 ]

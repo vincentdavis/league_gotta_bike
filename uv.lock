@@ -669,6 +669,9 @@ wheels = [
 ]
 
 [package.optional-dependencies]
+cookiecutter = [
+    { name = "cookiecutter" },
+]
 honcho = [
     { name = "honcho" },
 ]
@@ -987,7 +990,7 @@ dev = [
     { name = "django-debug-toolbar" },
     { name = "django-reset-migrations" },
     { name = "django-stubs" },
-    { name = "django-tailwind", extra = ["honcho", "reload"] },
+    { name = "django-tailwind", extra = ["cookiecutter", "honcho", "reload"] },
     { name = "honcho" },
     { name = "logfire-mcp" },
     { name = "pytest" },
@@ -1031,7 +1034,7 @@ dev = [
     { name = "django-debug-toolbar", specifier = ">=6.2.0" },
     { name = "django-reset-migrations", specifier = ">=0.4.0" },
     { name = "django-stubs", specifier = ">=5.2.9" },
-    { name = "django-tailwind", extras = ["reload", "honcho", "reload"] },
+    { name = "django-tailwind", extras = ["cookiecutter", "honcho", "reload"] },
     { name = "honcho", specifier = ">=2.0.0" },
     { name = "logfire-mcp", specifier = ">=0.6.0" },
     { name = "pytest", specifier = ">=9.0.1" },

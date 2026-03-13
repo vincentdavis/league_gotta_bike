@@ -5,7 +5,8 @@ from django.core.exceptions import ValidationError
 from django.forms import inlineformset_factory
 
 from apps.membership.models import Season
-from .models import Organization, LeagueProfile, TeamProfile, SquadProfile, SocialMediaAccount
+
+from .models import LeagueProfile, Organization, SocialMediaAccount, SquadProfile, TeamProfile
 
 
 class OrganizationBaseForm(forms.ModelForm):
@@ -304,7 +305,8 @@ class OrganizationEditForm(forms.ModelForm):
         model = Organization
         fields = [
             'name', 'description', 'contact_email', 'contact_phone',
-            'website_url', 'logo', 'enable_member_chat', 'enable_news_channel', 'membership_open', 'is_active'
+            'website_url', 'logo', 'enable_member_chat', 'enable_news_channel',
+            'membership_open', 'require_verified_email', 'require_verified_phone', 'is_active'
         ]
         widgets = {
             'name': forms.TextInput(attrs={
@@ -336,6 +338,13 @@ class OrganizationEditForm(forms.ModelForm):
             }),
             'membership_open': forms.CheckboxInput(attrs={
                 'class': 'checkbox checkbox-primary'
+            }),
+            'require_verified_email': forms.CheckboxInput(attrs={
+                'class': 'checkbox checkbox-primary'
+            }),
+            'require_verified_phone': forms.CheckboxInput(attrs={
+                'class': 'checkbox checkbox-primary',
+                'disabled': 'disabled'
             }),
             'is_active': forms.CheckboxInput(attrs={
                 'class': 'checkbox checkbox-primary'
@@ -377,7 +386,7 @@ class TeamProfileForm(forms.ModelForm):
 
     class Meta:
         model = TeamProfile
-        fields = ['short_description', 'banner', 'team_type']
+        fields = ['short_description', 'banner', 'team_type', 'discord_url']
         widgets = {
             'short_description': forms.TextInput(attrs={
                 'class': 'input input-bordered w-full',
@@ -390,6 +399,10 @@ class TeamProfileForm(forms.ModelForm):
             }),
             'team_type': forms.Select(attrs={
                 'class': 'select select-bordered w-full'
+            }),
+            'discord_url': forms.URLInput(attrs={
+                'class': 'input input-bordered w-full',
+                'placeholder': 'https://discord.gg/your-invite'
             }),
         }
 

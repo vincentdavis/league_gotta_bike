@@ -1,0 +1,32 @@
+{% extends "organizations/base.html" %}
+
+{% block title %}Delete Invite Link - {{ organization.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 py-8">
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h2 class="card-title text-error">Delete Invite Link</h2>
+            <p class="text-gray-600 mt-2">
+                Are you sure you want to delete the invite link
+                <strong>"{{ object.label|default:"Invite Link" }}"</strong>
+                for {{ organization.name }}?
+            </p>
+            {% if object.use_count > 0 %}
+            <p class="text-sm text-gray-500 mt-1">
+                This link has been used {{ object.use_count }} time{{ object.use_count|pluralize }}.
+            </p>
+            {% endif %}
+
+            <div class="divider"></div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="flex justify-end gap-2">
+                    <a href="{% url 'membership:invite_link_list' slug=organization.slug %}" class="btn btn-ghost">Cancel</a>
+                    <button type="submit" class="btn btn-error">Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

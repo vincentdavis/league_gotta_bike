@@ -1,0 +1,95 @@
+{% extends "organizations/base.html" %}
+
+{% block title %}Invite Links - {{ organization.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-1">Invite Links</h1>
+            <p class="text-gray-600">{{ organization.name }}</p>
+        </div>
+        <a href="{% url 'membership:invite_link_create' slug=organization.slug %}" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            New Invite Link
+        </a>
+    </div>
+
+    {% if invite_links %}
+    <div class="space-y-4">
+        {% for link in invite_links %}
+        <div class="card bg-base-100 shadow">
+            <div class="card-body p-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 mb-1">
+                            <h3 class="font-semibold truncate">{{ link.label|default:"Invite Link" }}</h3>
+                            {% if link.is_valid %}
+                            <span class="badge badge-success badge-sm">Active</span>
+                            {% else %}
+                            <span class="badge badge-ghost badge-sm">Inactive</span>
+                            {% endif %}
+                        </div>
+                        <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500">
+                            <span>Used {{ link.use_count }} time{{ link.use_count|pluralize }}</span>
+                            {% if link.max_uses %}
+                            <span>Max: {{ link.max_uses }}</span>
+                            {% endif %}
+                            {% if link.expires_at %}
+                            <span>Expires: {{ link.expires_at|date:"M d, Y H:i" }}</span>
+                            {% endif %}
+                            <span>Created {{ link.created_at|date:"M d, Y" }}</span>
+                        </div>
+                        <!-- Copyable link -->
+                        <div class="mt-2 flex items-center gap-2">
+                            <input type="text"
+                                   value="{{ request.scheme }}://{{ request.get_host }}{% url 'membership:invite_accept' token=link.token %}"
+                                   readonly
+                                   class="input input-bordered input-sm flex-1 font-mono text-xs"
+                                   id="link-{{ link.pk }}" />
+                            <button type="button"
+                                    class="btn btn-ghost btn-sm"
+                                    onclick="navigator.clipboard.writeText(document.getElementById('link-{{ link.pk }}').value); this.textContent='Copied!'; setTimeout(() => this.textContent='Copy', 2000);">
+                                Copy
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <form method="post" action="{% url 'membership:invite_link_toggle' pk=link.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-ghost btn-sm">
+                                {% if link.is_active %}Deactivate{% else %}Activate{% endif %}
+                            </button>
+                        </form>
+                        <a href="{% url 'membership:invite_link_delete' pk=link.pk %}" class="btn btn-ghost btn-sm text-error">
+                            Delete
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card bg-base-100 shadow">
+        <div class="card-body text-center py-12">
+            <p class="text-gray-500 mb-4">No invite links yet. Create one to share with potential members.</p>
+            <a href="{% url 'membership:invite_link_create' slug=organization.slug %}" class="btn btn-primary btn-sm">
+                Create Invite Link
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="mt-6">
+        <a href="{% url 'organizations:organization_manage' slug=organization.slug %}" class="btn btn-ghost btn-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to Manage
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends "organizations/base.html" %}
+
+{% block title %}Pending Requests - {{ organization.name }} - League Gotta Bike{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Pending Requests</h1>
+            <p class="text-gray-600 mt-1">{{ organization.name }} - Review membership requests</p>
+        </div>
+        <a href="{% url 'membership:member_list' slug=organization.slug %}" class="btn btn-ghost">
+            &larr; Back to Members
+        </a>
+    </div>
+
+    <!-- Requests List -->
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            {% if requests %}
+            <div class="overflow-x-auto">
+                <table class="table table-zebra w-full">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Requested</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for membership_request in requests %}
+                        <tr>
+                            <td>
+                                <div class="flex items-center gap-3">
+                                    <div class="avatar placeholder">
+                                        <div class="bg-warning text-warning-content rounded-full w-12">
+                                            <span class="text-sm">{{ membership_request.user.first_name.0|upper }}{{ membership_request.user.last_name.0|upper }}</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="font-bold">{{ membership_request.user.get_full_name }}</div>
+                                        <div class="text-sm opacity-50">@{{ membership_request.user.username }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ membership_request.user.email }}</td>
+                            <td>{{ membership_request.join_date|date:"M d, Y" }}</td>
+                            <td>
+                                <a href="{% url 'membership:request_decision' membership_id=membership_request.id %}" class="btn btn-primary btn-sm">
+                                    Review
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <!-- Empty State -->
+            <div class="text-center py-12">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3 class="text-2xl font-bold text-gray-900 mb-2">No pending requests</h3>
+                <p class="text-gray-600">All membership requests have been processed.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="mt-6 text-center">
+        <a href="{{ organization.get_absolute_url }}" class="btn btn-ghost">
+            &larr; Back to {{ organization.name }}
+        </a>
+    </div>
+</div>
+{% endblock %}

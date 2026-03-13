@@ -1,0 +1,83 @@
+{% extends "organizations/base.html" %}
+
+{% block title %}Join {{ organization.name }} - League Gotta Bike{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto px-4 py-12">
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body items-center text-center">
+            <!-- Organization Info -->
+            {% if organization.logo %}
+            <img src="{{ organization.logo.url }}" alt="{{ organization.name }}" class="h-24 w-24 rounded-lg object-contain mb-2">
+            {% else %}
+            <div class="avatar placeholder mb-2">
+                <div class="bg-primary text-primary-content rounded-lg w-24">
+                    <span class="text-4xl">{{ organization.name.0|upper }}</span>
+                </div>
+            </div>
+            {% endif %}
+
+            <h1 class="text-2xl font-bold">{{ organization.name }}</h1>
+            <p class="text-gray-500">{{ organization.get_type_display }}</p>
+
+            {% if organization.description %}
+            <p class="text-gray-600 mt-2 max-w-md">{{ organization.description|truncatewords:40 }}</p>
+            {% endif %}
+
+            <div class="divider"></div>
+
+            {% if already_member %}
+            <div class="alert alert-info">
+                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>You are already a member of {{ organization.name }}.</span>
+            </div>
+            <a href="{{ organization.get_absolute_url }}" class="btn btn-primary mt-4">Go to {{ organization.get_type_display }}</a>
+
+            {% elif pending_request %}
+            <div class="alert alert-warning">
+                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span>You already have a pending request to join. This invite will activate your membership immediately.</span>
+            </div>
+            <form method="post" class="mt-4">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                    </svg>
+                    Join {{ organization.name }}
+                </button>
+            </form>
+
+            {% elif user.is_authenticated %}
+            <p class="text-lg mb-4">You've been invited to join <strong>{{ organization.name }}</strong>!</p>
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                    </svg>
+                    Join {{ organization.name }}
+                </button>
+            </form>
+
+            {% else %}
+            <p class="text-lg mb-4">You've been invited to join <strong>{{ organization.name }}</strong>!</p>
+            <p class="text-gray-500 mb-4">Log in or create an account to accept this invitation.</p>
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                    </svg>
+                    Log In &amp; Join
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

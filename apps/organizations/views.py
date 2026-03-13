@@ -6,33 +6,45 @@ import logfire
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db import transaction, models
+from django.db import models, transaction
 from django.db.models import Q
 from django.http import HttpResponse
-from django.shortcuts import render, get_object_or_404, redirect
-from django.urls import reverse, reverse_lazy
-from django.views.generic import DetailView, ListView, CreateView, UpdateView, DeleteView, TemplateView
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse
 from django.views import View
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
 
 from accounts.models import User
-from apps.membership.models import Membership, Season, MemberRole
 from apps.events.models import Event
+from apps.membership.models import MemberRole, Membership, Season
 from apps.sponsors.models import Sponsor
 
-from .models import Organization, LeagueProfile, TeamProfile, SquadProfile
 from .forms import (
-    LeagueCreateForm, TeamCreateForm, SquadCreateForm, ClubCreateForm, PracticeGroupCreateForm,
-    OrganizationEditForm, LeagueProfileForm, TeamProfileForm, SquadProfileForm, SeasonForm,
-    SocialMediaAccountFormSet
+    ClubCreateForm,
+    LeagueCreateForm,
+    LeagueProfileForm,
+    OrganizationEditForm,
+    PracticeGroupCreateForm,
+    SeasonForm,
+    SocialMediaAccountFormSet,
+    SquadCreateForm,
+    SquadProfileForm,
+    TeamCreateForm,
+    TeamProfileForm,
 )
 from .mixins import UserNameRequiredMixin
+from .models import Organization
 from .permissions import (
-    OrgOwnerRequiredMixin, OrgAdminRequiredMixin,
-    is_org_admin, get_user_membership, can_create_sub_organization, can_manage_members
+    OrgAdminRequiredMixin,
+    OrgOwnerRequiredMixin,
+    can_create_sub_organization,
+    can_manage_members,
+    get_user_membership,
+    is_org_admin,
 )
 
-
 # Redirect Views (auto-route to member or guest based on membership)
+
 
 class LeagueRedirectView(View):
     """Redirect to member or guest view based on user membership status."""
@@ -93,6 +105,7 @@ class TeamRedirectView(View):
 
 class LeagueMemberView(LoginRequiredMixin, DetailView):
     """Display details of a league (members only)"""
+
     model = Organization
     template_name = 'organizations/league_detail.html'
     context_object_name = 'league'
@@ -169,6 +182,7 @@ class LeagueMemberView(LoginRequiredMixin, DetailView):
 
 class TeamMemberView(LoginRequiredMixin, DetailView):
     """Display details of a team (members only)"""
+
     model = Organization
     template_name = 'organizations/team_detail.html'
     context_object_name = 'team'
@@ -271,6 +285,7 @@ class TeamMemberView(LoginRequiredMixin, DetailView):
 
 class OrganizationDetailView(DetailView):
     """Display details of a sub-organization (squad, club, etc.)"""
+
     model = Organization
     template_name = 'organizations/organization_detail.html'
     context_object_name = 'organization'
@@ -321,6 +336,7 @@ class OrganizationDetailView(DetailView):
 
 class LeagueGuestView(DetailView):
     """Public/guest view of a league for non-members and non-logged-in users."""
+
     model = Organization
     template_name = 'organizations/league_guest.html'
     context_object_name = 'league'
@@ -358,6 +374,7 @@ class LeagueGuestView(DetailView):
 
 class TeamGuestView(DetailView):
     """Public/guest view of a team for non-members and non-logged-in users."""
+
     model = Organization
     template_name = 'organizations/team_guest.html'
     context_object_name = 'team'
@@ -408,6 +425,7 @@ class TeamGuestView(DetailView):
 
 class LeagueListView(ListView):
     """Display list of all leagues and teams with search"""
+
     model = Organization
     template_name = 'organizations/league_list.html'
     context_object_name = 'organizations'
@@ -504,6 +522,7 @@ class LeagueListView(ListView):
 
 class UserOrganizationsView(LoginRequiredMixin, ListView):
     """Display all organizations the user is a member of"""
+
     model = Membership
     template_name = 'organizations/user_organizations.html'
     context_object_name = 'memberships'
@@ -536,6 +555,7 @@ class UserOrganizationsView(LoginRequiredMixin, ListView):
 
 class OrganizationTypeSelectView(LoginRequiredMixin, TemplateView):
     """View for selecting organization type to create."""
+
     template_name = 'organizations/organization_type_select.html'
 
     def get_context_data(self, **kwargs):
@@ -562,6 +582,7 @@ class OrganizationTypeSelectView(LoginRequiredMixin, TemplateView):
 
 class LeagueCreateView(UserNameRequiredMixin, LoginRequiredMixin, CreateView):
     """View for creating a new league."""
+
     model = Organization
     form_class = LeagueCreateForm
     template_name = 'organizations/organization_create.html'
@@ -591,6 +612,7 @@ class LeagueCreateView(UserNameRequiredMixin, LoginRequiredMixin, CreateView):
 
 class TeamCreateView(UserNameRequiredMixin, LoginRequiredMixin, CreateView):
     """View for creating a new team."""
+
     model = Organization
     form_class = TeamCreateForm
     template_name = 'organizations/organization_create.html'
@@ -620,6 +642,7 @@ class TeamCreateView(UserNameRequiredMixin, LoginRequiredMixin, CreateView):
 
 class SquadCreateView(UserNameRequiredMixin, LoginRequiredMixin, CreateView):
     """View for creating a new squad."""
+
     model = Organization
     form_class = SquadCreateForm
     template_name = 'organizations/organization_create.html'
@@ -665,6 +688,7 @@ class SquadCreateView(UserNameRequiredMixin, LoginRequiredMixin, CreateView):
 
 class ClubCreateView(UserNameRequiredMixin, LoginRequiredMixin, CreateView):
     """View for creating a new club."""
+
     model = Organization
     form_class = ClubCreateForm
     template_name = 'organizations/organization_create.html'
@@ -710,6 +734,7 @@ class ClubCreateView(UserNameRequiredMixin, LoginRequiredMixin, CreateView):
 
 class PracticeGroupCreateView(UserNameRequiredMixin, LoginRequiredMixin, CreateView):
     """View for creating a new practice group."""
+
     model = Organization
     form_class = PracticeGroupCreateForm
     template_name = 'organizations/organization_create.html'
@@ -765,6 +790,7 @@ class PracticeGroupCreateView(UserNameRequiredMixin, LoginRequiredMixin, CreateV
 
 class OrganizationEditView(OrgAdminRequiredMixin, UpdateView):
     """View for editing organization basic details."""
+
     model = Organization
     form_class = OrganizationEditForm
     template_name = 'organizations/organization_edit.html'
@@ -879,6 +905,7 @@ class OrganizationEditView(OrgAdminRequiredMixin, UpdateView):
 
 class OrganizationSettingsView(OrgAdminRequiredMixin, DetailView):
     """View for organization settings page."""
+
     model = Organization
     template_name = 'organizations/organization_settings.html'
     slug_url_kwarg = 'slug'
@@ -902,6 +929,7 @@ class OrganizationSettingsView(OrgAdminRequiredMixin, DetailView):
 
 class OrganizationDeleteView(OrgOwnerRequiredMixin, DeleteView):
     """View for deleting an organization."""
+
     model = Organization
     template_name = 'organizations/organization_delete_confirm.html'
     slug_url_kwarg = 'slug'
@@ -929,6 +957,7 @@ class OrganizationDeleteView(OrgOwnerRequiredMixin, DeleteView):
 
 class SeasonListView(LoginRequiredMixin, ListView):
     """List all seasons for a League or Team."""
+
     model = Season
     template_name = 'organizations/season_list.html'
     context_object_name = 'seasons'
@@ -957,6 +986,7 @@ class SeasonListView(LoginRequiredMixin, ListView):
 
 class SeasonCreateView(OrgAdminRequiredMixin, CreateView):
     """Create a new season for a League or Team."""
+
     model = Season
     form_class = SeasonForm
     template_name = 'organizations/season_form.html'
@@ -996,6 +1026,7 @@ class SeasonCreateView(OrgAdminRequiredMixin, CreateView):
 
 class SeasonEditView(OrgAdminRequiredMixin, UpdateView):
     """Edit an existing season."""
+
     model = Season
     form_class = SeasonForm
     template_name = 'organizations/season_form.html'
@@ -1041,6 +1072,7 @@ class SeasonEditView(OrgAdminRequiredMixin, UpdateView):
 
 class SeasonDeleteView(OrgOwnerRequiredMixin, DeleteView):
     """Delete a season (Owners only)."""
+
     model = Season
     template_name = 'organizations/season_delete_confirm.html'
     slug_url_kwarg = 'season_slug'
@@ -1220,7 +1252,7 @@ def import_members_csv(request, slug):
                     updated_count += 1
 
             except Exception as e:
-                errors.append(f"Row {row_num}: {str(e)}")
+                errors.append(f"Row {row_num}: {e!s}")
                 error_count += 1
 
         # Show success/error messages
@@ -1246,7 +1278,7 @@ def import_members_csv(request, slug):
         )
 
     except Exception as e:
-        messages.error(request, f"Error processing CSV file: {str(e)}")
+        messages.error(request, f"Error processing CSV file: {e!s}")
         logfire.error(
             "CSV import failed",
             organization_id=organization.id,
@@ -1276,14 +1308,14 @@ def download_csv_template(request):
 
 
 class OrganizationManageView(OrgAdminRequiredMixin, UpdateView):
-    """
-    Unified management page for Leagues and Teams with three tabs:
+    """Unified management page for Leagues and Teams with three tabs:
     - Membership: List members with filters for permissions, roles, and status
     - Seasons: List and manage seasons
     - Profile: Edit organization profile
 
     Only available for LEAGUE and TEAM organization types.
     """
+
     model = Organization
     form_class = OrganizationEditForm
     template_name = 'organizations/organization_manage.html'
@@ -1296,6 +1328,17 @@ class OrganizationManageView(OrgAdminRequiredMixin, UpdateView):
             messages.error(request, "Management page is only available for Leagues and Teams.")
             return redirect(self.object.get_absolute_url())
         return super().dispatch(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        """Handle POST requests, routing membership settings separately."""
+        if request.POST.get('membership_settings'):
+            org = self.get_object()
+            org.require_verified_email = 'require_verified_email' in request.POST
+            # require_verified_phone is disabled in the UI, so don't update it
+            org.save(update_fields=['require_verified_email'])
+            messages.success(request, "Membership requirements updated.")
+            return redirect(f"{org.get_absolute_url()}manage/?tab=membership")
+        return super().post(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1409,5 +1452,3 @@ class OrganizationManageView(OrgAdminRequiredMixin, UpdateView):
     def get_success_url(self):
         """Return to manage page with profile tab active."""
         return f"{self.object.get_absolute_url()}manage/?tab=profile"
-
-

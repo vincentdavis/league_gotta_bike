@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Membership, MemberRole, Season, SeasonMembership
+from .models import Membership, MemberRole, Season, SeasonMembership, InviteLink
 
 
 class MemberRoleInline(admin.TabularInline):
@@ -192,3 +192,11 @@ class SeasonMembershipAdmin(admin.ModelAdmin):
     def get_organization(self, obj):
         """Display the organization from the membership"""
         return obj.membership.organization.name
+
+
+@admin.register(InviteLink)
+class InviteLinkAdmin(admin.ModelAdmin):
+    list_display = ['label', 'organization', 'is_active', 'use_count', 'max_uses', 'expires_at', 'created_at']
+    list_filter = ['is_active', 'organization']
+    search_fields = ['label', 'organization__name', 'token']
+    readonly_fields = ['token', 'use_count', 'created_at']

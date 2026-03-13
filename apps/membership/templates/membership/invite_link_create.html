@@ -1,0 +1,53 @@
+{% extends "organizations/base.html" %}
+
+{% block title %}Create Invite Link - {{ organization.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 py-8">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900 mb-1">Create Invite Link</h1>
+        <p class="text-gray-600">{{ organization.name }}</p>
+    </div>
+
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-error mb-4">
+                    {% for error in form.non_field_errors %}
+                    <span>{{ error }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% for field in form %}
+                <div class="form-control mb-4">
+                    <label class="label">
+                        <span class="label-text font-medium">{{ field.label }}</span>
+                    </label>
+                    {{ field }}
+                    {% if field.help_text %}
+                    <label class="label">
+                        <span class="label-text-alt text-gray-500">{{ field.help_text }}</span>
+                    </label>
+                    {% endif %}
+                    {% if field.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ field.errors.0 }}</span>
+                    </label>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+                <div class="divider"></div>
+                <div class="flex justify-end gap-2">
+                    <a href="{% url 'membership:invite_link_list' slug=organization.slug %}" class="btn btn-ghost">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Create Link</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

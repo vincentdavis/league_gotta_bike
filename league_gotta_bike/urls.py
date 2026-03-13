@@ -19,12 +19,17 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+from apps.analytics.api import api as analytics_api
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     # Custom accounts URLs (must come before allauth)
     path('accounts/', include('accounts.urls')),
     # Django-allauth URLs
     path('accounts/', include('allauth.urls')),
+    # Analytics
+    path('analytics/', include('apps.analytics.urls')),
+    path('api/analytics/', analytics_api.urls),
 ]
 
 # Development-only URLs

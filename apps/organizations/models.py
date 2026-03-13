@@ -130,6 +130,14 @@ class Organization(models.Model):
         default=True,
         help_text="Allow new members to join this organization"
     )
+    require_verified_email = models.BooleanField(
+        default=False,
+        help_text="Require members to have a verified email address"
+    )
+    require_verified_phone = models.BooleanField(
+        default=False,
+        help_text="Require members to have a verified phone number"
+    )
 
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
@@ -452,6 +460,10 @@ class TeamProfile(models.Model):
         blank=True,
         null=True,
         help_text="Banner image displayed at the top of the team page"
+    )
+    discord_url = models.URLField(
+        blank=True,
+        help_text="Discord guild/server invite link (e.g. https://discord.gg/your-invite)"
     )
 
     class Meta:

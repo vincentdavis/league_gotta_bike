@@ -4,7 +4,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 
-from .models import Membership
+from .models import Membership, InviteLink
 
 User = get_user_model()
 
@@ -229,3 +229,31 @@ class MemberRoleManagementForm(forms.Form):
         if membership:
             existing_role_types = [role.role_type for role in membership.member_roles.all()]
             self.fields['roles'].initial = existing_role_types
+
+
+class InviteLinkCreateForm(forms.ModelForm):
+    """Form for creating an invite link."""
+
+    class Meta:
+        model = InviteLink
+        fields = ['label', 'max_uses', 'expires_at']
+        widgets = {
+            'label': forms.TextInput(attrs={
+                'class': 'input input-bordered w-full',
+                'placeholder': 'e.g. Spring 2026 sign-up',
+            }),
+            'max_uses': forms.NumberInput(attrs={
+                'class': 'input input-bordered w-full',
+                'min': '1',
+                'placeholder': 'Leave blank for unlimited',
+            }),
+            'expires_at': forms.DateTimeInput(attrs={
+                'class': 'input input-bordered w-full',
+                'type': 'datetime-local',
+            }),
+        }
+        labels = {
+            'label': 'Label (optional)',
+            'max_uses': 'Max Uses (optional)',
+            'expires_at': 'Expires At (optional)',
+        }

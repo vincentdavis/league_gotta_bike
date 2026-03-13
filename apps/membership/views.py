@@ -1,32 +1,59 @@
 """Views for membership management."""
 
+from allauth.account.models import EmailAddress
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, FormView, View
-from django.views.generic.detail import SingleObjectMixin
+from django.views.generic import DeleteView, DetailView, FormView, ListView, UpdateView, View
 
-from apps.organizations.models import Organization
 from apps.organizations.mixins import UserNameRequiredMixin
+from apps.organizations.models import Organization
 from apps.organizations.permissions import (
-    OrgMemberManagerRequiredMixin, OrgMemberRequiredMixin,
-    is_org_member, get_user_membership
+    OrgMemberManagerRequiredMixin,
+    OrgMemberRequiredMixin,
+    get_user_membership,
+    is_org_member,
 )
 
-from .models import Membership, MemberRole, Season, SeasonMembership
 from .forms import (
-    MembershipInviteForm, MembershipPermissionUpdateForm,
-    MembershipStatusUpdateForm, MembershipRequestForm,
-    MembershipRequestDecisionForm, MemberRoleManagementForm
+    InviteLinkCreateForm,
+    MemberRoleManagementForm,
+    MembershipInviteForm,
+    MembershipPermissionUpdateForm,
+    MembershipRequestDecisionForm,
+    MembershipRequestForm,
 )
+from .models import InviteLink, MemberRole, Membership, Season, SeasonMembership
+
+
+def _check_verification_requirements(user, organization):
+    """Check if user meets the organization's verification requirements.
+
+    Returns an error message string if requirements are not met, or None if OK.
+    """
+    if organization.require_verified_email:
+        has_verified = EmailAddress.objects.filter(user=user, verified=True).exists()
+        if not has_verified:
+            return (
+                f'{organization.name} requires a verified email address. '
+                'Please verify your email before joining.'
+            )
+    if organization.require_verified_phone and not getattr(user, 'phone_verified', False):
+        return (
+            f'{organization.name} requires a verified phone number. '
+            'Please verify your phone number before joining.'
+        )
+    return None
 
 
 # Member List Views
 
+
 class MemberListView(OrgMemberRequiredMixin, ListView):
     """View showing all members of an organization."""
+
     model = Membership
     template_name = 'membership/member_list.html'
     context_object_name = 'memberships'
@@ -76,6 +103,7 @@ class MemberListView(OrgMemberRequiredMixin, ListView):
 
 class MemberDetailView(OrgMemberRequiredMixin, DetailView):
     """View showing member details within an organization."""
+
     model = Membership
     template_name = 'membership/member_detail.html'
     context_object_name = 'membership'
@@ -96,6 +124,7 @@ class MemberDetailView(OrgMemberRequiredMixin, DetailView):
 
 class MembershipRequestView(UserNameRequiredMixin, LoginRequiredMixin, FormView):
     """View for requesting to join an organization."""
+
     template_name = 'membership/request_join.html'
     form_class = MembershipRequestForm
 
@@ -111,6 +140,12 @@ class MembershipRequestView(UserNameRequiredMixin, LoginRequiredMixin, FormView)
     def form_valid(self, form):
         """Create membership request."""
         organization = self.get_organization()
+
+        # Check verification requirements
+        verification_error = _check_verification_requirements(self.request.user, organization)
+        if verification_error:
+            messages.error(self.request, verification_error)
+            return redirect(organization.get_absolute_url())
 
         # Check if already a member
         if is_org_member(self.request.user, organization):
@@ -145,6 +180,7 @@ class MembershipRequestView(UserNameRequiredMixin, LoginRequiredMixin, FormView)
 
 class MembershipRequestListView(OrgMemberManagerRequiredMixin, ListView):
     """View for admins to see pending join requests."""
+
     model = Membership
     template_name = 'membership/request_list.html'
     context_object_name = 'requests'
@@ -169,6 +205,7 @@ class MembershipRequestListView(OrgMemberManagerRequiredMixin, ListView):
 
 class MembershipRequestDecisionView(OrgMemberManagerRequiredMixin, UpdateView):
     """View for admins to approve/reject join requests."""
+
     model = Membership
     form_class = MembershipRequestDecisionForm
     template_name = 'membership/request_decision.html'
@@ -205,6 +242,7 @@ class MembershipRequestDecisionView(OrgMemberManagerRequiredMixin, UpdateView):
 
 class MembershipInviteView(OrgMemberManagerRequiredMixin, FormView):
     """View for inviting users to join an organization."""
+
     template_name = 'membership/invite.html'
     form_class = MembershipInviteForm
 
@@ -319,6 +357,7 @@ class MembershipLeaveView(LoginRequiredMixin, View):
 
 class MembershipRoleUpdateView(OrgMemberManagerRequiredMixin, UpdateView):
     """View for updating a member's role."""
+
     model = Membership
     form_class = MembershipPermissionUpdateForm
     template_name = 'membership/role_update.html'
@@ -349,6 +388,7 @@ class MembershipRoleUpdateView(OrgMemberManagerRequiredMixin, UpdateView):
 
 class MemberRoleManagementView(OrgMemberManagerRequiredMixin, FormView):
     """View for managing member organizational roles."""
+
     template_name = 'membership/role_management.html'
     form_class = MemberRoleManagementForm
 
@@ -425,6 +465,7 @@ class MemberRoleManagementView(OrgMemberManagerRequiredMixin, FormView):
 
 class MembershipRemoveView(OrgMemberManagerRequiredMixin, DeleteView):
     """View for removing a member from an organization."""
+
     model = Membership
     template_name = 'membership/member_remove_confirm.html'
     pk_url_kwarg = 'membership_id'
@@ -470,6 +511,7 @@ class MembershipRemoveView(OrgMemberManagerRequiredMixin, DeleteView):
 
 class SubOrgMemberManagementView(OrgMemberManagerRequiredMixin, View):
     """View for managing members of a sub-organization (Squad, Club, Practice Group)."""
+
     template_name = 'membership/sub_org_member_management.html'
 
     def get_organization(self):
@@ -589,6 +631,7 @@ class SubOrgMemberManagementView(OrgMemberManagerRequiredMixin, View):
 
 class SeasonDetailView(DetailView):
     """Public view of a season with registration options."""
+
     model = Season
     template_name = 'membership/season_detail.html'
     context_object_name = 'season'
@@ -639,3 +682,173 @@ class SeasonDetailView(DetailView):
                 pass
 
         return context
+
+
+# Invite Link Views
+
+class InviteLinkListView(OrgMemberManagerRequiredMixin, ListView):
+    """View for managing invite links for an organization."""
+
+    model = InviteLink
+    template_name = 'membership/invite_link_list.html'
+    context_object_name = 'invite_links'
+
+    def get_organization(self):
+        return get_object_or_404(Organization, slug=self.kwargs['slug'])
+
+    def get_queryset(self):
+        return InviteLink.objects.filter(organization=self.get_organization())
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['organization'] = self.get_organization()
+        return context
+
+
+class InviteLinkCreateView(OrgMemberManagerRequiredMixin, FormView):
+    """View for creating a new invite link."""
+
+    template_name = 'membership/invite_link_create.html'
+    form_class = InviteLinkCreateForm
+
+    def get_organization(self):
+        return get_object_or_404(Organization, slug=self.kwargs['slug'])
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['organization'] = self.get_organization()
+        return context
+
+    def form_valid(self, form):
+        organization = self.get_organization()
+        invite_link = form.save(commit=False)
+        invite_link.organization = organization
+        invite_link.created_by = self.request.user
+        invite_link.save()
+        messages.success(self.request, 'Invite link created.')
+        return redirect('membership:invite_link_list', slug=organization.slug)
+
+
+class InviteLinkToggleView(OrgMemberManagerRequiredMixin, View):
+    """Toggle an invite link active/inactive."""
+
+    def get_organization(self):
+        invite_link = get_object_or_404(InviteLink, pk=self.kwargs['pk'])
+        return invite_link.organization
+
+    def post(self, request, pk):
+        invite_link = get_object_or_404(InviteLink, pk=pk)
+        invite_link.is_active = not invite_link.is_active
+        invite_link.save(update_fields=['is_active'])
+        status = 'activated' if invite_link.is_active else 'deactivated'
+        messages.success(request, f'Invite link {status}.')
+        return redirect('membership:invite_link_list', slug=invite_link.organization.slug)
+
+
+class InviteLinkDeleteView(OrgMemberManagerRequiredMixin, DeleteView):
+    """Delete an invite link."""
+
+    model = InviteLink
+    pk_url_kwarg = 'pk'
+    template_name = 'membership/invite_link_confirm_delete.html'
+
+    def get_organization(self):
+        return self.get_object().organization
+
+    def get_success_url(self):
+        return reverse('membership:invite_link_list', kwargs={'slug': self.get_object().organization.slug})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['organization'] = self.get_object().organization
+        return context
+
+
+class InviteAcceptView(View):
+    """Public view for accepting an invite link.
+
+    GET: Shows confirmation page with organization info.
+    POST: Joins the user to the organization.
+    """
+
+    def get(self, request, token):
+        invite_link = get_object_or_404(InviteLink, token=token)
+
+        if not invite_link.is_valid:
+            return render(request, 'membership/invite_invalid.html', {
+                'organization': invite_link.organization,
+            })
+
+        context = {
+            'invite_link': invite_link,
+            'organization': invite_link.organization,
+        }
+
+        # Check membership status if authenticated
+        if request.user.is_authenticated:
+            existing = Membership.objects.filter(
+                user=request.user, organization=invite_link.organization
+            ).first()
+            if existing and existing.status == Membership.ACTIVE:
+                context['already_member'] = True
+            elif existing and existing.status == Membership.PROSPECT:
+                context['pending_request'] = True
+
+        return render(request, 'membership/invite_accept.html', context)
+
+    def post(self, request, token):
+        invite_link = get_object_or_404(InviteLink, token=token)
+
+        if not invite_link.is_valid:
+            messages.error(request, 'This invite link is no longer valid.')
+            return redirect('organizations:league_list')
+
+        # Must be logged in to join
+        if not request.user.is_authenticated:
+            # Store the invite URL in session so we can redirect back after login
+            request.session['pending_invite_token'] = token
+            messages.info(request, 'Please log in or create an account to join.')
+            from urllib.parse import urlencode
+
+            from django.urls import reverse as url_reverse
+            login_url = url_reverse('account_login')
+            next_url = reverse('membership:invite_accept', kwargs={'token': token})
+            return redirect(f'{login_url}?{urlencode({"next": next_url})}')
+
+        organization = invite_link.organization
+
+        # Check verification requirements
+        verification_error = _check_verification_requirements(request.user, organization)
+        if verification_error:
+            messages.error(request, verification_error)
+            return redirect(reverse('membership:invite_accept', kwargs={'token': token}))
+
+        # Check if already a member
+        existing = Membership.objects.filter(
+            user=request.user, organization=organization
+        ).first()
+
+        if existing and existing.status == Membership.ACTIVE:
+            messages.info(request, f'You are already a member of {organization.name}.')
+            return redirect(organization.get_absolute_url())
+
+        if existing and existing.status == Membership.PROSPECT:
+            # Upgrade prospect to active member
+            existing.status = Membership.ACTIVE
+            existing.save(update_fields=['status'])
+        elif existing:
+            # Reactivate inactive/expired membership
+            existing.status = Membership.ACTIVE
+            existing.save(update_fields=['status'])
+        else:
+            # Create new membership
+            Membership.objects.create(
+                user=request.user,
+                organization=organization,
+                permission_level=Membership.MEMBER,
+                status=Membership.ACTIVE,
+            )
+
+        invite_link.record_use()
+        messages.success(request, f'Welcome! You have joined {organization.name}.')
+        return redirect(organization.get_absolute_url())

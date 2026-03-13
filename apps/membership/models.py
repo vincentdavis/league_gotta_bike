@@ -1,6 +1,9 @@
+import secrets
+
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.text import slugify
 
@@ -537,3 +540,73 @@ class SeasonMembership(models.Model):
 
         self.full_clean()
         super().save(*args, **kwargs)
+
+
+def _generate_invite_token():
+    """Generate a unique URL-safe token for invite links."""
+    return secrets.token_urlsafe(32)
+
+
+class InviteLink(models.Model):
+    """A shareable link that allows users to join an organization.
+
+    Admins/managers create invite links with optional constraints (max uses, expiry).
+    Anyone with the link can visit the confirmation page and join.
+    """
+
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="invite_links",
+        help_text="Organization this invite link is for",
+    )
+    token = models.CharField(
+        max_length=64, unique=True, default=_generate_invite_token, db_index=True,
+        help_text="Unique token used in the invite URL",
+    )
+    created_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, related_name="created_invite_links",
+        help_text="User who created this invite link",
+    )
+    label = models.CharField(
+        max_length=100, blank=True,
+        help_text="Optional label to identify this link (e.g. 'Spring 2026 sign-up')",
+    )
+    max_uses = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text="Maximum number of times this link can be used (blank = unlimited)",
+    )
+    use_count = models.PositiveIntegerField(default=0, help_text="Number of times this link has been used")
+    expires_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="When this link expires (blank = never)",
+    )
+    is_active = models.BooleanField(default=True, help_text="Whether this link is currently active")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["organization", "is_active"]),
+        ]
+
+    def __str__(self):
+        label = self.label or "Invite link"
+        return f"{label} - {self.organization.name}"
+
+    @property
+    def is_valid(self):
+        """Check if this invite link can still be used."""
+        if not self.is_active:
+            return False
+        if self.max_uses is not None and self.use_count >= self.max_uses:
+            return False
+        if self.expires_at and timezone.now() >= self.expires_at:
+            return False
+        return True
+
+    def get_absolute_url(self):
+        return reverse("membership:invite_accept", kwargs={"token": self.token})
+
+    def record_use(self):
+        """Increment use_count atomically."""
+        InviteLink.objects.filter(pk=self.pk).update(use_count=models.F("use_count") + 1)
+        self.refresh_from_db(fields=["use_count"])
