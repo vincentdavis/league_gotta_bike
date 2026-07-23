@@ -54,8 +54,9 @@
                                         id="{{ field.id_for_label }}"
                                         class="input input-bordered w-full font-mono text-center text-2xl tracking-widest {% if field.errors %}input-error{% endif %}"
                                         placeholder="000000"
-                                        maxlength="6"
-                                        pattern="[0-9]{6}"
+                                        {# 6 digits for TOTP, 8 for a recovery code -- both post to this same field #}
+                                        maxlength="8"
+                                        pattern="[0-9]*"
                                         inputmode="numeric"
                                         autocomplete="one-time-code"
                                         {% if field.field.required %}required{% endif %}
@@ -132,7 +133,7 @@
                                     type="text"
                                     name="code"
                                     class="input input-bordered w-full font-mono"
-                                    placeholder="xxxxxxxx-xxxx-xxxx"
+                                    placeholder="00000000"
                                     required
                                 >
                                 <button type="submit" class="btn btn-sm btn-outline w-full">

@@ -50,7 +50,8 @@
                                     autocomplete="one-time-code"
                                     inputmode="numeric"
                                     pattern="[0-9]*"
-                                    maxlength="6"
+                                    {# 6 digits for TOTP, 8 for a recovery code -- both post to this same field #}
+                                    maxlength="8"
                                 >
                                 {% if field.help_text %}
                                     <label class="label">

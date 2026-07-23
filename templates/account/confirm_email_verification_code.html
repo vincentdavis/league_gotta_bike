@@ -44,11 +44,14 @@
                             type="text"
                             name="{{ form.code.name }}"
                             id="{{ form.code.id_for_label }}"
-                            class="input input-bordered input-lg w-full text-center tracking-widest {% if form.code.errors %}input-error{% endif %}"
-                            placeholder="Enter code"
+                            class="input input-bordered input-lg w-full text-center tracking-widest uppercase {% if form.code.errors %}input-error{% endif %}"
+                            placeholder="XXXX-XXXX"
                             autocomplete="one-time-code"
-                            inputmode="numeric"
-                            maxlength="6"
+                            inputmode="text"
+                            autocapitalize="characters"
+                            autocorrect="off"
+                            spellcheck="false"
+                            maxlength="12"
                             required
                         >
                         {% if form.code.help_text %}
