@@ -10,9 +10,18 @@ WORKDIR /app
 COPY . .
 
 # Install project dependencies.
-RUN uv sync --frozen
+RUN uv sync --frozen --compile-bytecode
 
-# Entrypoint script to handle migrations, collectstatic, and start the app.
+# Install Tailwind CSS dependencies
+RUN uv run python manage.py tailwind install
+
+# Build Tailwind CSS
+RUN uv run python manage.py tailwind build
+
+# Collect static files (WhiteNoise serves from this directory)
+RUN uv run python manage.py collectstatic --noinput
+
+# Entrypoint script to handle migrations, superuser, and start the app.
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 

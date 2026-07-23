@@ -3,24 +3,9 @@
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
-# Install production dependencies
-echo "Installing production dependencies..."
-uv sync --frozen
-
-# Install Tailwind CSS dependencies and build
-echo "Installing Tailwind CSS dependencies..."
-uv run manage.py tailwind install
-
-echo "Building Tailwind CSS for production..."
-uv run manage.py tailwind build
-
 # Run Django migrations.
 echo "Running migrations..."
 uv run manage.py migrate
-
-# Collect static files.
-echo "Collecting static files..."
-uv run manage.py collectstatic --noinput
 
 # EnsureSuperuser
 echo "Ensuring Superuser..."
