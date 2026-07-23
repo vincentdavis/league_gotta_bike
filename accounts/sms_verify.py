@@ -1,7 +1,7 @@
 """SMS phone verification using the Sinch Verification REST API.
 
 The Sinch Python SDK 2.x dropped the managed Verification product, so this
-module talks to the Verification REST API directly with httpx. The managed
+module talks to the Verification REST API directly with httpx2. The managed
 flow is unchanged: Sinch generates, sends, and validates the code -- we only
 start a verification and report the code the user entered.
 
@@ -18,7 +18,7 @@ import hmac
 import json
 from datetime import UTC, datetime
 
-import httpx
+import httpx2
 import logfire
 import phonenumbers
 from django.conf import settings
@@ -140,14 +140,14 @@ def _signed_request(method, path, payload):
     headers = _build_signed_headers(method, path, body)
 
     try:
-        response = httpx.request(
+        response = httpx2.request(
             method,
             VERIFICATION_ORIGIN + path,
             content=body.encode(),
             headers=headers,
             timeout=REQUEST_TIMEOUT_SECONDS,
         )
-    except httpx.HTTPError as e:
+    except httpx2.HTTPError as e:
         raise SinchVerificationError(f"Sinch request failed: {e}") from e
 
     try:
