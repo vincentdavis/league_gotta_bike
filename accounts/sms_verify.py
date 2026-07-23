@@ -1,5 +1,24 @@
-"""SMS phone verification using Sinch Verification API with Python SDK."""
+"""SMS phone verification using the Sinch Verification REST API.
 
+The Sinch Python SDK 2.x dropped the managed Verification product, so this
+module talks to the Verification REST API directly with httpx. The managed
+flow is unchanged: Sinch generates, sends, and validates the code -- we only
+start a verification and report the code the user entered.
+
+Authentication uses Application Signed Requests (HMAC-SHA256 over a canonical
+string), the same scheme the 1.x SDK used, with the existing
+SINCH_APPLICATION_KEY / SINCH_APPLICATION_SECRET credentials.
+
+Docs: https://developers.sinch.com/docs/verification/api-reference/
+"""
+
+import base64
+import hashlib
+import hmac
+import json
+from datetime import UTC, datetime
+
+import httpx
 import logfire
 import phonenumbers
 from django.conf import settings
@@ -8,26 +27,38 @@ from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.http import JsonResponse
 from django.shortcuts import redirect
-from django.utils import timezone
+from django.utils import timezone as django_timezone
 from django.views.decorators.http import require_POST
-from sinch import SinchClient
-from sinch.domains.verification.exceptions import VerificationException
-from sinch.domains.verification.models import VerificationIdentity
 
 # Constants
 CODE_LENGTH = 4  # Sinch Verification API sends 4-digit codes by default
 CODE_EXPIRY_MINUTES = 10
 RATE_LIMIT_SECONDS = 60
+REQUEST_TIMEOUT_SECONDS = 15
+
+# Sinch Verification REST API (host + paths without host, used for signing)
+VERIFICATION_ORIGIN = "https://verification.api.sinch.com"
+VERIFICATIONS_PATH = "/verification/v1/verifications"
+REPORT_BY_ID_PATH = "/verification/v1/verifications/id/{id}"
+
+# The Content-Type used both on the wire and inside the signed string. Must match
+# exactly what the server sees, so it is defined once and reused.
+_CONTENT_TYPE = "application/json; charset=UTF-8"
 
 
-def get_sinch_client():
-    """Initialize and return Sinch client.
+class SinchVerificationError(Exception):
+    """Raised when a Sinch Verification API request fails."""
+
+
+def get_credentials():
+    """Return the Sinch Verification application key and secret.
 
     Returns:
-        SinchClient: Configured Sinch client instance
+        tuple[str, str]: (application_key, application_secret)
 
     Raises:
-        ValueError: If Sinch configuration is missing
+        ValueError: If either credential is missing.
+
     """
     application_key = settings.SINCH_APPLICATION_KEY
     application_secret = settings.SINCH_APPLICATION_SECRET
@@ -35,7 +66,96 @@ def get_sinch_client():
     if not application_key or not application_secret:
         raise ValueError("Sinch Verification API configuration incomplete")
 
-    return SinchClient(application_key=application_key, application_secret=application_secret)
+    return application_key, application_secret
+
+
+def _build_signed_headers(method, path, body):
+    """Build Application Signed Request headers for a Verification API call.
+
+    Reproduces the Sinch signing scheme exactly: the canonical string joins the
+    HTTP verb, Content-MD5, Content-Type, the "x-timestamp:<ts>" header, and the
+    request path with newline separators, then signs it with
+    HMAC-SHA256(Base64-Decode(secret), string) and Base64-encodes the result.
+
+    Args:
+        method: HTTP verb (e.g. "POST", "PUT").
+        path: Request path without the origin (e.g. "/verification/v1/verifications").
+        body: The exact request body string that will be sent on the wire.
+
+    Returns:
+        dict: Headers including Content-Type, Authorization, and x-timestamp.
+
+    """
+    application_key, application_secret = get_credentials()
+
+    # MD5 is mandated by the Sinch Application Signed Request spec (Content-MD5).
+    # It is part of a signature, not used as a security hash here.
+    content_md5 = (
+        base64.b64encode(hashlib.md5(body.encode()).digest()).decode()  # ruff:ignore[hashlib-insecure-hash-function]
+        if body
+        else ""
+    )
+
+    timestamp = datetime.now(UTC).isoformat()
+
+    string_to_sign = (
+        method + "\n" + content_md5 + "\n" + _CONTENT_TYPE + "\n" + "x-timestamp:" + timestamp + "\n" + path
+    )
+
+    signature = base64.b64encode(
+        hmac.new(
+            base64.b64decode(application_secret),
+            string_to_sign.encode(),
+            hashlib.sha256,
+        ).digest()
+    ).decode()
+
+    return {
+        "Content-Type": _CONTENT_TYPE,
+        "Authorization": f"Application {application_key}:{signature}",
+        "x-timestamp": timestamp,
+    }
+
+
+def _signed_request(method, path, payload):
+    """Send a signed request to the Verification API.
+
+    Serializes the payload once and uses that exact string for both the HMAC
+    signature and the request body, so the Content-MD5 the server recomputes
+    matches ours.
+
+    Args:
+        method: HTTP verb.
+        path: Request path without origin.
+        payload: dict to serialize as the JSON body.
+
+    Returns:
+        tuple[int, dict]: (status_code, parsed_body). Body is {} if not JSON.
+
+    Raises:
+        SinchVerificationError: On network/transport failure.
+
+    """
+    body = json.dumps(payload)
+    headers = _build_signed_headers(method, path, body)
+
+    try:
+        response = httpx.request(
+            method,
+            VERIFICATION_ORIGIN + path,
+            content=body.encode(),
+            headers=headers,
+            timeout=REQUEST_TIMEOUT_SECONDS,
+        )
+    except httpx.HTTPError as e:
+        raise SinchVerificationError(f"Sinch request failed: {e}") from e
+
+    try:
+        parsed = response.json()
+    except ValueError:
+        parsed = {}
+
+    return response.status_code, parsed
 
 
 def get_cache_key(user_id):
@@ -46,6 +166,7 @@ def get_cache_key(user_id):
 
     Returns:
         str: Cache key for verification ID
+
     """
     return f"phone_verification_id_{user_id}"
 
@@ -61,7 +182,8 @@ def normalize_phone_number(phone_number, region="US"):
         str: Phone number in E.164 format with '+' (e.g., "+17203013003")
 
     Raises:
-        phonenumbers.NumberParseException: If phone number cannot be parsed
+        ValueError: If phone number cannot be parsed or is invalid.
+
     """
     # Parse the phone number
     parsed = phonenumbers.parse(str(phone_number), region)
@@ -75,20 +197,19 @@ def normalize_phone_number(phone_number, region="US"):
 
 
 def start_verification(phone_number):
-    """Start SMS verification using Sinch Verification API.
+    """Start SMS verification using the Sinch Verification REST API.
 
     Args:
-        phone_number: Phone number to send verification to (E.164 format, e.g., +15555555555)
+        phone_number: Phone number to send verification to (any parseable format)
 
     Returns:
-        dict: Verification response with 'id' and success status
+        dict: {"success": True, "verification_id": str, "message": str}
 
     Raises:
-        VerificationException: If verification start fails
-        ValueError: If Sinch configuration is missing
-    """
-    sinch_client = get_sinch_client()
+        ValueError: If the phone number is invalid or credentials are missing.
+        SinchVerificationError: If the Verification API rejects the request.
 
+    """
     # Normalize phone number to E.164 format
     try:
         normalized_number = normalize_phone_number(phone_number)
@@ -99,83 +220,94 @@ def start_verification(phone_number):
             normalized_phone=normalized_number,
         )
     except (phonenumbers.NumberParseException, ValueError) as e:
-        logfire.error(
-            "Invalid phone number format", phone_number=str(phone_number), error=str(e)
-        )
-        raise ValueError(f"Invalid phone number format: {e}")
+        logfire.error("Invalid phone number format", phone_number=str(phone_number), error=str(e))
+        raise ValueError(f"Invalid phone number format: {e}") from e
 
-    try:
-        response = sinch_client.verification.verifications.start_sms(
-            identity=VerificationIdentity(type="number", endpoint=normalized_number)
-        )
+    payload = {
+        "identity": {"type": "number", "endpoint": normalized_number},
+        "method": "sms",
+    }
 
-        logfire.info(
-            "Verification started via Sinch SDK",
-            phone_number=str(phone_number),
-            normalized_number=normalized_number,
-            verification_id=response.id,
-            status="started",
-        )
+    status_code, body = _signed_request("POST", VERIFICATIONS_PATH, payload)
 
-        return {"success": True, "verification_id": response.id, "message": "Verification code sent successfully"}
-
-    except VerificationException as e:
+    if status_code >= 400:
+        error_message = body.get("message") or f"HTTP {status_code}"
         logfire.error(
             "Sinch Verification API error",
             phone_number=str(phone_number),
-            error=str(e),
+            status_code=status_code,
+            error=error_message,
         )
-        raise
+        raise SinchVerificationError(error_message)
+
+    verification_id = body.get("id")
+
+    logfire.info(
+        "Verification started via Sinch REST API",
+        phone_number=str(phone_number),
+        normalized_number=normalized_number,
+        verification_id=verification_id,
+        status="started",
+    )
+
+    return {
+        "success": True,
+        "verification_id": verification_id,
+        "message": "Verification code sent successfully",
+    }
 
 
 def report_verification_code(verification_id, code):
-    """Report verification code to Sinch for validation.
+    """Report a verification code to Sinch for validation.
 
     Args:
-        verification_id: Verification ID from start_verification
-        code: 6-digit verification code entered by user
+        verification_id: Verification ID returned by start_verification
+        code: Verification code entered by the user
 
     Returns:
-        bool: True if code is valid, False otherwise
+        bool: True if the code is valid, False otherwise.
 
-    Raises:
-        VerificationException: If verification report fails
-        ValueError: If Sinch configuration is missing
     """
-    sinch_client = get_sinch_client()
+    path = REPORT_BY_ID_PATH.format(id=verification_id)
+    payload = {"method": "sms", "sms": {"code": code}}
 
     try:
-        response = sinch_client.verification.verifications.report_by_id(
-            id=verification_id, verification_report_request={"code": code}
-        )
-
-        # Check if verification was successful
-        # The response will have a status field indicating success/failure
-        is_valid = response.status == "SUCCESSFUL"
-
-        if is_valid:
-            logfire.info(
-                "Verification code validated successfully",
-                verification_id=verification_id,
-                status=response.status,
-            )
-        else:
-            logfire.warning(
-                "Invalid verification code",
-                verification_id=verification_id,
-                status=response.status,
-            )
-
-        return is_valid
-
-    except VerificationException as e:
+        status_code, body = _signed_request("PUT", path, payload)
+    except (SinchVerificationError, ValueError) as e:
         logfire.error(
             "Verification report error",
             verification_id=verification_id,
             error=str(e),
         )
-        # If there's an exception, treat it as invalid code
+        # Treat any transport/config failure as an invalid code.
         return False
+
+    if status_code >= 400:
+        logfire.warning(
+            "Invalid verification code",
+            verification_id=verification_id,
+            status_code=status_code,
+            error=body.get("message"),
+        )
+        return False
+
+    # Sinch reports the outcome in the "status" field.
+    is_valid = body.get("status") == "SUCCESSFUL"
+
+    if is_valid:
+        logfire.info(
+            "Verification code validated successfully",
+            verification_id=verification_id,
+            status=body.get("status"),
+        )
+    else:
+        logfire.warning(
+            "Invalid verification code",
+            verification_id=verification_id,
+            status=body.get("status"),
+        )
+
+    return is_valid
 
 
 def store_verification_id(user_id, verification_id):
@@ -184,6 +316,7 @@ def store_verification_id(user_id, verification_id):
     Args:
         user_id: User ID
         verification_id: Verification ID from Sinch
+
     """
     cache_key = get_cache_key(user_id)
     # Store for CODE_EXPIRY_MINUTES
@@ -200,6 +333,7 @@ def get_verification_id(user_id):
 
     Returns:
         str: Verification ID if found, None otherwise
+
     """
     cache_key = get_cache_key(user_id)
     verification_id = cache.get(cache_key)
@@ -215,6 +349,7 @@ def delete_verification_id(user_id):
 
     Args:
         user_id: User ID
+
     """
     cache_key = get_cache_key(user_id)
     cache.delete(cache_key)
@@ -225,11 +360,12 @@ def delete_verification_id(user_id):
 def verify_phone(request):
     """Send verification code to user's phone number.
 
-    POST endpoint that generates and sends an SMS verification code using Sinch SDK.
-    Implements rate limiting to prevent abuse.
+    POST endpoint that starts an SMS verification via the Sinch Verification
+    REST API. Implements rate limiting to prevent abuse.
 
     Returns:
         JsonResponse: Success/error status and message
+
     """
     user = request.user
 
@@ -246,8 +382,8 @@ def verify_phone(request):
     last_sent = request.session.get(session_key)
 
     if last_sent:
-        last_sent_time = timezone.datetime.fromisoformat(last_sent)
-        time_since_last = timezone.now() - last_sent_time
+        last_sent_time = django_timezone.datetime.fromisoformat(last_sent)
+        time_since_last = django_timezone.now() - last_sent_time
 
         # Require at least RATE_LIMIT_SECONDS between sends
         if time_since_last.total_seconds() < RATE_LIMIT_SECONDS:
@@ -258,14 +394,14 @@ def verify_phone(request):
             )
 
     try:
-        # Start verification using Sinch SDK
+        # Start verification via the Verification REST API
         result = start_verification(user.phone_number)
 
         # Store verification ID in cache
         store_verification_id(user.id, result["verification_id"])
 
         # Update session with send time
-        request.session[session_key] = timezone.now().isoformat()
+        request.session[session_key] = django_timezone.now().isoformat()
 
         logfire.info(
             "Verification code requested", user_id=user.id, username=user.username, phone=str(user.phone_number)
@@ -274,12 +410,12 @@ def verify_phone(request):
         return JsonResponse({"success": True, "message": result["message"]})
 
     except ValueError as e:
-        logfire.error("Sinch configuration error", error=str(e))
+        logfire.error("Sinch configuration or phone error", error=str(e))
         return JsonResponse({"success": False, "message": "SMS verification not configured"}, status=500)
 
-    except VerificationException as e:
+    except SinchVerificationError as e:
         logfire.error("Verification start failed", error=str(e))
-        return JsonResponse({"success": False, "message": f"Failed to send verification code: {str(e)}"}, status=500)
+        return JsonResponse({"success": False, "message": f"Failed to send verification code: {e!s}"}, status=500)
 
 
 @login_required
@@ -287,14 +423,15 @@ def verify_phone(request):
 def confirm_verification(request):
     """Verify the SMS code entered by the user.
 
-    POST endpoint that checks if the verification code is valid using Sinch SDK.
-    If valid, marks the user's phone as verified.
+    POST endpoint that checks if the verification code is valid via the Sinch
+    Verification REST API. If valid, marks the user's phone as verified.
 
     POST parameters:
-        code: 6-digit verification code
+        code: verification code (CODE_LENGTH digits)
 
     Returns:
         JsonResponse or redirect: Success/error status
+
     """
     user = request.user
     code = request.POST.get("code", "").strip()
