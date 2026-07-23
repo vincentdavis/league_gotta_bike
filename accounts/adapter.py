@@ -19,11 +19,8 @@ class AccountAdapter(DefaultAccountAdapter):
                 context_keys=list(context.keys()),
             )
 
-            # Log the actual email content for debugging
-            if 'code' in context:
-                logfire.info("Email contains verification code", code=context['code'])
-            if 'key' in context:
-                logfire.info("Email contains verification key", key=context['key'])
+            # NOTE: Never log context['code'] or context['key'] -- these are live
+            # authentication secrets (a verification code is effectively a login).
 
             # Call the parent method to actually send the email
             try:
@@ -31,8 +28,10 @@ class AccountAdapter(DefaultAccountAdapter):
                 logfire.info("Email sent successfully", email=email)
                 return result
             except Exception as e:
+                # Log, then re-raise: allauth must not proceed as if delivery
+                # succeeded, or the user is sent to enter a code that never arrived.
                 logfire.error("Email sending failed", email=email, error=str(e))
-                return None
+                raise
 
     def send_confirmation_mail(self, request, emailconfirmation, signup):
         """Override to add specific logging for confirmation emails."""
@@ -41,11 +40,12 @@ class AccountAdapter(DefaultAccountAdapter):
             email=emailconfirmation.email_address.email,
             is_signup=signup,
         ):
+            # NOTE: Do not log emailconfirmation.key -- it is the confirmation
+            # secret and would leak into observability logs.
             logfire.info(
                 "Sending confirmation email",
                 email=emailconfirmation.email_address.email,
                 is_signup=signup,
-                key=emailconfirmation.key,
             )
 
             # Call the parent method
@@ -54,5 +54,7 @@ class AccountAdapter(DefaultAccountAdapter):
                 logfire.info("Confirmation email sent successfully")
                 return result
             except Exception as e:
+                # Re-raise so allauth surfaces the failure instead of silently
+                # treating the confirmation email as sent.
                 logfire.error("Confirmation email sending failed", error=str(e))
-                return None
+                raise
