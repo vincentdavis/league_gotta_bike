@@ -1057,7 +1057,7 @@ requires-dist = [
     { name = "pydantic-settings", specifier = ">=2.14.2" },
     { name = "pyjwt", specifier = ">=2.13.0" },
     { name = "resend", specifier = ">=2.34.0" },
-    { name = "sinch", specifier = ">=2.1.0" },
+    { name = "sinch", specifier = ">=1.1.4,<2" },
     { name = "whitenoise", specifier = ">=6.12.0" },
 ]
 
@@ -2087,15 +2087,15 @@ wheels = [
 
 [[package]]
 name = "sinch"
-version = "2.1.0"
+version = "1.1.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pydantic" },
+    { name = "httpx" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/3a/ab/c1fbabe1d8b7d5f366c5de2d659dfe256b28eaaa61126954b29a8f8cdfe8/sinch-2.1.0.tar.gz", hash = "sha256:2a259575337914c7e8839ee5a446e7b75ee7a4cfb48a0f025e57bf003ea8c8e6", size = 105799, upload-time = "2026-06-30T10:12:18.87Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/86/af/fbc229d03497872e5baa184680178d1cdcd8e8fe46fdd32f6d7316845fbd/sinch-1.1.4.tar.gz", hash = "sha256:9ea0d6a28709b60ff602dc6fadf16176e0efe099564d499f87b9deecb4b20ff8", size = 49830, upload-time = "2025-10-23T13:22:15.492Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b3/cb/d41160c65d75f5564ca5ad09338e6c21d0efdd5791cef805a718a9026f02/sinch-2.1.0-py3-none-any.whl", hash = "sha256:ba5e86078445cc49d3b888d2d1b6a521e7555e23118e4ed61484675ad7ecab90", size = 298349, upload-time = "2026-06-30T10:12:17.459Z" },
+    { url = "https://files.pythonhosted.org/packages/6f/44/9a1ab1a0adbbbf6a7a3f9993d603c108da9ae3d52b20a6faf3ee9efb1e1f/sinch-1.1.4-py3-none-any.whl", hash = "sha256:06b7717c9c7ced02e17d118e264886e66fbb1beeb4ab17b95cb2af2f9a75c7f9", size = 147593, upload-time = "2025-10-23T13:22:14.491Z" },
 ]
 
 [[package]]
