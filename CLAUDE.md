@@ -94,7 +94,7 @@ tests/
 - **WhiteNoise** for static file serving in production
 - **Cloudflare R2** (S3-compatible) for media file storage in production (optional, set `USE_S3=True`)
 - **django-push-notifications** for web push notifications
-- **Sinch** for SMS phone verification
+- **Sinch Verification REST API** (called via **httpx2**) for SMS phone verification
 - **django-ninja** for mobile REST API with auto-generated OpenAPI docs
 - **Logfire** for logging, observability, and application monitoring
 
@@ -317,13 +317,23 @@ In development with `DEBUG=True`, emails are automatically sent to the console (
 
 ### Phone Verification (Sinch SMS)
 
-Phone verification is handled by the **Sinch Verification API** using the official Python SDK.
+Phone verification is handled by the **Sinch Verification REST API**, called directly with **httpx2** (`accounts/sms_verify.py`).
+
+> **Note:** This does *not* use the Sinch Python SDK. The SDK's 2.x line dropped the managed Verification product, so the code talks to the REST API directly. Authentication uses **Application Signed Requests** (HMAC-SHA256 over a canonical string), reproducing the SDK's signing scheme with the same `SINCH_APPLICATION_KEY` / `SINCH_APPLICATION_SECRET` credentials. Do not add `sinch` back as a dependency.
 
 #### Implementation
-- `accounts/sms_verify.py` - SMS verification logic
-- Uses Sinch's managed verification flow (4-digit codes, 10-minute expiry)
+- `accounts/sms_verify.py` - SMS verification logic (REST calls + request signing)
+- Uses Sinch's managed verification flow (4-digit codes); Sinch generates, sends, and validates the code
+  - Start: `POST https://verification.api.sinch.com/verification/v1/verifications`
+  - Report: `PUT https://verification.api.sinch.com/verification/v1/verifications/id/{id}`
 - Rate limiting: 60-second cooldown between requests
 - Phone verification status tracked on User model (`phone_verified` field)
+- Failures raise `SinchVerificationError` (defined in `sms_verify.py`)
+
+#### Admin Testing Tool
+- `accounts/verification_test.py` - staff-only page at `/accounts/admin/test-verification/` (linked from the user menu → Admin)
+- Lets an admin send a real SMS or email verification code to any destination and verify it, to exercise the live delivery paths
+- Does **not** touch any account: SMS is validated by Sinch, email codes are generated/compared in the session only
 
 #### Configuration
 Set the following environment variables in `.env`:
