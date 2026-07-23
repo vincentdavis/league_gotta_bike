@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Test Verification Codes - GOTTA.BIKE{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-8">
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold">Test Verification Codes</h1>
+        <p class="text-base-content/70 mt-1">
+            Admin-only tool to test the live SMS and email code flows. Sends a real
+            message to the destination you enter and lets you verify the code.
+            <strong>Does not affect any account.</strong>
+        </p>
+    </div>
+
+    {% if messages %}
+        <div class="space-y-2 mb-6">
+            {% for message in messages %}
+                <div role="alert" class="alert {% if message.tags == 'error' %}alert-error{% elif message.tags == 'success' %}alert-success{% else %}alert-info{% endif %}">
+                    <span>{{ message }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="grid gap-6 md:grid-cols-2">
+        <!-- SMS test -->
+        <div class="card bg-base-100 shadow-md border border-base-300">
+            <div class="card-body">
+                <h2 class="card-title">SMS (Sinch)</h2>
+
+                <form method="post" class="space-y-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="sms_send">
+                    <div class="form-control">
+                        <label class="label" for="sms_phone">
+                            <span class="label-text">Phone number</span>
+                        </label>
+                        <input
+                            type="tel"
+                            name="phone"
+                            id="sms_phone"
+                            class="input input-bordered w-full"
+                            placeholder="+1 555 555 5555"
+                            value="{{ sms_dest|default:'' }}"
+                            autocomplete="off"
+                        >
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm w-full">
+                        {% if sms_dest %}Resend SMS code{% else %}Send SMS code{% endif %}
+                    </button>
+                </form>
+
+                {% if sms_dest %}
+                    <div class="divider text-xs">Code sent to {{ sms_dest }}</div>
+                    <form method="post" class="space-y-3">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="sms_verify">
+                        <div class="form-control">
+                            <label class="label" for="sms_code">
+                                <span class="label-text">Enter the code received</span>
+                            </label>
+                            <input
+                                type="text"
+                                name="code"
+                                id="sms_code"
+                                class="input input-bordered w-full text-center tracking-widest"
+                                inputmode="numeric"
+                                autocomplete="one-time-code"
+                                required
+                            >
+                        </div>
+                        <button type="submit" class="btn btn-outline btn-sm w-full">Verify SMS code</button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Email test -->
+        <div class="card bg-base-100 shadow-md border border-base-300">
+            <div class="card-body">
+                <h2 class="card-title">Email</h2>
+
+                <form method="post" class="space-y-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="email_send">
+                    <div class="form-control">
+                        <label class="label" for="email_addr">
+                            <span class="label-text">Email address</span>
+                        </label>
+                        <input
+                            type="email"
+                            name="email"
+                            id="email_addr"
+                            class="input input-bordered w-full"
+                            placeholder="you@example.com"
+                            value="{{ email_dest|default:'' }}"
+                            autocomplete="off"
+                        >
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm w-full">
+                        {% if email_dest %}Resend email code{% else %}Send email code{% endif %}
+                    </button>
+                </form>
+
+                {% if email_dest %}
+                    <div class="divider text-xs">Code sent to {{ email_dest }}</div>
+                    <form method="post" class="space-y-3">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="email_verify">
+                        <div class="form-control">
+                            <label class="label" for="email_code">
+                                <span class="label-text">Enter the code received</span>
+                            </label>
+                            <input
+                                type="text"
+                                name="code"
+                                id="email_code"
+                                class="input input-bordered w-full text-center tracking-widest uppercase"
+                                autocapitalize="characters"
+                                autocorrect="off"
+                                spellcheck="false"
+                                autocomplete="one-time-code"
+                                required
+                            >
+                        </div>
+                        <button type="submit" class="btn btn-outline btn-sm w-full">Verify email code</button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <p class="text-xs text-base-content/50 mt-6">
+        Note: SMS sends incur Sinch charges and email sends go through the live
+        mail provider. Use destinations you control.
+    </p>
+</div>
+{% endblock %}
