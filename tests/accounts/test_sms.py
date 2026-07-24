@@ -1,4 +1,4 @@
-"""Tests for SMS verification functionality using Sinch SDK."""
+"""Tests for SMS verification functionality using the Sinch Verification REST API."""
 
 import logfire
 from django.conf import settings
@@ -41,7 +41,7 @@ class SMSVerificationTestCase(TestCase):
         )
 
     def test_start_verification(self):
-        """Test that SMS verification can be started using Sinch SDK.
+        """Test that SMS verification can be started using the Sinch Verification REST API.
 
         This test actually sends an SMS via Sinch Verification API to verify the integration works.
         Make sure TEST_TO_PHONE_NUMBER is set to a real phone number you can access.
