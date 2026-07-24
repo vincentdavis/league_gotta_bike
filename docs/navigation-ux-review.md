@@ -20,25 +20,25 @@ There is also **one genuine bug** (500 errors) mixed in — fix that first regar
 
 ## 🔴 P0 — Broken or hard dead-ends (do first)
 
-- [ ] **Fix 500s on "View Details" and "Change Role"** — `S`
+- [x] **Fix 500s on "View Details" and "Change Role"** — `S`
       `MemberDetailView` (views.py:108) and `MembershipRoleUpdateView` (views.py:363) declare `membership/member_detail.html` and `membership/role_update.html`, **which don't exist**. The member-list dropdown links straight to both (member_list.html:149,151), so both actions raise `TemplateDoesNotExist` → 500 for every member. **Create the two missing templates** (or repoint the links at `member_roles`/`member_detail` surfaces that do exist).
-- [ ] **Add a top-of-page back/up affordance to _every_ org sub-page** — `M`
+- [x] **Add a top-of-page back/up affordance to _every_ org sub-page** — `M`
       The reported dead-end: no way back to the team without the browser back button or the logo→home. Establish a single always-visible top-of-page "← {Team}" (see the systemic fix in P1).
-- [ ] **Give the Manage cluster a back path** — `M`
+- [x] **Give the Manage cluster a back path** — `M`
       `organization_manage.html` (the hub's "Manage" gear target) and its tab partials (`_membership_tab`, `_seasons_tab`, `_profile_tab`) have **no breadcrumb and no back-to-hub link** — the main admin surface is itself a dead-end. Fixing the container covers all three tabs at once.
 
 ## 🟠 P1 — The systemic fix + consistency (highest leverage)
 
-- [ ] **Add a shared org-context header + breadcrumb in `organizations/base.html`** — `M` *(the single highest-leverage change)*
+- [x] **Add a shared org-context header + breadcrumb in `organizations/base.html`** — `M` *(the single highest-leverage change)*
       Render "Leagues › {League} › {Team} › {Section}" (last crumb = current page) at the top of the org content block. Because nearly every org/membership template extends this base, one change gives all of them a consistent location signpost and a one-tap route back to the team hub.
-- [ ] **Extract one reusable `_breadcrumbs.html` partial** — `S`
+- [x] **Extract one reusable `_breadcrumbs.html` partial** — `S`
       The two detail hubs (`team_detail.html:8-17`, `organization_detail.html:8-19`) hand-duplicate the trail. Extract it once and reuse it everywhere (base header + any page that needs a custom trail).
-- [ ] **Move member_list's "Back to team" from the bottom to the top** — `S`
+- [x] **Move member_list's "Back to team" from the bottom to the top** — `S`
       Today the only up-link is `← Back to {org}` at member_list.html:199 (of 204), below the whole roster. Put a back/breadcrumb above the header. *(Subsumed once the base-header fix lands.)*
 - [ ] **Standardize where "back" points** — `M`
       Peer sub-pages currently send "back" to three different destinations. Define one rule: sub-page → team hub (`object.get_absolute_url`), consistently.
-- [ ] **Add breadcrumbs to all membership sub-pages** — `M`
-      `member_list`, `role_management`, `request_list`, `invite`, `invite_link_list`/`create`, `season_detail`, `sub_org_member_management` — none have breadcrumbs.
+- [x] **Add breadcrumbs to all membership sub-pages** — `M`
+      `member_list`, `role_management`, `request_list`, `invite`, `invite_link_list`/`create`, `sub_org_member_management` — none had breadcrumbs. *(`season_detail` excluded — unreachable, see Round 2.)*
 
 ## 🟡 P2 — Discoverability, global nav, mobile, a11y
 
@@ -67,6 +67,72 @@ There is also **one genuine bug** (500 errors) mixed in — fix that first regar
 - [ ] Make the org name in list/form headers a link to the team hub — `S`.
 - [ ] `league_guest`: add a top "← Browse" affordance and a location heading — `S`.
 - [ ] Browse page: add an on-page `<h1>` to anchor location — `S`.
+
+---
+
+## Round 2 — findings from rendering every page
+
+The first pass was static template reading. A second pass **actually rendered all 28 org/membership
+pages** through the real views (test client, seeded league → team → squad → season, transaction
+rolled back). That caught four things static review missed.
+
+### 🔴 Fixed — `Remove Member` returned a 500
+
+`MembershipRemoveView` declared `membership/member_remove_confirm.html`, which didn't exist.
+Reachable from **two** live links — `member_list.html:152` ("Remove Member" in the row dropdown) and
+`member_detail.html:72`. This is the *same dropdown* whose other two actions were the original P0;
+that fix caught 2 of 3.
+
+- [x] Created `membership/member_remove_confirm.html`.
+
+### 🔴 Fixed — the last-owner guard was dead code
+
+More serious than the 500 that was hiding it. `MembershipRemoveView` put its *"cannot remove the only
+owner"* check in `delete()`. In Django 6.0, `BaseDeleteView.post()` sits ahead of
+`DeletionMixin.post()` in the MRO and routes POST straight to `form_valid()` — **`delete()` is never
+called.** Simply adding the missing template would have shipped a live path to remove an
+organization's only owner, orphaning it with nobody able to manage it.
+
+- [x] Moved the guard to `form_valid()`.
+- [x] Added `is_last_owner` to the context so the confirm page warns and hides the submit button,
+      rather than only failing after the click.
+- [x] Verified by POST: sole owner **blocked**, ordinary member **removed**, owner-with-co-owner
+      **removed**, and the GET page shows the warning with no submit button.
+- Audited the other four `DeleteView` subclasses — none share the pattern.
+
+### 🔴 Fixed — `/{slug}/settings/` returned a 500
+
+`OrganizationSettingsView` declared `organizations/organization_settings.html`, which never existed —
+so the route had never worked. Linked from nowhere, and fully superseded by `OrganizationManageView`
+(membership / seasons / profile tabs). It was also a *third* member-table surface, which cuts against
+the P2 de-duplication item.
+
+- [x] Removed the view and its route rather than reviving a duplicate of Manage.
+
+### 🟠 Fixed — the shared breadcrumb silently skipped 4 pages
+
+`_breadcrumbs.html` renders only when `organization` is in context. Views that set an explicit
+`context_object_name` (`league`, `team`) don't provide it, so the breadcrumb rendered *nothing* — no
+error, just a silently missing trail. The **league hub** and all three guest views were affected.
+
+- [x] Added the `organization` alias to `LeagueMemberView`, `LeagueGuestView`, `TeamGuestView`.
+- [x] Retired `team_guest.html`'s hand-rolled league-only nav (it would now be a duplicate, and it
+      was wrapped in `{% if league %}` so standalone teams got nothing at all).
+- Re-ran the audit: **all 25 org-context pages now render exactly one breadcrumb.** The three
+  without one — `/browse/`, `/create/`, `/create/squad/` — have no org to anchor to. Correct as-is.
+
+### 📋 Not a bug — season registration is unimplemented
+
+Worth a decision, not a fix. `SeasonDetailView` exists but **has no URL route**, so
+`membership/season_detail.html` is unreachable and `_season_card.html` is included nowhere.
+
+This can't be fixed by adding a route: both templates link to `membership:season_register` and
+`membership:join_and_register_season`, and **neither has a view or a URL**. The season *registration*
+UI was written ahead of its backend.
+
+Today `season_list.html` is admin-only (Edit / Delete). It shows a registered-count but there is no
+way to see who registered, and **members cannot register for a season at all**. Either build the
+registration backend or remove the three templates — but it's a feature call, not cleanup.
 
 ---
 

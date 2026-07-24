@@ -1,0 +1,48 @@
+{% extends "organizations/base.html" %}
+
+{% block title %}Remove Member - {{ organization.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 py-8">
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h2 class="card-title text-error">Remove Member</h2>
+
+            {% if is_last_owner %}
+            <div class="alert alert-warning mt-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span>
+                    <strong>{{ object.user.get_full_name }}</strong> is the only owner of
+                    {{ organization.name }} and cannot be removed. Promote another member to
+                    owner first.
+                </span>
+            </div>
+            {% else %}
+            <p class="text-gray-600 mt-2">
+                Are you sure you want to remove
+                <strong>{{ object.user.get_full_name }}</strong>
+                from <strong>{{ organization.name }}</strong>?
+            </p>
+            <p class="text-sm text-gray-500 mt-1">
+                They will lose access to member-only pages, chats, and events. Their
+                {{ object.get_permission_level_display|lower }} permissions will be revoked.
+                You can invite them back later.
+            </p>
+            {% endif %}
+
+            <div class="divider"></div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="flex justify-end gap-2">
+                    <a href="{% url 'membership:member_list' slug=organization.slug %}" class="btn btn-ghost">Cancel</a>
+                    {% if not is_last_owner %}
+                    <button type="submit" class="btn btn-error">Remove Member</button>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

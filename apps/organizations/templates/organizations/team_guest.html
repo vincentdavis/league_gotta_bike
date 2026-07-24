@@ -12,16 +12,7 @@
 {% endif %}
 
 <div class="max-w-4xl mx-auto px-4 py-8">
-    <!-- League Breadcrumb (if team is part of a league) -->
-    {% if league %}
-    <nav class="text-sm mb-4">
-        <a href="{% url 'organizations:league_guest' league_slug=league.slug %}" class="text-primary hover:text-primary-focus">
-            {{ league.name }}
-        </a>
-        <span class="text-gray-500 mx-2">/</span>
-        <span class="text-gray-700">{{ team.name }}</span>
-    </nav>
-    {% endif %}
+    <!-- Breadcrumb comes from organizations/_breadcrumbs.html via organizations/base.html -->
 
     <!-- Logo and Name -->
     <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-8">

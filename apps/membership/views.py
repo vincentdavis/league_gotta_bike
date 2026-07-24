@@ -483,8 +483,12 @@ class MembershipRemoveView(OrgMemberManagerRequiredMixin, DeleteView):
         """Redirect to member list."""
         return reverse('membership:member_list', kwargs={'slug': self.get_object().organization.slug})
 
-    def delete(self, request, *args, **kwargs):
-        """Handle member removal with checks."""
+    def form_valid(self, form):
+        """Handle member removal with checks.
+
+        Django's DeleteView routes POST through form_valid(), not delete(), so the
+        last-owner guard lives here.
+        """
         membership = self.get_object()
 
         # Prevent removing the last owner
@@ -497,20 +501,31 @@ class MembershipRemoveView(OrgMemberManagerRequiredMixin, DeleteView):
 
             if owner_count <= 1:
                 messages.error(
-                    request,
+                    self.request,
                     'Cannot remove the only owner. Promote another member to owner first.'
                 )
                 return redirect('membership:member_list', slug=membership.organization.slug)
 
         messages.success(
-            request,
+            self.request,
             f'{membership.user.get_full_name()} has been removed from {membership.organization.name}.'
         )
-        return super().delete(request, *args, **kwargs)
+        return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['organization'] = self.get_object().organization
+        membership = self.get_object()
+        context['organization'] = membership.organization
+        context['breadcrumb_section'] = 'Members'
+        # Surface the last-owner block before submit rather than after.
+        context['is_last_owner'] = (
+            membership.permission_level == Membership.OWNER
+            and Membership.objects.filter(
+                organization=membership.organization,
+                permission_level=Membership.OWNER,
+                status=Membership.ACTIVE
+            ).count() <= 1
+        )
         return context
 
 

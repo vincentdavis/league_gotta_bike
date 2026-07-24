@@ -129,6 +129,7 @@ class LeagueMemberView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['organization'] = self.object  # Alias so the shared breadcrumb partial resolves
         # Get all teams in this league
         context['teams'] = self.object.children.filter(
             type=Organization.TEAM,
@@ -348,6 +349,7 @@ class LeagueGuestView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['organization'] = self.object  # Alias so the shared breadcrumb partial resolves
         # Get league profile
         context['league_profile'] = getattr(self.object, 'league_profile', None)
 
@@ -405,6 +407,7 @@ class TeamGuestView(DetailView):
         context = super().get_context_data(**kwargs)
         # Get parent league if exists
         context['league'] = self.object.parent
+        context['organization'] = self.object  # Alias so the shared breadcrumb partial resolves
         # Get team profile
         context['team_profile'] = getattr(self.object, 'team_profile', None)
 
@@ -902,28 +905,6 @@ class OrganizationEditView(OrgAdminRequiredMixin, UpdateView):
             )
 
         return super().form_invalid(form)
-
-
-class OrganizationSettingsView(OrgAdminRequiredMixin, DetailView):
-    """View for organization settings page."""
-
-    model = Organization
-    template_name = 'organizations/organization_settings.html'
-    slug_url_kwarg = 'slug'
-    context_object_name = 'organization'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        # Get members
-        context['members'] = self.object.memberships.select_related('user').all()
-        # Get profile
-        if self.object.type == Organization.LEAGUE:
-            context['profile'] = getattr(self.object, 'league_profile', None)
-        elif self.object.type == Organization.TEAM:
-            context['profile'] = getattr(self.object, 'team_profile', None)
-        elif self.object.type == Organization.SQUAD:
-            context['profile'] = getattr(self.object, 'squad_profile', None)
-        return context
 
 
 # Delete View
