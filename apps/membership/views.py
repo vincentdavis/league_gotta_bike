@@ -86,6 +86,7 @@ class MemberListView(OrgMemberRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['organization'] = self.get_organization()
         context['user_membership'] = get_user_membership(self.request.user, context['organization'])
+        context['breadcrumb_section'] = 'Members'
 
         # Add filter counts
         context['total_count'] = Membership.objects.filter(organization=context['organization']).count()
@@ -117,6 +118,7 @@ class MemberDetailView(OrgMemberRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         context['organization'] = self.object.organization
         context['user_membership'] = get_user_membership(self.request.user, self.object.organization)
+        context['breadcrumb_section'] = 'Members'
         return context
 
 
@@ -200,6 +202,7 @@ class MembershipRequestListView(OrgMemberManagerRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['organization'] = self.get_organization()
+        context['breadcrumb_section'] = 'Join requests'
         return context
 
 
@@ -383,6 +386,7 @@ class MembershipRoleUpdateView(OrgMemberManagerRequiredMixin, UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['organization'] = self.get_object().organization
+        context['breadcrumb_section'] = 'Change role'
         return context
 
 
@@ -415,6 +419,7 @@ class MemberRoleManagementView(OrgMemberManagerRequiredMixin, FormView):
         membership = self.get_membership()
         context['membership'] = membership
         context['organization'] = membership.organization
+        context['breadcrumb_section'] = 'Manage roles'
         return context
 
     def form_valid(self, form):
@@ -702,6 +707,7 @@ class InviteLinkListView(OrgMemberManagerRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['organization'] = self.get_organization()
+        context['breadcrumb_section'] = 'Invite links'
         return context
 
 

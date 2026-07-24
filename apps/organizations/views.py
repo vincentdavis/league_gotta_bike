@@ -982,6 +982,7 @@ class SeasonListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['organization'] = self.organization
         context['can_manage'] = is_org_admin(self.request.user, self.organization)
+        context['breadcrumb_section'] = 'Seasons'
         return context
 
 
@@ -1346,6 +1347,7 @@ class OrganizationManageView(OrgAdminRequiredMixin, UpdateView):
 
         # Add active tab from query parameter (default to 'membership')
         context['active_tab'] = self.request.GET.get('tab', 'membership')
+        context['breadcrumb_section'] = 'Manage: ' + context['active_tab'].replace('_', ' ').title()
 
         # Membership Tab Data
         memberships = Membership.objects.filter(
