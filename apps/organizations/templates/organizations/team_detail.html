@@ -5,17 +5,6 @@
 
 {% block content %}
 <div class="px-4 sm:px-0">
-    <!-- Breadcrumbs -->
-    <nav class="mb-4">
-        <ol class="flex items-center space-x-2 text-sm text-gray-500">
-            <li><a href="{% url 'organizations:league_list' %}" class="hover:text-gray-700">Leagues</a></li>
-            <li>/</li>
-            <li><a href="{{ league.get_absolute_url }}" class="hover:text-gray-700">{{ league.name }}</a></li>
-            <li>/</li>
-            <li class="text-gray-900">{{ team.name }}</li>
-        </ol>
-    </nav>
-
     <!-- Team Header -->
     <div class="bg-white shadow rounded-lg p-6 mb-6">
         <div class="flex items-start justify-between">

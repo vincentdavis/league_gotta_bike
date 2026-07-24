@@ -1,0 +1,80 @@
+{% extends "organizations/base.html" %}
+
+{% block title %}{{ membership.user.get_full_name }} - {{ organization.name }} - League Gotta Bike{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-8">
+    <div class="mb-6 flex items-center justify-between gap-4 flex-wrap">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Member Details</h1>
+            <p class="text-gray-600">{{ organization.name }}</p>
+        </div>
+        <a href="{% url 'membership:member_list' slug=organization.slug %}" class="btn btn-ghost btn-sm">
+            &larr; All members
+        </a>
+    </div>
+
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <!-- Member header -->
+            <div class="flex items-center gap-4">
+                <div class="avatar placeholder">
+                    <div class="bg-primary text-primary-content rounded-full w-16">
+                        <span class="text-xl">{{ membership.user.first_name.0|upper }}{{ membership.user.last_name.0|upper }}</span>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <h2 class="text-2xl font-bold text-gray-900">{{ membership.user.get_full_name }}</h2>
+                    {% if membership.user.email %}<p class="text-sm text-gray-500">{{ membership.user.email }}</p>{% endif %}
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Details -->
+            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <dt class="text-xs uppercase tracking-wide text-gray-500">Permission level</dt>
+                    <dd class="mt-1"><span class="badge badge-primary">{{ membership.get_permission_level_display }}</span></dd>
+                </div>
+                <div>
+                    <dt class="text-xs uppercase tracking-wide text-gray-500">Status</dt>
+                    <dd class="mt-1"><span class="badge {% if membership.status == 'active' %}badge-success{% else %}badge-ghost{% endif %}">{{ membership.get_status_display }}</span></dd>
+                </div>
+                <div>
+                    <dt class="text-xs uppercase tracking-wide text-gray-500">Joined</dt>
+                    <dd class="mt-1 text-gray-900">{{ membership.join_date|date:"M d, Y"|default:"&mdash;" }}</dd>
+                </div>
+                <div>
+                    <dt class="text-xs uppercase tracking-wide text-gray-500">Roles</dt>
+                    <dd class="mt-1">
+                        {% if membership.member_roles.exists %}
+                            <div class="flex flex-wrap gap-1">
+                                {% for role in membership.member_roles.all %}
+                                    <span class="badge badge-outline">{{ role.get_role_type_display }}{% if role.is_primary %} &#9733;{% endif %}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <span class="text-gray-400">No roles assigned</span>
+                        {% endif %}
+                    </dd>
+                </div>
+            </dl>
+
+            <!-- Management actions (managers and above) -->
+            {% if user_membership.permission_level == 'owner' or user_membership.permission_level == 'admin' or user_membership.permission_level == 'manager' %}
+                <div class="divider"></div>
+                <div class="flex flex-wrap gap-2">
+                    <a href="{% url 'membership:role_update' membership_id=membership.id %}" class="btn btn-outline btn-sm">Change permission level</a>
+                    <a href="{% url 'membership:member_roles' slug=organization.slug membership_id=membership.id %}" class="btn btn-outline btn-sm">Manage roles</a>
+                    {% if user_membership.permission_level == 'owner' or user_membership.permission_level == 'admin' %}
+                        {% if membership.user != request.user %}
+                            <a href="{% url 'membership:member_remove' membership_id=membership.id %}" class="btn btn-outline btn-error btn-sm">Remove from {{ organization.name }}</a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

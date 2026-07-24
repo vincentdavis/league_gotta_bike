@@ -1,0 +1,64 @@
+{% extends "organizations/base.html" %}
+
+{% block title %}Change Permission Level - {{ object.user.get_full_name }} - League Gotta Bike{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 py-8">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">Change Permission Level</h1>
+        <p class="text-gray-600">{{ object.user.get_full_name }} in {{ organization.name }}</p>
+    </div>
+
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <!-- Member info -->
+            <div class="bg-base-200 rounded-lg p-4 mb-4">
+                <div class="flex items-center gap-4">
+                    <div class="avatar placeholder">
+                        <div class="bg-primary text-primary-content rounded-full w-12">
+                            <span>{{ object.user.first_name.0|upper }}{{ object.user.last_name.0|upper }}</span>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="font-bold text-gray-900">{{ object.user.get_full_name }}</p>
+                        <p class="text-sm text-gray-500">Currently: {{ object.get_permission_level_display }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-info mb-4">
+                <span class="text-sm">
+                    Permission level controls what this member can <strong>do</strong> (owner / admin / manager / member).
+                    To set descriptive roles like Coach or Parent, use
+                    <a href="{% url 'membership:member_roles' slug=organization.slug membership_id=object.id %}" class="link">Manage roles</a> instead.
+                </span>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-error mb-4">
+                        {% for error in form.non_field_errors %}<span>{{ error }}</span>{% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="form-control mb-6">
+                    <label class="label" for="{{ form.permission_level.id_for_label }}">
+                        <span class="label-text font-semibold">Permission level</span>
+                    </label>
+                    {{ form.permission_level }}
+                    {% if form.permission_level.errors %}
+                        <label class="label"><span class="label-text-alt text-error">{{ form.permission_level.errors.0 }}</span></label>
+                    {% endif %}
+                </div>
+
+                <div class="flex justify-end gap-2">
+                    <a href="{% url 'membership:member_detail' membership_id=object.id %}" class="btn btn-ghost">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

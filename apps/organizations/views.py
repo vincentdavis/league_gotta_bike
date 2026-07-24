@@ -230,6 +230,7 @@ class TeamMemberView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['league'] = self.object.parent  # Will be None for standalone teams
+        context['organization'] = self.object  # Alias so the shared breadcrumb partial resolves
         # Get all sub-organizations (squads, clubs, etc.)
         context['sub_orgs'] = self.object.children.filter(
             is_active=True

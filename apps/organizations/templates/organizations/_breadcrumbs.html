@@ -1,0 +1,33 @@
+{% comment %}
+Shared org-context breadcrumb, rendered once by organizations/base.html so every
+org/team sub-page gets a consistent top-of-page trail and a one-tap route back to
+the team hub (the reported dead-end fix).
+
+Renders only when `organization` is in context. The team-hub view aliases its
+object to `organization`; membership/management sub-pages already provide it.
+Guards the parent level with {% if organization.parent %} so standalone teams
+don't render an empty crumb. `{% if organization %}` is used (not a filter arg)
+so pages without an org context render nothing rather than erroring.
+
+Optional context var `breadcrumb_section` (a string) appends a trailing
+current-page label; when set, the org crumb links back to the hub.
+{% endcomment %}
+{% if organization %}
+<nav aria-label="Breadcrumb" class="mb-4">
+    <ol class="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-500">
+        <li><a href="{% url 'organizations:league_list' %}" class="hover:text-gray-700">Browse</a></li>
+        {% if organization.parent %}
+            <li aria-hidden="true">/</li>
+            <li><a href="{{ organization.parent.get_absolute_url }}" class="hover:text-gray-700">{{ organization.parent.name }}</a></li>
+        {% endif %}
+        <li aria-hidden="true">/</li>
+        {% if breadcrumb_section %}
+            <li><a href="{{ organization.get_absolute_url }}" class="hover:text-gray-700">{{ organization.name }}</a></li>
+            <li aria-hidden="true">/</li>
+            <li class="text-gray-900 font-medium" aria-current="page">{{ breadcrumb_section }}</li>
+        {% else %}
+            <li><a href="{{ organization.get_absolute_url }}" class="text-gray-900 font-medium hover:underline">{{ organization.name }}</a></li>
+        {% endif %}
+    </ol>
+</nav>
+{% endif %}
