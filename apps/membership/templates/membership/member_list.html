@@ -10,7 +10,7 @@
             <h1 class="text-3xl font-bold text-gray-900">{{ organization.name }} Members</h1>
             <p class="text-gray-600 mt-1">Manage your organization's members</p>
         </div>
-        {% if user_membership.role in 'OrgOwner,OrgAdmin,OrgManager' %}
+        {% if can_manage %}
         <div class="flex gap-2">
             <a href="{% url 'membership:invite' slug=organization.slug %}" class="btn btn-primary">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -52,35 +52,53 @@
     <!-- Filters -->
     <div class="card bg-base-100 shadow-xl mb-6">
         <div class="card-body">
-            <form method="get" class="flex gap-4 items-end">
-                <div class="form-control flex-1">
+            <form method="get" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                <div class="form-control">
                     <label class="label">
-                        <span class="label-text">Filter by Status</span>
+                        <span class="label-text">Search name or email</span>
                     </label>
-                    <select name="status" class="select select-bordered">
-                        <option value="">All Statuses</option>
-                        <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
-                        <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactive</option>
-                        <option value="prospect" {% if request.GET.status == 'prospect' %}selected{% endif %}>Prospect</option>
+                    <input type="text" name="q" value="{{ request.GET.q|default:'' }}"
+                           placeholder="Type to search..." class="input input-bordered w-full">
+                </div>
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">Permission Level</span>
+                    </label>
+                    <select name="permission_level" class="select select-bordered">
+                        <option value="">All Permission Levels</option>
+                        {% for value, label in permission_levels %}
+                        <option value="{{ value }}" {% if request.GET.permission_level == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
                     </select>
                 </div>
-                <div class="form-control flex-1">
+                <div class="form-control">
                     <label class="label">
-                        <span class="label-text">Filter by Role</span>
+                        <span class="label-text">Role</span>
                     </label>
                     <select name="role" class="select select-bordered">
                         <option value="">All Roles</option>
-                        <option value="OrgOwner" {% if request.GET.role == 'OrgOwner' %}selected{% endif %}>Owner</option>
-                        <option value="OrgAdmin" {% if request.GET.role == 'OrgAdmin' %}selected{% endif %}>Administrator</option>
-                        <option value="OrgManager" {% if request.GET.role == 'OrgManager' %}selected{% endif %}>Manager</option>
-                        <option value="OrgCoach" {% if request.GET.role == 'OrgCoach' %}selected{% endif %}>Coach</option>
-                        <option value="OrgMember" {% if request.GET.role == 'OrgMember' %}selected{% endif %}>Member</option>
+                        {% for value, label in available_roles %}
+                        <option value="{{ value }}" {% if request.GET.role == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
                     </select>
                 </div>
-                <button type="submit" class="btn btn-primary">Apply Filters</button>
-                {% if request.GET.status or request.GET.role %}
-                <a href="{% url 'membership:member_list' slug=organization.slug %}" class="btn btn-ghost">Clear</a>
-                {% endif %}
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">Status</span>
+                    </label>
+                    <select name="status" class="select select-bordered">
+                        <option value="">All Statuses</option>
+                        {% for value, label in member_statuses %}
+                        <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="lg:col-span-4 flex gap-2">
+                    <button type="submit" class="btn btn-primary">Apply Filters</button>
+                    {% if request.GET.q or request.GET.status or request.GET.role or request.GET.permission_level %}
+                    <a href="{% url 'membership:member_list' slug=organization.slug %}" class="btn btn-ghost">Clear</a>
+                    {% endif %}
+                </div>
             </form>
         </div>
     </div>
@@ -94,10 +112,12 @@
                     <thead>
                         <tr>
                             <th>Name</th>
-                            <th>Role</th>
+                            <th>Email</th>
+                            <th>Permission</th>
+                            <th>Roles</th>
                             <th>Status</th>
                             <th>Joined</th>
-                            {% if user_membership.role in 'OrgOwner,OrgAdmin,OrgManager' %}
+                            {% if can_manage %}
                             <th>Actions</th>
                             {% endif %}
                         </tr>
@@ -118,15 +138,26 @@
                                     </div>
                                 </div>
                             </td>
+                            <td>{{ membership.user.email }}</td>
                             <td>
                                 <span class="badge
-                                    {% if membership.role == 'OrgOwner' %}badge-primary
-                                    {% elif membership.role == 'OrgAdmin' %}badge-success
-                                    {% elif membership.role == 'OrgManager' %}badge-info
-                                    {% elif membership.role == 'OrgCoach' %}badge-warning
+                                    {% if membership.permission_level == 'owner' %}badge-error
+                                    {% elif membership.permission_level == 'admin' %}badge-warning
+                                    {% elif membership.permission_level == 'manager' %}badge-info
                                     {% else %}badge-ghost{% endif %}">
-                                    {{ membership.get_role_display }}
+                                    {{ membership.get_permission_level_display }}
                                 </span>
+                            </td>
+                            <td>
+                                {% if membership.member_roles.exists %}
+                                <div class="flex flex-wrap gap-1">
+                                    {% for role in membership.member_roles.all %}
+                                    <span class="badge badge-sm badge-outline">{{ role.get_role_type_display }}</span>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <span class="text-gray-400 text-sm">No roles</span>
+                                {% endif %}
                             </td>
                             <td>
                                 <span class="badge
@@ -137,7 +168,7 @@
                                 </span>
                             </td>
                             <td>{{ membership.join_date|date:"M d, Y" }}</td>
-                            {% if user_membership.role in 'OrgOwner,OrgAdmin,OrgManager' %}
+                            {% if can_manage %}
                             <td>
                                 <div class="dropdown dropdown-end">
                                     <label tabindex="0" class="btn btn-ghost btn-sm">
@@ -147,7 +178,7 @@
                                     </label>
                                     <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
                                         <li><a href="{% url 'membership:member_detail' membership_id=membership.id %}">View Details</a></li>
-                                        {% if user_membership.role in 'OrgOwner,OrgAdmin' and membership.user != user %}
+                                        {% if can_admin and membership.user != user %}
                                         <li><a href="{% url 'membership:role_update' membership_id=membership.id %}">Change Role</a></li>
                                         <li><a href="{% url 'membership:member_remove' membership_id=membership.id %}" class="text-error">Remove Member</a></li>
                                         {% endif %}
@@ -166,13 +197,13 @@
             <div class="flex justify-center mt-6">
                 <div class="btn-group">
                     {% if page_obj.has_previous %}
-                    <a href="?page=1{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}" class="btn btn-sm">«</a>
-                    <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}" class="btn btn-sm">‹</a>
+                    <a href="{% querystring page=1 %}" class="btn btn-sm">«</a>
+                    <a href="{% querystring page=page_obj.previous_page_number %}" class="btn btn-sm">‹</a>
                     {% endif %}
                     <a class="btn btn-sm btn-active">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</a>
                     {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}" class="btn btn-sm">›</a>
-                    <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}" class="btn btn-sm">»</a>
+                    <a href="{% querystring page=page_obj.next_page_number %}" class="btn btn-sm">›</a>
+                    <a href="{% querystring page=page_obj.paginator.num_pages %}" class="btn btn-sm">»</a>
                     {% endif %}
                 </div>
             </div>
@@ -185,7 +216,7 @@
                 </svg>
                 <h3 class="text-2xl font-bold text-gray-900 mb-2">No members found</h3>
                 <p class="text-gray-600 mb-6">No members match your current filters</p>
-                {% if user_membership.role in 'OrgOwner,OrgAdmin,OrgManager' %}
+                {% if can_manage %}
                 <a href="{% url 'membership:invite' slug=organization.slug %}" class="btn btn-primary">
                     Invite First Member
                 </a>

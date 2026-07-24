@@ -136,8 +136,14 @@
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <!-- Members -->
         <div class="bg-white shadow rounded-lg p-6">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-2xl font-bold text-gray-900">Team Members</h2>
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <div class="flex items-baseline gap-3">
+                    <h2 class="text-2xl font-bold text-gray-900">Team Members</h2>
+                    <a href="{% url 'membership:member_list' slug=team.slug %}"
+                       class="text-sm text-blue-600 hover:text-blue-800 whitespace-nowrap">
+                        View all{% if members %} ({{ members|length }}){% endif %} &rarr;
+                    </a>
+                </div>
 
                 {% if can_edit %}
                 <div class="flex gap-2">

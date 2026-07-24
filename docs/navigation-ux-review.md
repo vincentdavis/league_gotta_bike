@@ -43,10 +43,10 @@ There is also **one genuine bug** (500 errors) mixed in — fix that first regar
 ## 🟡 P2 — Discoverability, global nav, mobile, a11y
 
 **Hub ↔ sub-page linking**
-- [ ] **Link the hub's "Members" card to the full roster** — `S` — `team_detail.html:149-211` lists members inline with no link to the filterable `membership:member_list` page; the richest member surface is unreachable from the hub.
-- [ ] **De-duplicate the two member tables** — `M` — `_membership_tab.html` renders a read-only member table with no row actions, while `member_list.html` has view/role/remove. Pick one canonical surface; point the other at it.
-- [ ] **Give `invite_accept` a decline/back exit** — `S` — invited users have no way out except accept.
-- [ ] **Guest "already a member" state → link to member view** — `S`.
+- [x] **Link the hub's "Members" card to the full roster** — `S` — `team_detail.html:149-211` lists members inline with no link to the filterable `membership:member_list` page; the richest member surface is unreachable from the hub.
+- [x] **De-duplicate the two member tables** — `M` — see Round 3; this one uncovered a live permissions bug.
+- [x] **Give `invite_accept` a decline/back exit** — `S` — invited users have no way out except accept.
+- [x] **Guest "already a member" state → link to member view** — `S` — done on both `team_guest` and `league_guest`.
 
 **Global navigation**
 - [ ] **Let the global navbar return to the current team, not just Home** — `M` — deep in a team, the only global affordance is logo→home; add a breadcrumb slot in `base.html`.
@@ -133,6 +133,47 @@ UI was written ahead of its backend.
 Today `season_list.html` is admin-only (Edit / Delete). It shows a registered-count but there is no
 way to see who registered, and **members cannot register for a season at all**. Either build the
 registration backend or remove the three templates — but it's a feature call, not cleanup.
+
+---
+
+## Round 3 — de-duplicating the member tables uncovered a permissions bug
+
+The P2 de-dup item required reading both member tables closely. That read found
+`member_list.html` gating **every** admin control on `user_membership.role` — but `Membership` has
+no `role` field. Authorization lives on `permission_level`; roles are descriptive and live on
+`MemberRole`.
+
+Django's `{% if %}` resolves the missing attribute to `None`, and its `in` operator swallows the
+resulting error and returns `False`. So the gate was **always false for everyone, owners included**:
+
+| Broken by `.role` | Effect |
+|---|---|
+| `{% if user_membership.role in 'OrgOwner,OrgAdmin,OrgManager' %}` | Invite Member, Pending Requests, the whole **Actions column**, View Details, Change Role, Remove Member — invisible to *every* user including owners |
+| `{{ membership.get_role_display }}` | Role badge column rendered **blank** for every member |
+| Filter form `name="role"` with `OrgOwner`-style values | Submitted `?role=OrgOwner`, which the view never reads (it reads `permission_level`) — **the filter did nothing** |
+
+This reframes the earlier P0 work: the dropdown whose three actions were 500ing had itself never
+rendered. The 500s were real (the URLs are directly reachable, and `member_detail.html` links to
+`member_remove`), but the dropdown was invisible the whole time.
+
+- [x] Replaced the string-matching gates with `can_manage` / `can_admin` booleans computed in the
+      view from `permission_level`, matching the permission matrix in CLAUDE.md
+      (manage members → owner/admin/manager; assign permissions → owner/admin).
+- [x] Fixed the Permission column to use `get_permission_level_display`.
+- [x] Rebuilt the filter form against what the view actually reads, and added server-side role
+      filtering and name/email search to close the gap with the tab's client-side version.
+- [x] Pagination now preserves every filter via `{% querystring %}` (it previously dropped all but
+      two params).
+
+**Canonical surface: `member_list.html`.** It is member-accessible (the Manage tab is admin-only),
+paginated, and has row actions. It absorbed the tab's Email and Roles columns so nothing was lost.
+
+- [x] `_membership_tab.html` keeps what is genuinely admin-only — membership requirements, stats,
+      quick actions, CSV export — and its duplicated table, duplicated filters, and 40-line
+      client-side filter script were replaced by a link to the roster.
+
+Verified by rendering: 24 checks covering owner-vs-member visibility, all four filters, the invite
+exit across all three branches, and the absence of the duplicate table.
 
 ---
 

@@ -172,6 +172,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span>You are already a member of this league</span>
+            <a href="{{ league.get_member_url }}" class="btn btn-sm">Go to member view</a>
         </div>
     {% elif membership_open %}
         <div class="card bg-primary text-primary-content shadow-xl">

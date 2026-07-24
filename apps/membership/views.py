@@ -4,6 +4,7 @@ from allauth.account.models import EmailAddress
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.generic import DeleteView, DetailView, FormView, ListView, UpdateView, View
@@ -68,7 +69,9 @@ class MemberListView(OrgMemberRequiredMixin, ListView):
         organization = self.get_organization()
         qs = Membership.objects.filter(
             organization=organization
-        ).select_related('user').order_by("-permission_level", "user__first_name")
+        ).select_related('user').prefetch_related('member_roles').order_by(
+            "-permission_level", "user__first_name"
+        )
 
         # Filter by status if provided
         status = self.request.GET.get('status')
@@ -80,6 +83,21 @@ class MemberListView(OrgMemberRequiredMixin, ListView):
         if permission_level:
             qs = qs.filter(permission_level=permission_level)
 
+        # Filter by organizational role if provided
+        role = self.request.GET.get('role')
+        if role:
+            qs = qs.filter(member_roles__role_type=role).distinct()
+
+        # Free-text search over name and email
+        q = self.request.GET.get('q', '').strip()
+        if q:
+            qs = qs.filter(
+                Q(user__first_name__icontains=q)
+                | Q(user__last_name__icontains=q)
+                | Q(user__username__icontains=q)
+                | Q(user__email__icontains=q)
+            )
+
         return qs
 
     def get_context_data(self, **kwargs):
@@ -87,6 +105,20 @@ class MemberListView(OrgMemberRequiredMixin, ListView):
         context['organization'] = self.get_organization()
         context['user_membership'] = get_user_membership(self.request.user, context['organization'])
         context['breadcrumb_section'] = 'Members'
+
+        # Authorization is on permission_level; roles are descriptive only.
+        user_membership = context['user_membership']
+        context['can_manage'] = bool(user_membership) and user_membership.permission_level in (
+            Membership.OWNER, Membership.ADMIN, Membership.MANAGER
+        )
+        context['can_admin'] = bool(user_membership) and user_membership.permission_level in (
+            Membership.OWNER, Membership.ADMIN
+        )
+
+        # Filter dropdown options
+        context['permission_levels'] = Membership.PERMISSION_LEVEL_CHOICES
+        context['member_statuses'] = Membership.STATUS_CHOICES
+        context['available_roles'] = MemberRole.ROLE_TYPE_CHOICES
 
         # Add filter counts
         context['total_count'] = Membership.objects.filter(organization=context['organization']).count()

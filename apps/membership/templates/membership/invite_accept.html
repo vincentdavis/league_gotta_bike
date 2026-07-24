@@ -77,6 +77,14 @@
                 </button>
             </form>
             {% endif %}
+
+            {% if not already_member %}
+            <!-- Way out. Invite links are multi-use, so this navigates away rather
+                 than declining -- declining would burn a link shared with others. -->
+            <a href="{{ organization.get_absolute_url }}" class="btn btn-ghost btn-sm mt-4">
+                Not now &mdash; just look around
+            </a>
+            {% endif %}
         </div>
     </div>
 </div>
